@@ -1,6 +1,8 @@
 \ProvidesPackage{main}
 
 % Packages
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry}
 \usepackage[
     backend=bibtex,
     style=numeric,
@@ -21,11 +23,16 @@
 \usepackage{tablefootnote}
 \usepackage[titles]{tocloft}
 \usepackage{titlesec}
-\usepackage[utf8]{inputenc}
 \usepackage{xcolor}
+\hypersetup{hidelinks}
+\colorlet{gray}{black} % for safety, force any gray text to render as black
+
+\setlength{\headheight}{12pt}
+\setlength{\headsep}{10pt}
+\setlength{\footskip}{14pt}
 
 % Images path
-\graphicspath{components/images}
+\graphicspath{{components/images/}}
 
 % Bibliography source
 \addbibresource{bibliography}
@@ -39,10 +46,10 @@
     [display]
     {\bfseries \huge}
     {Capitolul \thechapter:}
-    {}{}[]
+    {0pt}{}[]
 
 % Custom labels
-\renewcommand*\contentsname{Tabelă de Conținut}
+\renewcommand*\contentsname{Cuprins}
 \renewcommand*\listfigurename{Listă de Imagini}
 \renewcommand*\figurename{Imagine}
 \captionsetup[table]{name=Tabel}

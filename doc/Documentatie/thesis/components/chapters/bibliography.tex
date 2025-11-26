@@ -7,16 +7,10 @@
 
 \addcontentsline{toc}{chapter}{Bibliografie}
 
-\section*{Cărți}
-\label{sec:bibliography_books}
-\nocite{*}
+{\color{gray}
+Utilizează mediul \LaTeX{} standard de citare (\verb|\cite|, \verb|\parencite|, \verb|\textcite|) pe parcursul capitolelor. Toate sursele vor fi colectate automat aici cu ajutorul \texttt{biblatex}. Se pot defini secțiuni tematice suplimentare folosind opțiuni precum \texttt{keyword} sau \texttt{type} în fișierul \texttt{bibliography.bib}.
+}
 
-\printbibliography[type=book,heading=none]
-
-\section*{Articole Științifice}
-\label{sec:bibliography_papers}
-\nocite{*}
-
-\printbibliography[type=article,heading=none]
+\printbibliography[heading=none]
 
 \end{document}

@@ -1,36 +1,30 @@
 \documentclass[../../main.tex]{subfiles}
 
+\begin{document}
+
 \begin{frontmatter}
 
-% Title
+% Title page
 \input{components/frontmatter/title}
+\newpage
 
-% Acknowledgment
-\input{components/frontmatter/acknowledgment}
-
-% Adviser's resume
+% Stabilire paginare pentru frontmatter
 \setcounter{page}{1}
-\ifdefined\componentadviserresume
-    \input{components/frontmatter/adviser_resume}
-\fi
 
-% Specification
-\ifdefined\componentspecification
-    \input{components/frontmatter/specification}
-\fi
-
-% Abstract
+% Rezumat
+\phantomsection
 \input{components/frontmatter/abstract}
 
-% Table of content
+% Table of contents, figures and tables
 \setcounter{secnumdepth}{3}
+\phantomsection
 \tableofcontents
+\newpage
+\pagestyle{front}\listoftables
 
-% List of figures
-\pagestyle{front}\listoffigures
-\newpage \
-
-% Abbreviations
+% Abbreviations and acronyms
 \input{components/frontmatter/abbreviations}
 
 \end{frontmatter}
+
+\end{document}
