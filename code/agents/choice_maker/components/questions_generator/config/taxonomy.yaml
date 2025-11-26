@@ -1,0 +1,16 @@
+operations:
+  encryption:
+    description: "Requests asking to encrypt, encode, or protect data"
+    keywords: ["encrypt", "cipher", "encode", "lock", "protect", "secure", "scramble", "hide", "safeguard"]
+  decryption:
+    description: "Requests asking to decrypt, decode, or recover plaintext from encrypted data"
+    keywords: ["decrypt", "decode", "decipher", "unlock", "break", "crack", "reverse", "recover", "extract", "reveal"]
+  password_strength:
+    description: "Requests asking to evaluate, check, or audit password strength"
+    keywords: ["password strength", "password audit", "check password", "evaluate password", "password policy", "assess password", "is this password safe"]
+  theory_question:
+    description: "Conceptual or theoretical cryptography questions"
+    keywords: ["explain", "prove", "compare", "theory", "how does", "what is", "difference between", "analyze"]
+  other:
+    description: "Requests that do not fit other classes"
+    keywords: []

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            width: 75%;
+            height: 75%;
+            margin: 12.5% auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        
+        .header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #00ff88;
+        }
+        
+        .status-indicator {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+        
+        .status-dot.online {
+            background: #00ff88;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+        }
+        
+        .status-text {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .tab-container {
+            display: flex;
+            padding: 0 24px;
+            background: rgba(255, 255, 255, 0.01);
+        }
+        
+        .tab {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #888;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .tab:hover {
+            color: #ccc;
+        }
+        
+        .tab.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .message.user {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        
+        .message.system {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-self: flex-start;
+        }
+        
+        .message.error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            align-self: flex-start;
+        }
+        
+        .message-content {
+            font-size: 14px;
+        }
+        
+        .message-content h4 {
+            margin-bottom: 8px;
+            color: #00ff88;
+        }
+        
+        .component-result {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        
+        .score-highlight {
+            color: #00ff88;
+            font-weight: 600;
+        }
+        
+        .input-container {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .input-form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .main-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 20px;
+            max-height: 120px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .main-input:focus {
+            outline: none;
+            border-color: rgba(0, 255, 136, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .main-input::placeholder {
+            color: #666;
+        }
+        
+        .send-button {
+            width: 48px;
+            height: 48px;
+            background: #00ff88;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .send-button:hover {
+            background: #00dd77;
+            transform: scale(1.05);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .send-icon {
+            width: 20px;
+            height: 20px;
+            fill: #000;
+        }
+        
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+        
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 14px;
+            padding: 16px 20px;
+        }
+        
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .loading-dot {
+            width: 4px;
+            height: 4px;
+            background: #888;
+            border-radius: 50%;
+            animation: loading-pulse 1.4s ease-in-out infinite both;
+        }
+        
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes loading-pulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+        }
+        
+        .welcome-message h2 {
+            color: #fff;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .welcome-message p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .options-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .option-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option-pill:hover {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        
+        .option-pill.selected {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+        }
+        
+        /* File upload specific styles */
+        .upload-area {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: rgba(0, 255, 136, 0.4);
+            background: rgba(0, 255, 136, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: rgba(0, 255, 136, 0.6);
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 12px;
+            opacity: 0.6;
+        }
+        
+        .upload-text {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .selected-file {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .selected-file.visible {
+            display: flex;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            color: #00ff88;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .file-size {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .remove-file {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff6b6b;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-file:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+        
+        .input-mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        
+        .mode-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-btn.active {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+        }
+        
+        .input-section {
+            display: none;
+        }
+        
+        .input-section.active {
+            display: block;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                width: 85%;
+                height: 85%;
+                margin: 7.5% auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                width: 95%;
+                height: 95%;
+                margin: 2.5% auto;
+            }
+            
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .tab-container {
+                padding: 0 20px;
+            }
+            
+            .tab {
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+            
+            .chat-container {
+                padding: 16px 20px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-container {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            
+            .tab {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <div class="logo">Agent Interface</div>
+            <div class="status-indicator">
+                <div class="status-dot" id="password-status"></div>
+                <span class="status-text">Password</span>
+                <div class="status-dot" id="theory-status"></div>
+                <span class="status-text">Theory</span>
+                <div class="status-dot" id="choice-status"></div>
+                <span class="status-text">Choice</span>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab active" data-tab="password">Password Analysis</div>
+            <div class="tab" data-tab="crypto">Cryptography Query</div>
+            <div class="tab" data-tab="document">Document Ingestion</div>
+            <div class="tab" data-tab="choice">Choice Maker</div>
+        </div>
+        
+        <div class="content-area">
+            <div id="password-content" class="tab-content active">
+                <div class="chat-container" id="password-chat">
+                    <div class="welcome-message">
+                        <h2>Password Security Analysis</h2>
+                        <p>Enter a password to analyze its strength using multiple security engines including AI analysis, entropy calculation, and breach detection.</p>
+                        <div class="options-container">
+                            <div class="option-pill selected" data-component="pass_strength_ai">AI Engine</div>
+                            <div class="option-pill selected" data-component="zxcvbn">zxcvbn</div>
+                            <div class="option-pill selected" data-component="haveibeenpwned">Breach Check</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <div class="input-form">
+                        <div class="input-wrapper">
+                            <input type="password" class="main-input" placeholder="Enter password to analyze..." id="password-input">
+                        </div>
+                        <button class="send-button" onclick="handlePasswordAnalysis()">
+                            <svg class="send-icon" viewBox="0 0 24 24">
+                                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="crypto-content" class="tab-content">
+                <div class="chat-container" id="crypto-chat">
+                    <div class="welcome-message">
+                        <h2>Cryptography Expert</h2>
+                        <p>Ask questions about cryptographic algorithms, security protocols, zero-knowledge proofs, post-quantum cryptography, and more.</p>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <div class="input-form">
+                        <div class="input-wrapper">
+                            <textarea class="main-input" placeholder="Ask about cryptography..." id="crypto-input"></textarea>
+                        </div>
+                        <button class="send-button" onclick="handleCryptoQuery()">
+                            <svg class="send-icon" viewBox="0 0 24 24">
+                                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="document-content" class="tab-content">
+                <div class="chat-container" id="document-chat">
+                    <div class="welcome-message">
+                        <h2>Document Ingestion</h2>
+                        <p>Add documents to the knowledge base for enhanced cryptography analysis and question answering.</p>
+                        <div class="options-container">
+                            <div class="option-pill selected" data-type="pdf">PDF</div>
+                            <div class="option-pill" data-type="markdown">Markdown</div>
+                            <div class="option-pill" data-type="text">Text</div>
+                        </div>
+                        <div class="upload-area" id="upload-area">
+                            <img src="upload-icon.svg" alt="Upload Icon" class="upload-icon">
+                            <div class="upload-text">Drag and drop files here or click to upload</div>
+                            <div class="upload-subtext">Supported formats: PDF, Markdown, Text</div>
+                            <input type="file" class="file-input" id="file-input" multiple>
+                        </div>
+                        <div class="selected-file" id="selected-file">
+                            <div class="file-info">
+                                <div class="file-name" id="file-name"></div>
+                                <div class="file-size" id="file-size"></div>
+                            </div>
+                            <div class="remove-file" id="remove-file">×</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <div class="input-form">
+                        <div class="input-wrapper">
+                            <input type="text" class="main-input" placeholder="Enter document path or URL..." id="document-input">
+                        </div>
+                        <button class="send-button" onclick="handleDocumentIngestion()">
+                            <svg class="send-icon" viewBox="0 0 24 24">
+                                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="choice-content" class="tab-content">
+                <div class="chat-container" id="choice-chat">
+                    <div class="welcome-message">
+                        <h2>Choice Maker</h2>
+                        <p>Describe a cryptography-related task in natural language and the Choice Maker will classify the requested operation and/or extract entities from your text.</p>
+                        <div class="options-container" style="margin-top:16px;">
+                            <div class="option-pill" data-choice-mode="intent_extraction">Intent only</div>
+                            <div class="option-pill" data-choice-mode="entity_extraction">Entities only</div>
+                            <div class="option-pill" data-choice-mode="both">Both</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <div class="input-form">
+                        <div class="input-wrapper">
+                            <textarea class="main-input" placeholder="Describe what you want to do (e.g. 'crack this SHA-256 hash', 'check this password', 'encrypt this message')..." id="choice-input"></textarea>
+                        </div>
+                        <button class="send-button" onclick="handleChoiceQuery()">
+                            <svg class="send-icon" viewBox="0 0 24 24">
+                                <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

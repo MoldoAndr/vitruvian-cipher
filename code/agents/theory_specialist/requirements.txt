@@ -1,0 +1,31 @@
+# Web Framework
+fastapi==0.104.0
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.0
+
+# Machine Learning
+fastembed==0.7.3
+onnxruntime==1.23.1
+numpy==1.26.4
+chromadb==0.4.18
+
+# Document Processing
+PyPDF2==3.0.1
+langchain==0.0.340
+markdown==3.5.1
+python-magic==0.4.27
+
+# Background Tasks
+apscheduler==3.10.4
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+huggingface-hub==0.35.3
+tokenizers==0.22.1

@@ -1,0 +1,25 @@
+services:
+  cyberchef:
+    build:
+      context: ./CyberChef
+    ports:
+      - "18080:8080"
+
+  dcode_fr:
+    build:
+      context: ./dcode_fr
+    ports:
+      - "18081:8081"
+
+  gateway:
+    build:
+      context: ./aggregator
+    environment:
+      CYBERCHEF_URL: http://cyberchef:8080/detect
+      DCODE_URL: http://dcode_fr:8081/detect
+      REQUEST_TIMEOUT_MS: 4000
+    depends_on:
+      - cyberchef
+      - dcode_fr
+    ports:
+      - "18090:8090"

@@ -1,0 +1,66 @@
+@startuml
+title Crypto Agent Architecture
+
+skinparam {
+  shadowing false
+  RoundCorner 15
+  BackgroundColor #ffffff
+  ArrowThickness 2
+  defaultFontSize 12
+  ArrowColor #6b7280
+}
+
+skinparam rectangle {
+  BorderColor #d1d5db
+  BorderThickness 1
+}
+
+actor "Client" as client #374151
+
+rectangle "API Service" as API #f8fafc {
+  rectangle "JSON Parser\nSchema Validator" as VAL #e5e7eb
+  rectangle "Request Dispatcher" as DIS #e5e7eb
+  rectangle "Crypto Engine\nOpenSSL 3 + OQS" as ENG #e5e7eb
+}
+
+rectangle "CyberChef Integration" as CYBER #f1f5f9 {
+  rectangle "Recipe Engine\nOperation Pipeline" as RECIPE #e5e7eb
+  rectangle "Format Converter\nBase64/Hex/Binary" as FORMAT #e5e7eb
+}
+
+rectangle "Infrastructure" as INFRA #dbeafe {
+  rectangle "Key Management\nVault/KMS" as KMS #bfdbfe
+  rectangle "Audit Logger\nMetrics Collection" as AUDIT #bfdbfe
+}
+
+rectangle "Processing Queue" as QUEUE #f1f5f9 {
+  rectangle "Async Worker\nBatch Operations" as WORKER #e5e7eb
+}
+
+' Main synchronous flow
+client --> VAL : POST /crypto\n{operation, algorithm, data}
+VAL --> DIS : validated request
+DIS --> KMS : key retrieval
+KMS --> DIS : cryptographic keys
+DIS --> ENG : execute operation
+ENG --> RECIPE : CyberChef processing
+RECIPE --> FORMAT : format conversion
+FORMAT --> DIS : processed result
+DIS --> AUDIT : log operation
+DIS --> client : response
+
+' Alternative CyberChef direct flow
+client --> RECIPE : CyberChef recipes
+RECIPE --> FORMAT : data transformation
+FORMAT --> client : formatted output
+
+' Asynchronous processing
+DIS -.-> WORKER : queue large operations
+WORKER -.-> ENG : background processing
+WORKER -.-> client : webhook notification
+
+' Security flow
+KMS --> AUDIT : key access logging
+ENG --> AUDIT : operation auditing
+
+@enduml

@@ -1,0 +1,30 @@
+operation: encryption
+label: Encryption Intent
+batch_size: 6
+system_prompt: |
+  You synthesize short user requests that clearly ask an assistant to PROTECT plaintext data.
+  Every item must look like a training example for an intent classifier + entity extractor.
+  Highlight the artifact that needs protection and optionally the desired encryption method.
+  Always keep the text <= 240 characters and avoid revealing any actual credentials.
+user_prompt: |
+  Generate {count} JSON objects in an array. Each object MUST contain:
+    - text: a natural-language encryption request from an end user
+    - intent: {
+        label: "encryption",
+        confidence: float between 0.78 and 0.98
+      }
+    - entities: list with 1-3 entities from this set only:
+        * plaintext (data that must be encrypted)
+        * algorithm (requested cipher or mode)
+        * compliance_target (regulation or program being satisfied)
+      Each entity must include {type, value, confidence}
+    - metadata:
+        context: one of ["storage","transmission","backup","compliance"],
+        urgency: "low"|"medium"|"high"
+      }
+  Use JSON only with double quotes.
+post_rules:
+  - "Never use decrypt/decipher phrasing"
+  - "Make plaintext entity human-readable but anonymized"
+  - "Confidence values must include at most two decimals"
+  - "Spread contexts evenly across the set"

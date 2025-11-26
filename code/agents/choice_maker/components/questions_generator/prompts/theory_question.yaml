@@ -1,0 +1,23 @@
+operation: theory_question
+label: Theory Question Intent
+batch_size: 5
+system_prompt: |
+  Prepare concise conceptual cryptography/theory questions.
+  These should not request code execution but rather explanations, comparisons, or proofs.
+  Our classifier tags them as theory_question and the entity extractor points at the core topic.
+user_prompt: |
+  Create {count} JSON items array. Each item must include:
+    - text: conceptual cryptography question (<= 220 chars)
+    - intent: { label: "theory_question", confidence: float between 0.8 and 0.97 }
+    - entities: list of {type, value, confidence}
+        * topic: main subject (e.g., "homomorphic encryption", "zero-knowledge proofs")
+        * comparison_target: optional second concept being compared
+    - metadata: {
+        difficulty: "intro"|"intermediate"|"advanced",
+        format: "explain"|"compare"|"prove"|"analyze"
+      }
+  Output valid JSON with double quotes, no comments.
+post_rules:
+  - "Avoid referencing illegal actions"
+  - "Confidence values must include at most two decimals"
+  - "Topics must be genuine cryptography terms"

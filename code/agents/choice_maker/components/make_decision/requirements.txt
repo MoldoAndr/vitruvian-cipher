@@ -1,0 +1,15 @@
+PyYAML>=6.0
+pydantic>=2.7
+httpx>=0.26
+openai>=1.14
+numpy>=1.26
+scikit-learn>=1.4
+rapidfuzz>=3.6
+rich>=13.7
+torch>=2.1
+transformers>=4.38
+datasets>=2.18
+seqeval>=1.2
+Flask>=3.0
+python-dotenv>=1.0
+requests>=2.31

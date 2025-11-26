@@ -1,0 +1,27 @@
+Realizaeaza-mi o documentatie, alaturi de explicatii si de idei suplimentare pe care le consideri tu relevante
+pentru o lucrare de licenta in cadrul facultatii de calculatore si sisteme informatice pentru securitate nationala.
+
+Tema lucrarii:
+	Utilitar ce incorporeaza inteligenta artificiala pentru analiza de criptograme, utilitar de criptare/decriptare,
+	util in teoria numerelor si in analiza securitatii de parole
+
+Mod de functionare:
+	Hybrid intre ChatGPT, dcode.fr, cyberchef, factordb, crackstation, RSACtfTool, AESCTFTool
+
+Tehnologii folosite:
+	--	sugerez Docker, FastAPI, JWT, C/C++, OpenSSL, TenserFlow, PyTorch, etc.
+	--	vino tu cu sugestii aici
+
+Workflow-uri posibile
+	-	explicare de problema si venire cu solutii prin conversatie cu LLM-ul antrenat special in acest scop
+	-	mesaj criptat => descoprerire metoda de criptare si incercare de atac critpografic prestabilit
+	-	prezentare grafic/marja si sugestii cu privire la securitatea unei parole
+	-	cautare in baza de date numere prime/semiprime
+	-	interactiune din linie de comanda sau din terminal
+	-	tot workflow-ul trebuie sa fie securizat prin diferiti algoritmi criptografici
+	-	trebuie sa existe un istoric de conversatii asemanator cu Claude.ai sau chat.com
+	-	totul va fi gratuit, utilizare pentru scalabilitate de docker, docker-compose, kubernetes
+	-	sugereaza-mi un mod de antrenare al LLM-urilor
+	-	antrenare LLM pentru detectie algoritm de criptare folosit
+	-	algoritmi post-quantum implementati
+	-	existenta unei mici documentatii cu diferiti algoritmi

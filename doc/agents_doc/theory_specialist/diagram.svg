@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="724px" preserveAspectRatio="none" style="width:1371px;height:724px;" version="1.1" viewBox="0 0 1371 724" width="1371px" zoomAndPan="magnify"><defs/><g><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="184" x="603" y="11.1387">Theory Specialist RAG System</text><!--MD5=[fac864e77539af95038f0151207ed802]
+cluster API--><rect fill="#F8FAFC" height="96" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="622" x="24.87" y="474.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="108" x="281.87" y="488.1074">FastAPI Service</text><!--MD5=[e6de3b53b8973430fc217df0116a8ba5]
+cluster RAG--><rect fill="#F1F5F9" height="392" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="307" x="1048.87" y="178.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="110" x="1147.37" y="192.1074">RAG Processing</text><!--MD5=[7427b37573f6a2c3528bb2730ab2c641]
+cluster BG--><rect fill="#F8FAFC" height="371" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="178" x="659.87" y="37.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="129" x="684.37" y="51.1074">Background Tasks</text><!--MD5=[8abba5aaa149e177f2050bf54dc37b0d]
+cluster STORAGE--><rect fill="#F1F5F9" height="96" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="391" x="509.87" y="617.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="101" x="654.87" y="631.1074">Storage Layer</text><!--MD5=[e140ffe9d520e7041a6e410e66d94b56]
+cluster AI--><rect fill="#DBEAFE" height="96" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="148" x="861.87" y="319.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="76" x="897.87" y="333.1074">AI Services</text><!--MD5=[d92183cf5af8f4f31b0607538d95b5f3]
+entity DOC--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="146" x="187.87" y="506.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="126" x="197.87" y="528.1074">Document Ingestion</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="43" x="197.87" y="542.0762">/ingest</text><!--MD5=[01138e86748a6ad1c75f5829747f8425]
+entity CHAT--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="123" x="507.37" y="506.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="103" x="517.37" y="528.1074">Chat Generation</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="62" x="517.37" y="542.0762">/generate</text><!--MD5=[9267196c67f05b1f3b62a7b72b24020d]
+entity CONV--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="112" x="40.87" y="506.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="89" x="50.87" y="528.1074">Conversations</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="92" x="50.87" y="542.0762">/conversations</text><!--MD5=[dd6d9d8e233033dde7a134263565a474]
+entity HEALTH--><rect fill="#DBEAFE" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="103" x="369.37" y="506.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="83" x="379.37" y="528.1074">Health Check</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="44" x="379.37" y="542.0762">/health</text><!--MD5=[f7bd62888ba9800d5650a5758608e7f8]
+entity PARSER--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="129" x="1065.37" y="210.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="109" x="1075.37" y="232.1074">Document Parser</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="72" x="1075.37" y="246.0762">PDF/MD/TXT</text><!--MD5=[ad079552c06646e761e2c7b0ef12ad56]
+entity CHUNK--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="129" x="1159.37" y="351.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="1169.37" y="373.1074">Text Chunking</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="109" x="1169.37" y="387.0762">Recursive Splitter</text><!--MD5=[20755b229f40fc54e528bc79438c3556]
+entity EMB--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="131" x="1164.37" y="506.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="77" x="1174.37" y="528.1074">Embeddings</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="111" x="1174.37" y="542.0762">FastEmbed Model</text><!--MD5=[089d75077198379e37adf09724810ec4]
+entity RERANK--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="111" x="1229.37" y="210.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="57" x="1239.37" y="232.1074">Reranker</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="91" x="1239.37" y="246.0762">Cross-Encoder</text><!--MD5=[875a944bde88df74fdb9ab07fefddbf5]
+entity SCHED--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="99" x="676.37" y="69.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="63" x="686.37" y="91.1074">Scheduler</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="79" x="686.37" y="105.0762">APScheduler</text><!--MD5=[b2d26620105c5b296e70c863bee61ada]
+entity QUEUE--><rect fill="#E5E7EB" height="33.9688" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="134" x="680.87" y="358.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="114" x="690.87" y="380.1074">Processing Queue</text><!--MD5=[f9ba5bf973e7832d2ce5ed59077b93f7]
+entity DB--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="198" x="525.87" y="649.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="535.87" y="671.1074">SQL Database</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="178" x="535.87" y="685.0762">Documents &amp; Conversations</text><!--MD5=[14cedd01b3d8a44cb6a85e6661a69fae]
+entity VECTOR--><rect fill="#E5E7EB" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="126" x="758.87" y="649.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="106" x="768.87" y="671.1074">Vector Database</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="65" x="768.87" y="685.0762">ChromaDB</text><!--MD5=[762d9b1ee2eb630aa40151fb5f0602e7]
+entity LLM--><rect fill="#BFDBFE" height="47.9375" rx="7.5" ry="7.5" style="stroke: #D1D5DB; stroke-width: 1.0;" width="116" x="877.87" y="351.9688"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="81" x="887.87" y="373.1074">Ollama Client</text><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="96" x="887.87" y="387.0762">LLM Generation</text><!--MD5=[4a65e84059005d12693a083370a06717]
+entity client--><ellipse cx="401.87" cy="347.4688" fill="#374151" rx="8" ry="8" style="stroke: #A80036; stroke-width: 1.5;"/><path d="M401.87,355.4688 L401.87,382.4688 M388.87,363.4688 L414.87,363.4688 M401.87,382.4688 L388.87,397.4688 M401.87,382.4688 L414.87,397.4688 " fill="none" style="stroke: #A80036; stroke-width: 1.5;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="35" x="384.37" y="411.1074">Client</text><!--MD5=[4485fa671446b04ad7147ed315aedd4a]
+link client to DOC--><path d="M384.13,382.1588 C358.13,390.7088 309.94,410.2288 283.87,443.9688 C271.19,460.3688 265.48,483.1988 262.92,501.2088 " fill="none" id="client-&gt;DOC" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="262.22,506.6287,267.3204,498.2034,262.849,501.6685,259.3839,497.1971,262.22,506.6287" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="99" x="284.87" y="456.1074">POST document</text><!--MD5=[caabfb61d9b221ff7234062f07323c3b]
+link DOC to DB--><path d="M267.11,555.2188 C272.48,570.7588 281.79,590.4088 296.87,601.9688 C331.47,628.5188 437.78,648.2988 520.09,660.1488 " fill="none" id="DOC-&gt;DB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="525.47,660.9088,517.1198,655.6863,520.5194,660.2077,515.998,663.6073,525.47,660.9088" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="98" x="297.87" y="599.1074">store metadata</text><!--MD5=[ee5ff13c8d807bad860b14a0f81dfda6]
+link DOC to SCHED--><path d="M223.23,506.8887 C199.53,491.4488 172.25,471.7188 165.87,458.9688 C162.88,453.0088 162.7,449.8388 165.87,443.9688 C274.26,243.1088 553.13,143.4987 671.47,109.2088 " fill="none" id="DOC-&gt;SCHED" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="676.3,107.8188,666.5485,106.4375,671.4913,109.1886,668.7402,114.1314,676.3,107.8188" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="115" x="298.87" y="301.1074">trigger processing</text><!--MD5=[da8adf2a1b76100254e44e0fdf2ebc8a]
+link SCHED to PARSER--><path d="M775.4,112.0087 C846.88,136.6088 979.25,182.1487 1060.45,210.0888 " fill="none" id="SCHED-&gt;PARSER" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="1065.24,211.7288,1058.0331,205.016,1060.5125,210.1006,1055.428,212.58,1065.24,211.7288" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="94" x="915.87" y="160.1074">load document</text><!--MD5=[6971f8857e8e638c700b37f314cd14d5]
+link PARSER to CHUNK--><path d="M1145.6,259.2388 C1162,283.4888 1187.7,321.4988 1205.14,347.2788 " fill="none" id="PARSER-&gt;CHUNK" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="1208.08,351.6288,1206.3544,341.9322,1205.2802,347.4862,1199.7263,346.4119,1208.08,351.6288" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="54" x="1174.87" y="301.1074">split text</text><!--MD5=[964c52684f30794acc5a3adcfc34e6d5]
+link CHUNK to EMB--><path d="M1224.78,400.2088 C1225.84,427.2788 1227.59,472.0188 1228.74,501.2388 " fill="none" id="CHUNK-&gt;EMB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="1228.95,506.5087,1232.5871,497.3561,1228.7502,501.5127,1224.5935,497.6758,1228.95,506.5087" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="108" x="1227.87" y="456.1074">generate vectors</text><!--MD5=[e2d1db84d766c40da965ab8bbb98ce00]
+link EMB to VECTOR--><path d="M1241.03,555.2988 C1246.4,570.2788 1249.61,589.2388 1238.87,601.9688 C1195.03,653.8988 996.66,667.8488 890.08,671.5988 " fill="none" id="EMB-&gt;VECTOR" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="885.08,671.7688,894.2118,675.458,890.0771,671.5974,893.9377,667.4627,885.08,671.7688" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="114" x="1245.87" y="599.1074">store embeddings</text><!--MD5=[4aaa44ec8fabe5a94e515bc83b326053]
+link EMB to DB--><path d="M1184.37,554.9788 C1149.19,571.4988 1098.73,592.4588 1051.87,601.9688 C984.33,615.6788 808.46,592.2588 741.87,609.9688 C713.44,617.5288 684.31,633.1788 662.22,646.9988 " fill="none" id="EMB-&gt;DB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="657.9,649.7288,667.6452,648.3035,662.1271,647.0582,663.3724,641.5402,657.9,649.7288" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="78" x="1102.87" y="599.1074">save chunks</text><!--MD5=[af6eae89b522b0bce4a893b1646dd5bf]
+link client to CHAT--><path d="M419.56,377.7588 C455.7,380.4388 537.56,392.2088 572.87,443.9688 C584.26,460.6688 582.5,483.7388 578.3,501.7788 " fill="none" id="client-&gt;CHAT" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="577.06,506.7188,583.1288,498.9618,578.276,501.8689,575.369,497.0161,577.06,506.7188" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="71" x="579.87" y="456.1074">POST query</text><!--MD5=[c3e2089afe34ca8c223fa1c2fbbff18b]
+link CHAT to client--><path d="M621.06,506.9488 C650.54,490.6688 678.15,467.6088 659.87,443.9688 C630.79,406.3788 482.32,385.9788 424.73,379.3788 " fill="none" id="CHAT-&gt;client" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="419.45,378.7888,427.9485,383.7662,424.4189,379.3456,428.8395,375.816,419.45,378.7888" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="665.87" y="456.1074">return answer</text><!--MD5=[f479d594a4b198de4043b16074ca45bd]
+link CHAT to DB--><path d="M607.91,555.1888 C618.66,563.7088 628.98,574.4088 634.87,586.9688 C643.24,604.8588 640.39,627.0387 635.62,644.3988 " fill="none" id="CHAT-&gt;DB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="634.09,649.6188,640.456,642.1039,635.4939,644.8199,632.7778,639.8577,634.09,649.6188" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="106" x="639.87" y="599.1074">get conversation</text><!--MD5=[f479d594a4b198de4043b16074ca45bd]
+link CHAT to DB--><path d="M546.45,554.9788 C535.95,568.6388 527.26,586.2887 534.87,601.9688 C543.83,620.4588 560.2,635.5788 576.55,647.0488 " fill="none" id="CHAT-&gt;DB-1" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="580.7,649.8888,575.5164,641.5144,576.5686,647.0725,571.0104,648.1247,580.7,649.8888" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="90" x="535.87" y="599.1074">save message</text><!--MD5=[1402809955e15a91ab997e6c47d6b031]
+link CHAT to VECTOR--><path d="M630.66,531.9488 C724.56,533.3788 896.35,542.2288 934.87,586.9688 C956.26,611.8188 924.91,634.0688 889.85,649.7088 " fill="none" id="CHAT-&gt;VECTOR" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="885.11,651.7688,894.9586,651.8373,889.6931,649.7699,891.7605,644.5044,885.11,651.7688" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="101" x="941.87" y="599.1074">similarity search</text><!--MD5=[9fbf03d32a6e0acd6ce62be378fb1e22]
+link VECTOR to RERANK--><path d="M884.95,669.2788 C936.4,662.9688 1007.58,646.1888 1051.87,601.9688 C1147.36,506.6188 1079.25,431.5188 1141.87,311.9688 C1147.89,300.4688 1149.56,296.8688 1159.87,288.9688 C1179,274.3088 1202.79,262.8988 1224.47,254.4887 " fill="none" id="VECTOR-&gt;RERANK" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="1229.35,252.6288,1219.515,252.106,1224.6796,254.4141,1222.3715,259.5786,1229.35,252.6288" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="1110.87" y="456.1074">rerank results</text><!--MD5=[53da72c41008725ce44fd1af110a0f98]
+link RERANK to LLM--><path d="M1228.97,254.8087 C1223.23,256.3688 1217.46,257.7988 1211.87,258.9688 C1150.83,271.7388 974.53,242.5788 932.87,288.9688 C919.09,304.3088 921.04,328.1088 925.76,346.7788 " fill="none" id="RERANK-&gt;LLM" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="927.16,351.9088,928.6559,342.1742,925.8468,347.0843,920.9367,344.2752,927.16,351.9088" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="139" x="933.87" y="301.1074">contextualized prompt</text><!--MD5=[1fccc57dd92f8115616099d833513a5c]
+link LLM to CHAT--><path d="M888.06,400.0188 C872.11,407.6788 854.24,416.2188 837.87,423.9688 C804.61,439.6988 796.83,444.8588 762.87,458.9688 C721.02,476.3488 673.24,493.8688 635.56,507.1488 " fill="none" id="LLM-&gt;CHAT" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="630.55,508.9188,640.3672,509.7078,635.2671,507.2606,637.7142,502.1605,630.55,508.9188" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="129" x="795.87" y="456.1074">generated response</text><!--MD5=[51f22b685b850a00b7c65ba8c6c486ea]
+link client to CONV--><path d="M384.26,380.1488 C347.27,387.3488 259.57,407.2088 194.87,443.9688 C167,459.7988 139.99,484.4188 121.4,503.2688 " fill="none" id="client-&gt;CONV" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="117.8,506.9588,126.9415,503.2936,121.2852,503.3736,121.2052,497.7173,117.8,506.9588" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="70" x="195.87" y="456.1074">GET history</text><!--MD5=[b546ecbb0d99d940ebefba8cb07651a2]
+link CONV to client--><path d="M72.48,506.6688 C56.21,488.2988 40.39,462.7288 55.87,443.9688 C97.23,393.8288 308.26,380.7688 378.84,377.7688 " fill="none" id="CONV-&gt;client" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="384.06,377.5588,374.9069,373.9227,379.064,377.7592,375.2276,381.9163,384.06,377.5588" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="108" x="56.87" y="456.1074">formatted history</text><!--MD5=[8d8a9731014aff3f77aeb36b2863daff]
+link CONV to DB--><path d="M110.36,555.0288 C120.93,570.8988 137.13,591.0188 156.87,601.9688 C217.59,635.6488 402.07,655.7988 520.47,665.6088 " fill="none" id="CONV-&gt;DB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="525.7,666.0388,517.0621,661.3072,520.7172,665.6247,516.3997,669.2797,525.7,666.0388" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="116" x="157.87" y="599.1074">retrieve messages</text><!--MD5=[ca6bb724ec16d34e3d1e3d8b182bed9f]
+link DB to CONV--><path d="M525.84,668.5888 C361.09,660.2887 45.4,639.6188 11.87,601.9688 C-3.1,585.1788 13.65,569.0288 36.12,556.4888 " fill="none" id="DB-&gt;CONV" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="40.68,554.0288,30.8596,554.7776,36.2786,556.401,34.6552,561.8199,40.68,554.0288" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="114" x="12.87" y="599.1074">conversation data</text><!--MD5=[e479c09eb488dff1876a0a0e92fe7647]
+link client to HEALTH--><path d="M419.53,383.9788 C441.38,393.7288 477.55,413.6788 492.87,443.9688 C495.87,449.9188 495.44,452.8188 492.87,458.9688 C485.62,476.2888 471.86,491.5288 458.3,503.4088 " fill="none" id="client-&gt;HEALTH" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="454.48,506.6588,463.9226,503.8591,458.2833,503.413,458.7294,497.7738,454.48,506.6588" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="68" x="495.87" y="456.1074">GET status</text><!--MD5=[7c99837d8103bdddd692978365dd022e]
+link HEALTH to client--><path d="M410.07,506.8787 C404.3,493.2587 397.8,475.5087 394.87,458.9688 C392.6,446.1788 392.82,432.1288 394.06,419.3288 " fill="none" id="HEALTH-&gt;client" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="394.6,414.2988,389.6709,422.8254,394.0714,419.2707,397.626,423.6712,394.6,414.2988" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="88" x="395.87" y="456.1074">system health</text><!--MD5=[6a469c584d1e48e0841b75e9791f3661]
+link HEALTH to DB--><path d="M409.77,555.0988 C404.48,569.7988 401.17,588.5288 410.87,601.9688 C436.18,637.0387 479.52,655.0688 520.6,664.2288 " fill="none" id="HEALTH-&gt;DB" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="525.6,665.2988,517.6495,659.4859,520.7131,664.2413,515.9576,667.305,525.6,665.2988" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="111" x="411.87" y="599.1074">check connection</text><!--MD5=[a9e5e138502305eb2a62405af931813f]
+link HEALTH to VECTOR--><path d="M447.14,555.0888 C459.29,564.3288 474.43,573.9488 489.87,578.9688 C517.88,588.0688 728.6,573.6388 754.87,586.9688 C779.19,599.3088 797.36,625.0088 808.59,645.1088 " fill="none" id="HEALTH-&gt;VECTOR" style="stroke: #6B7280; stroke-width: 2.0;"/><polygon fill="#6B7280" points="811.02,649.5688,810.2219,639.7523,808.6257,645.1793,803.1987,643.5831,811.02,649.5688" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="110" x="774.87" y="599.1074">count documents</text><!--MD5=[94061991af28c952ed280eccb5ff1a37]
+link SCHED to QUEUE--><path d="M727.7,118.3587 C731.91,171.8588 742.17,302.4688 746.2,353.7788 " fill="none" id="SCHED-&gt;QUEUE" style="stroke: #6B7280; stroke-width: 2.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#6B7280" points="746.59,358.7788,749.8839,349.497,746.2043,353.7936,741.9077,350.1141,746.59,358.7788" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="109" x="738.87" y="239.6074">batch processing</text><!--MD5=[efe1c1a51865a51ccb2b972aa96a2c19]
+link QUEUE to PARSER--><path d="M751.61,358.7288 C757.1,338.8788 769.32,305.8688 792.87,288.9688 C834.56,259.0488 974.24,245.3488 1060.13,239.6187 " fill="none" id="QUEUE-&gt;PARSER" style="stroke: #6B7280; stroke-width: 2.0; stroke-dasharray: 7.0,7.0;"/><polygon fill="#6B7280" points="1065.2,239.2888,1055.9564,235.8892,1060.2108,239.6175,1056.4825,243.8719,1065.2,239.2888" style="stroke: #6B7280; stroke-width: 2.0;"/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="122" x="793.87" y="301.1074">queued documents</text><!--MD5=[c52ddbc51cec373b446fd5e44e4c7a0d]
+@startuml
+title Theory Specialist RAG System
+
+skinparam {
+  shadowing false
+  RoundCorner 15
+  BackgroundColor #ffffff
+  ArrowThickness 2
+  defaultFontSize 12
+  ArrowColor #6b7280
+}
+
+skinparam rectangle {
+  BorderColor #d1d5db
+  BorderThickness 1
+}
+
+actor "Client" as client #374151
+
+rectangle "FastAPI Service" as API #f8fafc {
+  rectangle "Document Ingestion\n/ingest" as DOC #e5e7eb
+  rectangle "Chat Generation\n/generate" as CHAT #e5e7eb
+  rectangle "Conversations\n/conversations" as CONV #e5e7eb
+  rectangle "Health Check\n/health" as HEALTH #dbeafe
+}
+
+rectangle "RAG Processing" as RAG #f1f5f9 {
+  rectangle "Document Parser\nPDF/MD/TXT" as PARSER #e5e7eb
+  rectangle "Text Chunking\nRecursive Splitter" as CHUNK #e5e7eb
+  rectangle "Embeddings\nFastEmbed Model" as EMB #e5e7eb
+  rectangle "Reranker\nCross-Encoder" as RERANK #e5e7eb
+}
+
+rectangle "Background Tasks" as BG #f8fafc {
+  rectangle "Scheduler\nAPScheduler" as SCHED #e5e7eb
+  rectangle "Processing Queue" as QUEUE #e5e7eb
+}
+
+rectangle "Storage Layer" as STORAGE #f1f5f9 {
+  rectangle "SQL Database\nDocuments & Conversations" as DB #e5e7eb
+  rectangle "Vector Database\nChromaDB" as VECTOR #e5e7eb
+}
+
+rectangle "AI Services" as AI #dbeafe {
+  rectangle "Ollama Client\nLLM Generation" as LLM #bfdbfe
+}
+
+client - -> DOC : POST document
+DOC - -> DB : store metadata
+DOC - -> SCHED : trigger processing
+SCHED - -> PARSER : load document
+PARSER - -> CHUNK : split text
+CHUNK - -> EMB : generate vectors
+EMB - -> VECTOR : store embeddings
+EMB - -> DB : save chunks
+
+client - -> CHAT : POST query
+CHAT - -> DB : get conversation
+CHAT - -> VECTOR : similarity search
+VECTOR - -> RERANK : rerank results
+RERANK - -> LLM : contextualized prompt
+LLM - -> CHAT : generated response
+CHAT - -> DB : save message
+CHAT - -> client : return answer
+
+client - -> CONV : GET history
+CONV - -> DB : retrieve messages
+DB - -> CONV : conversation data
+CONV - -> client : formatted history
+
+client - -> HEALTH : GET status
+HEALTH - -> DB : check connection
+HEALTH - -> VECTOR : count documents
+HEALTH - -> client : system health
+
+SCHED -.-> QUEUE : batch processing
+QUEUE -.-> PARSER : queued documents
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 12:22:07 EET 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.8+9-Ubuntu-0ubuntu122.04.1
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

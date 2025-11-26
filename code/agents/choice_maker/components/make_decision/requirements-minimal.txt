@@ -1,0 +1,11 @@
+# Minimal requirements for inference only (CPU)
+# Install non-torch packages first from PyPI
+Flask>=3.0
+python-dotenv>=1.0
+requests>=2.31
+numpy>=1.26
+tokenizers>=0.15
+transformers>=4.38
+
+# CPU-only PyTorch (install separately with --index-url flag)
+# torch will be installed via pip with specific index in Dockerfile

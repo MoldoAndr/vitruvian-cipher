@@ -1,0 +1,86 @@
+@startuml
+title Password Checker Microservices
+
+skinparam {
+  shadowing false
+  RoundCorner 15
+  BackgroundColor #ffffff
+  ArrowThickness 2
+  defaultFontSize 12
+  ArrowColor #6b7280
+}
+
+skinparam rectangle {
+  BorderColor #d1d5db
+  BorderThickness 1
+}
+
+actor "Client" as client #374151
+
+rectangle "API Gateway" as GATEWAY #f8fafc {
+  rectangle "Aggregator Service\nPort 9000" as AGG #e5e7eb
+  rectangle "Score Endpoint\n/score" as SCORE #e5e7eb
+  rectangle "Health Check\n/health" as HEALTH #dbeafe
+}
+
+rectangle "Analysis Services" as SERVICES #f1f5f9 {
+  rectangle "PassStrengthAI\nML Neural Network\nPort 8000" as AI #e5e7eb
+  rectangle "zxcvbn Engine\nEntropy Analysis\nPort 8001" as ZXCVBN #e5e7eb
+  rectangle "Breach Checker\nHIBP Integration\nPort 8002" as HIBP #e5e7eb
+}
+
+rectangle "AI Components" as AI_COMP #dbeafe {
+  rectangle "TensorFlow Model\nTrained Classifier" as TF_MODEL #bfdbfe
+  rectangle "Training Dataset\nPassword Corpus" as DATASET #bfdbfe
+}
+
+rectangle "External APIs" as EXT #f1f5f9 {
+  rectangle "HIBP Range API\nBreach Database" as HIBP_API #e5e7eb
+  rectangle "SHA1 Processing\nHash Lookup" as HASH #e5e7eb
+}
+
+rectangle "Analysis Libraries" as LIBS #f8fafc {
+  rectangle "Dropbox zxcvbn\nPattern Detection" as ZXCVBN_LIB #e5e7eb
+  rectangle "Policy Engine\nLength Validation" as POLICIES #e5e7eb
+}
+
+' Main scoring flow
+client --> SCORE : POST password
+SCORE --> AGG : orchestrate scoring
+AGG --> AI : async score request
+AGG --> ZXCVBN : async score request
+AGG --> HIBP : async score request
+
+' AI service processing
+AI --> TF_MODEL : predict strength
+TF_MODEL --> DATASET : trained model
+TF_MODEL --> AGG : normalized score
+
+' zxcvbn processing
+ZXCVBN --> ZXCVBN_LIB : analyze patterns
+ZXCVBN_LIB --> POLICIES : apply rules
+ZXCVBN --> AGG : normalized score
+
+' HIBP processing  
+HIBP --> HASH : SHA1 hash
+HASH --> HIBP_API : range query
+HIBP_API --> HIBP : breach count
+HIBP --> AGG : normalized score
+
+' Response flow
+AGG --> SCORE : combined results
+SCORE --> client : aggregated score
+
+' Health monitoring
+client --> HEALTH : GET status
+HEALTH --> AGG : check services
+AGG --> AI : health status
+AGG --> ZXCVBN : health status
+AGG --> HIBP : health status
+HEALTH --> client : system health
+
+' Configuration
+POLICIES -.-> AGG : length policies
+AGG -.-> AI : conditional disable
+
+@enduml

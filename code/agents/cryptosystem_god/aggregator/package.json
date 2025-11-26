@@ -1,0 +1,27 @@
+{
+  "name": "cryptosystem-gateway",
+  "version": "0.1.0",
+  "description": "Unified HTTP gateway that fans out ciphertext detection requests to multiple agents (CyberChef, dcode.fr, ...).",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "nodemon --watch src --ext mjs src/server.mjs"
+  },
+  "keywords": [
+    "gateway",
+    "cryptosystem",
+    "cyberchef",
+    "dcode",
+    "orchestrator"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pino-http": "^10.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

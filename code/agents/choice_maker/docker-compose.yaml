@@ -1,0 +1,29 @@
+services:
+  make_decision:
+    build:
+      context: ./components/make_decision
+      dockerfile: Dockerfile
+    container_name: choice_maker_decision
+    ports:
+      - "8081:8080"  # host:container; host port shifted to avoid conflicts with other services
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8080
+      - ENTITIES_MODEL_DIR=/app/artifacts/entities
+      - INTENT_MODEL_DIR=/app/artifacts/intent
+    volumes:
+      # Mount artifacts so you can update models without rebuilding
+      - ./components/make_decision/artifacts:/app/artifacts:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - choice_maker_net
+
+networks:
+  choice_maker_net:
+    driver: bridge

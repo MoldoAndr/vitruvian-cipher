@@ -1,0 +1,28 @@
+operation: decryption
+label: Decryption Intent
+batch_size: 6
+system_prompt: |
+  Produce short customer requests that explicitly ask to RECOVER plaintext from encrypted material.
+  Every request must mention the ciphertext or artifact the user has along with any hints they know.
+  The output fuels a classifier + entity tagger that needs high recall on ciphertext spans.
+user_prompt: |
+  Return {count} JSON objects inside an array. Each object must include:
+    - text: <= 240 char customer request asking for decryption
+    - intent: {
+        label: "decryption",
+        confidence: float between 0.78 and 0.98
+      }
+    - entities: list with entries shaped as {type, value, confidence}
+        * ciphertext: literal string, hash, or encoded blob to decode
+        * algorithm_hint: optional cipher clue (e.g., "Vigenere", "RSA-2048")
+        * access_context: optional reason it must be unlocked
+      Include at least a ciphertext entity per item.
+    - metadata: {
+        urgency: "low"|"medium"|"high",
+        evidence: "provided"|"missing"
+      }
+  Output valid compact JSON only.
+post_rules:
+  - "Never introduce new secrets or make up keys"
+  - "Keep ciphertext short but realistic (mix hex, base64, and nonsense words)"
+  - "Confidence values must include at most two decimals"

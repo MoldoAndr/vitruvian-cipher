@@ -1,0 +1,124 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# IDE/project settings
+.idea/
+.vscode/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.tox/
+.nox/
+.ruff_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments & env files
+.env
+.env.*
+.venv/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node/JS
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Java/Gradle
+*.class
+target/
+.gradle/
+
+# C/C++ build outputs
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+
+# Coverage/bench artifacts
+.coverage*
+coverage/
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# Data and model artifacts
+data/
+datasets/
+outputs/
+checkpoints/
+runs/
+models/
+@models/
+transformers_cache/
+huggingface/
+.cache/huggingface/
+.cache/torch/
+*.csv
+*.tsv
+*.jsonl
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.ckpt
+*.pth
+*.pt
+*.pb
+*.tflite
+*.onnx
+*.joblib
+*.pkl
+*.pickle
+*.npz
+*.npy
+*.tar
+*.zip
+*.gz
+*.bin
+*.safetensors
+*.sqlite3
+
+# Caches
+.cache/
+__pypackages__/
+pip-wheel-metadata/
+site-packages/
+.bundle/
+*.pid
+
+# Agent-generated artifacts and datasets
+code/agents/theory_specialist/storage/
+code/agents/choice_maker/components/make_decision/artifacts/
+code/agents/prime_checker/junk/
+code/agents/cryptosystem_god/CyberChef/
+code/agents/password_checker/PWLDSStrength/
+code/agents/theory_specialist/app/__pycache__/
+code/agents/choice_maker/components/**/__pycache__/

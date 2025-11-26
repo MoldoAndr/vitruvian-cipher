@@ -1,0 +1,84 @@
+@startuml
+title Theory Specialist RAG System
+
+skinparam {
+  shadowing false
+  RoundCorner 15
+  BackgroundColor #ffffff
+  ArrowThickness 2
+  defaultFontSize 12
+  ArrowColor #6b7280
+}
+
+skinparam rectangle {
+  BorderColor #d1d5db
+  BorderThickness 1
+}
+
+actor "Client" as client #374151
+
+rectangle "FastAPI Service" as API #f8fafc {
+  rectangle "Document Ingestion\n/ingest" as DOC #e5e7eb
+  rectangle "Chat Generation\n/generate" as CHAT #e5e7eb
+  rectangle "Conversations\n/conversations" as CONV #e5e7eb
+  rectangle "Health Check\n/health" as HEALTH #dbeafe
+}
+
+rectangle "RAG Processing" as RAG #f1f5f9 {
+  rectangle "Document Parser\nPDF/MD/TXT" as PARSER #e5e7eb
+  rectangle "Text Chunking\nRecursive Splitter" as CHUNK #e5e7eb
+  rectangle "Embeddings\nFastEmbed Model" as EMB #e5e7eb
+  rectangle "Reranker\nCross-Encoder" as RERANK #e5e7eb
+}
+
+rectangle "Background Tasks" as BG #f8fafc {
+  rectangle "Scheduler\nAPScheduler" as SCHED #e5e7eb
+  rectangle "Processing Queue" as QUEUE #e5e7eb
+}
+
+rectangle "Storage Layer" as STORAGE #f1f5f9 {
+  rectangle "SQL Database\nDocuments & Conversations" as DB #e5e7eb
+  rectangle "Vector Database\nChromaDB" as VECTOR #e5e7eb
+}
+
+rectangle "AI Services" as AI #dbeafe {
+  rectangle "Ollama Client\nLLM Generation" as LLM #bfdbfe
+}
+
+' Document ingestion flow
+client --> DOC : POST document
+DOC --> DB : store metadata
+DOC --> SCHED : trigger processing
+SCHED --> PARSER : load document
+PARSER --> CHUNK : split text
+CHUNK --> EMB : generate vectors
+EMB --> VECTOR : store embeddings
+EMB --> DB : save chunks
+
+' Chat generation flow
+client --> CHAT : POST query
+CHAT --> DB : get conversation
+CHAT --> VECTOR : similarity search
+VECTOR --> RERANK : rerank results
+RERANK --> LLM : contextualized prompt
+LLM --> CHAT : generated response
+CHAT --> DB : save message
+CHAT --> client : return answer
+
+' Conversation management
+client --> CONV : GET history
+CONV --> DB : retrieve messages
+DB --> CONV : conversation data
+CONV --> client : formatted history
+
+' Health monitoring
+client --> HEALTH : GET status
+HEALTH --> DB : check connection
+HEALTH --> VECTOR : count documents
+HEALTH --> client : system health
+
+' Background processing
+SCHED -.-> QUEUE : batch processing
+QUEUE -.-> PARSER : queued documents
+
+@enduml
