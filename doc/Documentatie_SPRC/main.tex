@@ -1,0 +1,443 @@
+\documentclass[12pt,oneside]{report}
+
+% Pachete de bază (alese din cadrul șablonului robust)
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[
+    backend=bibtex,
+    style=numeric,
+    bibencoding=ascii,
+    sorting=anyt
+]{biblatex}
+\usepackage{caption}
+\usepackage{datetime}
+\usepackage{etoolbox}
+\usepackage{fancyhdr}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{lastpage}
+\usepackage{lscape}
+\usepackage{subcaption}
+\usepackage{tablefootnote}
+\usepackage[titles]{tocloft}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\colorlet{gray}{black} % ensure any gray placeholders render as black
+
+\hypersetup{hidelinks}
+\graphicspath{{images/}}
+\addbibresource{bibliography.bib}
+
+% Formatare titluri și liste
+\setlength{\cftfigindent}{0em}
+\setlength{\cfttabindent}{0em}
+\renewcommand*\contentsname{Cuprins}
+\titleformat{\chapter}[display]{\bfseries\huge}{Capitolul \thechapter:}{0pt}{}[]
+
+% Stiluri pentru antet/subsol
+\setlength{\headheight}{14pt}
+% Micșorează spațiul dintre antet (NECLASIFICAT) și text
+\setlength{\headsep}{8pt}
+\setlength{\footskip}{16pt}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+\fancypagestyle{front}{
+  \fancyhf{}
+  \fancyhead[C]{\small NECLASIFICAT}
+  \fancyfoot[C]{\small NECLASIFICAT\\\thepage}
+}
+\pagestyle{front}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[C]{\small NECLASIFICAT}
+  \fancyfoot[C]{\small NECLASIFICAT\\\thepage\ din \pageref*{LastPage}}
+}
+\newenvironment{frontmatter}{\pagenumbering{roman}}{\newpage \pagenumbering{arabic}}
+\AtBeginDocument{\addtocontents{toc}{\protect\thispagestyle{front}}}
+\addtocontents{lof}{\protect\thispagestyle{front}}
+
+% Comenzi auxiliare
+\newcommand{\textbfit}[1]{\textbf{\textit{#1}}}
+\newenvironment{codeenv}{\fontfamily{cmtt}\selectfont}{\par}
+\DeclareTextFontCommand{\inlinecodenonboxed}{\codeenv}
+\newcommand{\inlinecode}[1]{\mbox{\inlinecodenonboxed{#1}}}
+\newenvironment{abbreviations}{\begin{list}{}{\renewcommand{\makelabel}{\abbrlabel}}}{\end{list}}
+\newcommand{\abbrlabel}[1]{\makebox[3cm][l]{\textbf{#1}\ \dotfill}}
+
+% Configurare metadate (editabil rapid)
+\newcommand{\detaildate}{\color{gray}2025}
+\newcommand{\detailcountry}{România}
+\newcommand{\detailcity}{București}
+\newcommand{\detailparentinstitution}{Ministerul Apărării Naționale}
+\newcommand{\detailuniversity}{Academia Tehnică Militară ``\textit{Ferdinand I}''}
+\newcommand{\detailfaculty}{Facultatea de Sisteme Informatice și Securitate Cibernetică}
+\newcommand{\detailspecialization}{\color{gray}Calculatoare și Sisteme Informatice pentru Securitate si Apărare Națională}
+\newcommand{\detailtitle}{\color{gray}Unelte software bazate pe mecanisme de inteligență artificială aplicată în criptografie}
+\newcommand{\detailauthor}{\color{gray}Std. Sg. Maj. Moldovan Andrei-Gabriel}
+\newcommand{\detailadviser}{\color{gray}Cpt. Subașu Georgiana-Ramona}
+
+\begin{document}
+
+\begin{frontmatter}
+
+% Pagina de titlu
+\begin{titlepage}
+    \begin{center}
+
+        \textbf{\detailcountry} \\
+        \textbf{\detailparentinstitution} \\
+        \textbf{\detailuniversity} \\
+
+        \vspace*{0.5cm}
+
+        \textbf{\detailfaculty} \\
+        \textbf{\detailspecialization} \\
+
+        \vspace*{1.5cm}
+
+        \includegraphics[width=0.4\textwidth]{ATM.png}
+
+        \vspace*{1.5cm}
+
+        \large{\textbf{\detailtitle}}
+
+        \vspace*{0.5cm}
+
+        \normalsize
+        \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+            \textbf{Coordonator Științific} & \textbf{Absolvent}\\
+            \footnotesize \detailadviser & \footnotesize \detailauthor
+        \end{tabular*}
+
+        \vspace*{3cm}
+
+        \vspace*{1.5cm}
+        \textbf{\detailcity} \\
+        \textbf{\detaildate}
+
+    \end{center}
+\end{titlepage}
+
+% Paginare pentru frontmatter
+\setcounter{page}{1}
+
+% Abstract (RO)
+\chapter*{Abstract}
+\thispagestyle{front}
+{\color{gray}
+Lucrarea propune o platformă integrată care combină diferiți agenți AI specializați ca utilitare de criptanaliză și audit de parole pentru a acoperi un flux complet de securitate modernă din punct de vedere criptografic. Sistemul folosește orchestrare prin microservicii containerizate, momentan, și include: un agent de decizie (SecureBERT) pentru extragere de intenție și de entități relevante; un detector de criptosisteme inspirat din CyberChef/dcode.fr; un orchestrator de spargere de hash‑uri cu HashCat și John și generare de parole folosind PassGAN; un agregator de scoruri de parole (rețea neuronală, zxcvbn și HaveIBeenPwned), încă în lucru; un serviciu de testare primalitate/factorizare (YAFU + FactorDB); și un RAG local pentru asistență teoretică în criptografie. Se urmărește realizarea unei platforme centralizate care poate fi folosită local sau în cloud, cu capabilități AI/ML pentru detecție, analiză și suport educațional, punând accent pe modularitate, extindere ulterioară către Kubernetes și aliniere la bune practici de securitate.
+}
+
+\bigskip
+
+{\color{gray}
+    \textbf{Cuvinte cheie:} inteligență artificială, criptanaliză, securitate cibernetică, parole, HashCat, John the Ripper, PassGAN, SecureBERT, RAG local, containerizare, microservicii, Kubernetes, FactorDB, YAFU, zxcvbn, HaveIBeenPwned.
+}
+
+\newpage
+
+% Abstract (EN)
+\chapter*{Abstract (EN)}
+\thispagestyle{front}
+{
+    The thesis introduces an integrated platform that combines specialized AI agents as cryptanalysis and password-audit utilities to cover a complete, modern security workflow from a cryptographic perspective. The system currently relies on containerized microservice orchestration and includes: a decision agent (SecureBERT) for intent and entity extraction; a cryptosystem detector inspired by CyberChef/dcode.fr; a hash-cracking orchestrator using HashCat and John plus PassGAN-generated candidates; a password-score aggregator (neural network, zxcvbn, and HaveIBeenPwned) still in development; a primality/factorization testing service (YAFU + FactorDB); and a local RAG for theoretical assistance in cryptography. The goal is a centralized platform deployable locally or in the cloud, with AI/ML capabilities for detection, analysis, and educational support, emphasizing modularity, future expansion toward Kubernetes, and alignment with security best practices.
+}
+
+\bigskip
+
+{
+    \textbf{Keywords:} artificial intelligence, cryptanalysis, cybersecurity, passwords, HashCat, John the Ripper, PassGAN, SecureBERT, local RAG, containerization, microservices, Kubernetes, FactorDB, YAFU, zxcvbn, HaveIBeenPwned.
+}
+
+\newpage
+
+% Cuprins + liste
+\setcounter{secnumdepth}{3}
+\phantomsection
+\tableofcontents
+\newpage
+
+% Lista de abrevieri
+\chapter*{Listă de Abrevieri}
+\thispagestyle{front}
+\begin{abbreviations}
+    {\color{gray}
+    \item[AI] artificial intelligence
+    \item[ML] machine learning
+    \item[PKI] public key infrastructure
+    \item[RAG] retrieval-augmented generation
+    \item[TLS] transport layer security
+    \item[AES] Advanced Encryption Standard
+    \item[DES/3DES] Data Encryption Standard / Triple DES
+    \item[RSA] Rivest--Shamir--Adleman (public-key cryptography)
+    \item[ECC] elliptic curve cryptography
+    \item[HMAC] hash-based message authentication code
+    \item[AEAD] authenticated encryption with associated data
+    \item[LLM] large language model
+    \item[PQC] post-quantum cryptography
+    }
+\end{abbreviations}
+\newpage
+
+\end{frontmatter}
+
+% -------------------------
+% Conținut capitole
+% -------------------------
+\pagestyle{plain}
+
+\chapter{Introducere}
+\label{ch:introduction}
+
+\section{Context general}
+{\color{gray}
+Criptografia modernă a evoluat cu pași repezi, de la algoritmi simetrici clasici (DES, 3DES), către standarde robuste precum AES și suitele asimetrice (RSA, ECC), odată cu dezvoltarea infrastructurilor PKI și a protocoalelor TLS, precum și apariției PQC. În paralel, progresul AI a adus atât beneficii considerabile, cât și riscuri: modelele de tip ML/LLM pot accelera detecția anomaliilor și analiza traficului criptat, putând fi folosite și pentru generarea de atacuri (phishing, parole, malware) sau pentru asistarea criptanalizei. Astfel, securitatea cibernetică integrează din ce în ce mai mult tehnici AI precum răspuns rapid, corelare de evenimente și întărirea mecanismelor criptografice.
+}
+
+\section{Problema abordată}
+{\color{gray}
+Problema principală urmărește modul în care putem folosi agenți AI specializați pentru a automatiza analiza și răspunsul la amenințări criptografice, de la identificarea algoritmilor și auditul parolelor, până la factorizare pentru testare de securitate, cât și modul în care se poate îmbunătăți educația criptografică. Se observă, de asemenea, lipsa unei platforme integrate care să ofere aceste capabilități într-un mod modular, scalabil și sigur.
+}
+
+\section{Scopul lucrării}
+{\color{gray}
+Scopul lucrării este reprezentat de proiectarea unei platforme integrate, modulare și scalabile care folosește agenți AI pentru identificare de algoritmi, audit de parole, factorizare / teste criptografie, asistență teoretică, astfel încât detecția, analiza și răspunsul la amenințări să fie automatizate, reproductibile și ușor de folosit, atât local, cât și în cloud.
+}
+
+\section{Obiective specifice}
+\begin{itemize}
+    \item Realizarea și testarea robustă a unei părți din agenții AI propuși.
+    \item Integrarea tuturor agenților într-o infrastructură comună.
+    \item Crearea unei soluții robuste de deploy și testare.
+    \item Crearea unui Web Frontend și a unui Client CLI.
+    \item Legarea componentelor într-un flux coerent.
+\end{itemize}
+
+\chapter{Fundamente Teoretice}
+\label{ch:foundations}
+
+\section{Elemente de bază ale criptografiei}
+Criptografia urmărește să asigure confidențialitate, integritate, autentificare și nerepudiere pentru date transmise pe canale nesigure. Se împart două familii majore: criptografia simetrică (aceeași cheie pentru criptare/decriptare) și criptografia asimetrică (pereche publică/privată), completate de funcții hash și coduri de autentificare a mesajelor (MAC/HMAC) \cite{stinson,schneier,stallings}. Un criptosistem se definește formal prin spațiul mesajelor, al textelor cifrate, al cheilor și printr-o familie de funcții de criptare/decriptare parametrizate de cheie, iar securitatea se descrie prin modele de adversar și noțiuni riguroase de rezistență la atac. În practică, protocoalele moderne combină aceste primitive cu management de chei (generare, stocare, rotație) și cu mecanisme de transport securizat (ex. TLS), fiind fundamentele pe care se sprijină soluția propusă.
+
+\subsection{Definiții și clasificare}
+{\color{gray}
+Include definițiile pentru criptografie simetrică, criptografie asimetrică, funcții hash și alte primitive relevante. Discută diferențele între acestea și cazurile tipice de utilizare.
+}
+
+\subsection{Standardizare}
+{\color{gray}
+Enumeră standardele și organismele relevante (NIST, IEEE, RFC, GDPR, standarde militare) și menționează rolul lor în conformarea soluției propuse.
+}
+
+\section{Elemente fundamentale de inteligență artificială}
+{\color{gray}
+Descrie conceptele cheie din domeniul inteligenței artificiale care vor fi folosite în lucrare.
+}
+
+\subsection{Paradigme de învățare}
+{\color{gray}
+Discută despre învățarea supravegheată, nesupravegheată și prin întărire, raportându-te la scenariul lucrării.
+}
+
+\subsection{Modele generative și transformere}
+{\color{gray}
+Introduce arhitecturile Transformer, modelele generative moderne și implicațiile lor în securitatea cibernetică.
+}
+
+\subsection{GAN și LLM în securitate}
+{\color{gray}
+Prezintă modul în care GAN și LLM sunt utilizate în detecția și generarea de conținut relevant pentru securitate, incluzând exemple recente.
+}
+
+\section{Conexiunea AI--Criptografie}
+{\color{gray}
+Leagă componentele AI și criptografie pentru a fundamenta soluția propusă.
+}
+
+\subsection{Domenii de aplicare}
+{\color{gray}
+Analizează scenarii precum cryptoanalysis asistată de AI, generarea de parole, detecția anomaliilor sau automatizarea proceselor de securitate.
+}
+
+\subsection{Limitări curente}
+{\color{gray}
+Identifică limitările actuale ale abordărilor combinate AI--criptografie și explică modul în care soluția propusă răspunde acestor provocări.
+}
+
+\chapter{Soluția Propusă}
+\label{ch:proposed-solution}
+
+\section{Arhitectura generală}
+{\color{gray}
+Descrie arhitectura macro a sistemului și include o diagramă care evidențiază principalele componente și fluxuri de date.
+}
+
+\section{Metodologie și justificarea alegerilor}
+{\color{gray}
+Explică abordarea metodologică, pașii parcurși și motivele pentru alegerea tehnologiilor și a modelelor AI.
+}
+
+\subsection{Selecția tehnologiilor}
+{\color{gray}
+Detaliază limbajele, cadrele și infrastructura utilizate și argumentează selecția lor.
+}
+
+\subsection{Modele AI utilizate}
+{\color{gray}
+Prezintă modelele AI integrate, modul în care sunt antrenate, configurate și orchestrate.
+}
+
+\subsection{Principii de securitate}
+{\color{gray}
+Descrie măsurile de securitate și mecanismele de protecție integrate încă din etapa de proiectare.
+}
+
+\section{Descrierea componentelor}
+{\color{gray}
+Analizează fiecare componentă a soluției folosind paragrafe dedicate ce includ rolul, funcționarea, diagrama și justificarea tehnologică.
+}
+
+\subsection{Modul AI}
+{\color{gray}
+Detaliază agentul AI, capabilitățile, datele utilizate și modul de interacțiune cu celelalte componente.
+}
+
+\subsection{Modul criptografic}
+{\color{gray}
+Descrie serviciile criptografice, protocoalele implementate și modul de integrare cu orchestrarea AI.
+}
+
+\subsection{Orchestrator și interfețe}
+{\color{gray}
+Prezintă modul de coordonare între componente, fluxurile de lucru și interfețele expuse (CLI, API, UI).
+}
+
+\chapter{Implementare}
+\label{ch:implementation}
+
+\section{Mediu de dezvoltare}
+{\color{gray}
+Detaliază uneltele de dezvoltare, sistemul de operare, dependințele și configurațiile cheie.
+}
+
+\section{Framework-uri și librării}
+{\color{gray}
+Listează și descrie framework-urile, librăriile și modelele AI utilizate, inclusiv versiunile.
+}
+
+\section{Containerizare și infrastructură}
+{\color{gray}
+Prezintă modul în care aplicația este containerizată și orchestrată (Docker, docker-compose, Kubernetes etc.).
+}
+
+\section{Măsuri de securitate aplicate}
+{\color{gray}
+Enumeră controalele de securitate implementate (hardening, politici, rotație de chei, audit).
+}
+
+\section{Automatizare}
+{\color{gray}
+Descrie scripturile, pipeline-urile CI/CD sau orice automatizare care susține proiectul.
+}
+
+\chapter{Testare și Evaluare}
+\label{ch:testing}
+
+\section{Metodologia de testare}
+{\color{gray}
+Descrie strategia generală de testare și criteriile utilizate pentru a valida soluția.
+}
+
+\subsection{Teste unitare}
+{\color{gray}
+Prezintă acoperirea testelor unitare, instrumentele folosite și exemple relevante.
+}
+
+\subsection{Teste de integrare}
+{\color{gray}
+Detaliază scenariile de integrare și modul în care componentele sunt validate împreună.
+}
+
+\subsection{Teste de performanță}
+{\color{gray}
+Specifică metodologiile și instrumentele folosite pentru măsurarea performanței și scalabilității.
+}
+
+\section{Metrici și criterii de evaluare}
+{\color{gray}
+Definește indicatorii cantitativi și calitativi utilizați în analizarea rezultatelor testelor.
+}
+
+\section{Validarea rezultatelor}
+{\color{gray}
+Analizează rezultatele obținute în raport cu obiectivele propuse și discută implicațiile.
+}
+
+\chapter{Rezultate și Discuții}
+\label{ch:results}
+
+\section{Benchmark-uri comparative}
+{\color{gray}
+Prezintă rezultate numerice și comparații cu soluții similare sau baseline-uri.
+}
+
+\section{Analiza performanței}
+{\color{gray}
+Evaluează latența, throughput-ul, utilizarea resurselor și scalabilitatea.
+}
+
+\section{Beneficii și limitări}
+{\color{gray}
+Rezumă beneficiile soluției și limitele identificate în urma testării.
+}
+
+\section{Direcții de îmbunătățire}
+{\color{gray}
+Propune optimizări și extensii viitoare.
+}
+
+\chapter{Concluzii}
+\label{ch:conclusions}
+
+\section{Gradul de atingere a obiectivelor}
+{\color{gray}
+Recapitulează modul în care au fost îndeplinite obiectivele definite în introducere.
+}
+
+\section{Contribuții}
+{\color{gray}
+Enumeră contribuțiile teoretice și practice ale lucrării.
+}
+
+\section{Impact și dezvoltări viitoare}
+{\color{gray}
+Evaluează impactul potențial și prezintă direcții de continuare a cercetării.
+}
+
+\chapter*{Bibliografie}
+\addcontentsline{toc}{chapter}{Bibliografie}
+{\color{gray}
+}
+
+\printbibliography[heading=none]
+
+\chapter{Anexe}
+\label{ch:annexes}
+
+\section{Listă de diagrame suplimentare}
+{\color{gray}
+Include diagrame detaliate (de exemplu, PlantUML, diagrame de secvență sau arhitecturi alternative) care completează prezentarea din capitolele principale.
+}
+
+\section{Configurații tehnice}
+{\color{gray}
+Prezintă fișiere de configurare relevante (de exemplu, \inlinecode{docker-compose.yml}, fișiere de mediu, politici de securitate) și explică modul în care acestea sunt utilizate.
+}
+
+\section{Scripturi și manual de utilizare}
+{\color{gray}
+Include scripturile auxiliare și un ghid succint de utilizare a aplicației pentru diferitele roluri implicate.
+}
+
+\end{document}
