@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  react_frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    ports:
+      - "${REACT_FRONTEND_PORT:-5173}:80"
+    restart: unless-stopped

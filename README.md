@@ -31,7 +31,7 @@ An integrated bachelor-thesis platform that combines specialised AI agents, cryp
   pip install -r requirements.txt
   python scripts/train_intent.py --model-name cisco-ai/SecureBERT2.0-base
   ```
-- Docker Compose definitions (both `.yml` and `.yaml`) let you spin up the inference API; `run_all.sh` will pick up whichever file is present.
+- Docker Compose definitions (both `.yml` and `.yaml`) let you spin up the inference API; `code/run_all.sh` will pick up whichever file is present.
 
 ### Cryptosystem God (`code/agents/cryptosystem_god`)
 - Bundles three services: a CyberChef Magic wrapper, a dcode.fr-inspired heuristic engine, and an aggregator on port 8090.
@@ -80,8 +80,8 @@ An integrated bachelor-thesis platform that combines specialised AI agents, cryp
 - Detailed architecture, schema, and configuration instructions live in `Software_Details.md`.
 
 ### Orchestration Helper
-- `code/agents/run_all.sh` brings up the password checker, theory specialist, and choice maker stacks (if their Compose files exist) and reminds you to open the mock interface manually.
-- All services are expected to listen on localhost ports 9000, 8100, and 8081 respectively once the script completes.
+- `code/run_all.sh` brings up the password checker, theory specialist, and choice maker stacks (if their Compose files exist), builds & runs the React interface inside Docker, and reminds you to open the mock interface manually.
+- All services are expected to listen on localhost ports 9000, 8100, 8081, and 5173 respectively once the script completes.
 
 ## Interfaces (`code/interface`)
 - `mock/` is a static HTML/JS dashboard that monitors service health, runs password checks, relays questions to the RAG API, ingests documents, and queries the choice maker.
@@ -106,7 +106,7 @@ An integrated bachelor-thesis platform that combines specialised AI agents, cryp
 - Citations and bibliography sources are tracked in `articole/citations.md` and `doc/Documentatie/thesis/bibliography.bib`.
 
 ## Suggested Verify Steps
-- Run `code/agents/run_all.sh` to confirm the primary agents start and report healthy.
+- Run `code/run_all.sh` to confirm the primary agents start, the React Docker container is serving content, and the mock interface is reachable.
 - Hit `http://localhost:9000/score` and `http://localhost:8100/health` to validate the password checker and theory specialist stacks.
 - Execute `pytest` or targeted unit tests inside each Python subproject once environments are created (no central test runner is provided).
 

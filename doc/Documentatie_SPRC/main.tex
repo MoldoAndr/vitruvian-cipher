@@ -137,21 +137,6 @@ Lucrarea propune o platformă integrată care combină diferiți agenți AI spec
 
 \newpage
 
-% Abstract (EN)
-\chapter*{Abstract (EN)}
-\thispagestyle{front}
-{
-    The thesis introduces an integrated platform that combines specialized AI agents as cryptanalysis and password-audit utilities to cover a complete, modern security workflow from a cryptographic perspective. The system currently relies on containerized microservice orchestration and includes: a decision agent (SecureBERT) for intent and entity extraction; a cryptosystem detector inspired by CyberChef/dcode.fr; a hash-cracking orchestrator using HashCat and John plus PassGAN-generated candidates; a password-score aggregator (neural network, zxcvbn, and HaveIBeenPwned) still in development; a primality/factorization testing service (YAFU + FactorDB); and a local RAG for theoretical assistance in cryptography. The goal is a centralized platform deployable locally or in the cloud, with AI/ML capabilities for detection, analysis, and educational support, emphasizing modularity, future expansion toward Kubernetes, and alignment with security best practices.
-}
-
-\bigskip
-
-{
-    \textbf{Keywords:} artificial intelligence, cryptanalysis, cybersecurity, passwords, HashCat, John the Ripper, PassGAN, SecureBERT, local RAG, containerization, microservices, Kubernetes, FactorDB, YAFU, zxcvbn, HaveIBeenPwned.
-}
-
-\newpage
-
 % Cuprins + liste
 \setcounter{secnumdepth}{3}
 \phantomsection
@@ -221,49 +206,28 @@ Scopul lucrării este reprezentat de proiectarea unei platforme integrate, modul
 Criptografia urmărește să asigure confidențialitate, integritate, autentificare și nerepudiere pentru date transmise pe canale nesigure. Se împart două familii majore: criptografia simetrică (aceeași cheie pentru criptare/decriptare) și criptografia asimetrică (pereche publică/privată), completate de funcții hash și coduri de autentificare a mesajelor (MAC/HMAC) \cite{stinson,schneier,stallings}. Un criptosistem se definește formal prin spațiul mesajelor, al textelor cifrate, al cheilor și printr-o familie de funcții de criptare/decriptare parametrizate de cheie, iar securitatea se descrie prin modele de adversar și noțiuni riguroase de rezistență la atac. În practică, protocoalele moderne combină aceste primitive cu management de chei (generare, stocare, rotație) și cu mecanisme de transport securizat (ex. TLS), fiind fundamentele pe care se sprijină soluția propusă.
 
 \subsection{Definiții și clasificare}
-{\color{gray}
-Include definițiile pentru criptografie simetrică, criptografie asimetrică, funcții hash și alte primitive relevante. Discută diferențele între acestea și cazurile tipice de utilizare.
-}
+Din punct de vedere al clasificării, criptografia acoperă o suită vastă de primitive: criptare simetrică, criptare asimetrică, diverse criptosisteme (bloc, flux, hibrid), mecanisme de autentificare, funcții hash, semnături digitale, management al cheilor, generatoare pseudo-aleatoare și protocoale de distribuire a secretelor. Criptografia simetrică utilizează aceeași cheie pentru criptare și decriptare, oferind performanțe foarte bune și fiind preferată pentru volume mari de date, dar presupune existența unui canal sigur pentru distribuirea cheilor (exemplu: AES). Criptografia asimetrică (cu cheie publică) folosește o pereche publică/privată pentru a facilita schimbul securizat de chei, autentificarea și semnăturile digitale (RSA, ElGamal), însă costul computațional este mai ridicat.
+
+Funcțiile hash criptografice produc un digest de lungime fixă dintr-un mesaj de lungime variabilă, fiind concepute să reziste la inversare și coliziuni, motiv pentru care sunt folosite la verificarea integrității și la stocarea sigură a parolelor. Alte primitive importante includ codurile de autentificare a mesajului (MAC/HMAC), care combină o cheie secretă cu o funcție hash sau cu o schemă de criptare pentru a valida autenticitatea și integritatea; scheme de semnătură digitală ce oferă non-repudiere fără partajarea cheii; generatoare de numere aleatoare criptografic sigure; și protocoale de negociere a cheilor, precum Diffie–Hellman sau ECDH. În practica modernă, sistemele combină aceste primitive: asimetria este folosită pentru a stabili secrete, simetria pentru traficul intens, hash-ul și MAC-urile pentru integritate și autentificare, iar managementul cheilor (generare, rotație, revocare) asigură durabilitatea modelului de securitate \cite{handbook_applied_crypto}.
 
 \subsection{Standardizare}
-{\color{gray}
-Enumeră standardele și organismele relevante (NIST, IEEE, RFC, GDPR, standarde militare) și menționează rolul lor în conformarea soluției propuse.
-}
+Organismele de standardizare în criptografie sunt esențiale pentru a asigura interoperabilitatea între sisteme, validarea algoritmilor criptografici și adaptarea tehnologiei la amenințările emergente, inclusiv cele cuantice. Exemple cheie includ NIST (FIPS 140 pentru module criptografice, FIPS 197/AES și seria FIPS 203–205 pentru algoritmi post-cuanți), ISO/IEC (ISO/IEC 19790 privind cerințele de securitate și ISO/IEC 18033 pentru algoritmi de criptare), ETSI (TS 104 015 dedicat criptografiei cuantice), ITU (familia ITU-T Y.3800 pentru distribuția cuantică de chei), BSI (TR-02102 cu recomandări de algoritmi) și IETF (RFC 5280 pentru PKI X.509). Ele stabilesc cerințele de certificare, mecanismele de testare și ghidurile de implementare care ghidează atât soluțiile civile, cât și cele militare \cite{cryptographic_standardization}.
 
 \section{Elemente fundamentale de inteligență artificială}
-{\color{gray}
-Descrie conceptele cheie din domeniul inteligenței artificiale care vor fi folosite în lucrare.
-}
-
-\subsection{Paradigme de învățare}
-{\color{gray}
-Discută despre învățarea supravegheată, nesupravegheată și prin întărire, raportându-te la scenariul lucrării.
-}
-
-\subsection{Modele generative și transformere}
-{\color{gray}
-Introduce arhitecturile Transformer, modelele generative moderne și implicațiile lor în securitatea cibernetică.
-}
-
-\subsection{GAN și LLM în securitate}
-{\color{gray}
-Prezintă modul în care GAN și LLM sunt utilizate în detecția și generarea de conținut relevant pentru securitate, incluzând exemple recente.
-}
+Se folosesc mai multe concepte de IA aplicate:
+\begin{itemize}
+    \item învățare supravegheată și clasificare semantică (modelul SecureBERT din componenta de decizie pentru extragerea intențiilor și entităților);
+    \item embeddings obținute cu arhitecturi Transformer, folosite la căutare semantică în serviciul teoretic;
+    \item RAG, care combină recuperarea de fragmente, reranking și un model LLM pentru a genera răspunsuri cu surse;
+    \item reranking al rezultatelor de căutare pe baza scorurilor ML pentru a prioritiza contextul relevant;
+    \item data augmentation în generatorul de întrebări (questions\_generator) pentru a extinde seturile de antrenare cu variații și parafrazări sintetice;
+    \item ensemble și agregare de scoruri (password checker combină rețea neuronală, zxcvbn și HIBP);
+    \item inferență optimizată prin ONNX și containerizare pentru performanță și portabilitate;
+    \item rolul LLM-ului în RAG: răspunsuri naturale, contextualizate, cu halucinații reduse prin ancorare în fragmentele recuperate.
+\end{itemize}
 
 \section{Conexiunea AI--Criptografie}
-{\color{gray}
-Leagă componentele AI și criptografie pentru a fundamenta soluția propusă.
-}
-
-\subsection{Domenii de aplicare}
-{\color{gray}
-Analizează scenarii precum cryptoanalysis asistată de AI, generarea de parole, detecția anomaliilor sau automatizarea proceselor de securitate.
-}
-
-\subsection{Limitări curente}
-{\color{gray}
-Identifică limitările actuale ale abordărilor combinate AI--criptografie și explică modul în care soluția propusă răspunde acestor provocări.
-}
+AI-ul este din ce în ce mai implicat în criptografie, atât ca instrument de analiză, cât și ca obiect al securizării. Modele AI specializate (ex. SecureBERT) pot automatiza identificarea algoritmilor și clasificarea cererilor tehnice, asistând în alegerea metodelor criptanalitice adecvate (brute-force sau dicționar), conform tiparelor datelor \cite{kim2024_cryptanalysis,hu2025_cnn}. Integrarea tehnicilor de Retrieval-Augmented Generation permite asistenților AI să furnizeze recomandări fundamentate pe literatura de specialitate și standarde (ex. FIPS 140-3, BSI TR-02102), susținând tranziția către algoritmi post-cuantici și reducând riscul de halucinații \cite{dong2025_chatiot}. În evaluarea parolelor, se folosesc modele neuronale antrenate pe parole comune combinate cu estimatori euristici (zxcvbn) și baze de date publice precum HIBP, ceea ce îmbunătățește precizia scorării și a analizei de risc \cite{mo2025_password_strength,wheeler2016_zxcvbn}. Generarea de scenarii și date sintetice prin modele generative facilitează testarea rezilienței sistemelor, iar sistemele de detecție bazate pe învățare profundă pot identifica comportamente suspecte în trafic sau log-uri \cite{xu2025_ids}. Criptografia contribuie la protecția AI prin tehnici precum criptarea omomorfă, calculul multipartit securizat sau privacy diferențială, folosite pentru protejarea datelor și a modelelor în timpul antrenării sau inferenței \cite{lee2022_ppml}. Pentru integritatea modelelor, se propun watermark-uri digitale și semnături criptografice atașate acestora. Totuși, AI introduce riscuri semnificative, precum prompt injection sau exfiltrarea secretelor stocate, motiv pentru care sunt necesare guardrails, monitorizare și evaluare continuă a comportamentului modelului \cite{li2025_llm_security}.
 
 \chapter{Soluția Propusă}
 \label{ch:proposed-solution}
