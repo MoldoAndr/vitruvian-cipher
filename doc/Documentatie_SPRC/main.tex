@@ -23,6 +23,7 @@
 \usepackage{subcaption}
 \usepackage{tablefootnote}
 \usepackage{tabularx}
+\usepackage{indentfirst}
 \usepackage[titles]{tocloft}
 \usepackage{titlesec}
 \usepackage{xcolor}
@@ -430,18 +431,48 @@ După terminarea implementării funcționalităților componentelor, voi \textbf
 
 \section{Descrierea componentelor}
 
-\subsection{Modul AI}
+\subsection{Sistem RAG pentru asistență teoretică}
+Această componentă oferă suport teoretic în criptografie printr-un sistem RAG. Utilizează o bază de date vectorială (ChromaDB) pentru stocarea embeddings-urilor documentelor relevante, generate cu un model Transformer. La primirea unei întrebări, sistemul recuperează fragmente relevante, le rerankează și le integrează într-un răspuns generat de un model LLM, asigurând astfel acuratețea și relevanța informațiilor furnizate.
+Permite functionalități de ingestie a documentelor noi, actualizarea bazei de cunoștințe și optimizarea continuă a procesului de recuperare și generare a răspunsurilor.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.00\textwidth]{images/diagarama_theory_specialist.pdf}
+    \caption{Diagrama arhitectură Sistem RAG pentru asistență teoretică}
+\end{figure}
+\newpage
+\subsection{Modul verificare parole}
+Această componentă evaluează puterea parolelor folosind un model de rețea neuronală antrenat pe un set divers de parole, combinat cu algoritmul zxcvbn și verificarea în baza de date HaveIBeenPwned. Această abordare hibridă oferă o evaluare precisă a securității parolelor, identificând atât complexitatea lor, cât și dacă au fost compromise în breșe cunoscute.
 
-\subsection{Modul criptografic}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/diagarama_password_checker.pdf}
+    \caption{Diagrama arhitectură modul verificare parole}
+\end{figure}
+O implementare viitoare va include un sistem de feedback care să permită utilizatorilor să înțeleagă mai bine riscurile asociate parolelor slabe și să primească recomandări personalizate pentru îmbunătățirea securității acestora.
+\newpage
+\subsection{Modul detectare intenție și entități}
+Acest modul utilizează un model NLP bazat pe arhitectura Transformer pentru a extrage intenția și entitățile relevante din cererile utilizatorilor. Acesta ajută la direcționarea corectă a cererilor către agenții specializați, asigurând o interpretare precisă a nevoilor utilizatorului.
 
-\subsection{Orchestrator și interfețe}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/diagarama_choice_maker_make_choice.pdf}
+    \caption{Diagrama componentă make\_choice pentru detectarea intenției și entităților}
+\end{figure}
+
+Pentru a îmbunătăți performanța modelului, am implementat tehnici de data augmentation, generând variații și parafrazări sintetice ale setului de antrenare. Acest lucru ajută la creșterea robustetei modelului în fața diversității limbajului natural.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.38\textwidth]{images/diagarama_choice_maker_generate_questions.pdf}
+    \caption{Diagrama componentă generate\_questions pentru generarea corpusului TOON}
+\end{figure}
 
 \chapter{Implementare}
 \label{ch:implementation}
 
 \section{Mediu de dezvoltare}
 
-\section{Framework-uri și librării}
+\section{Framework-uri și biblioteci utilizate}
 
 \section{Containerizare și infrastructură}
 

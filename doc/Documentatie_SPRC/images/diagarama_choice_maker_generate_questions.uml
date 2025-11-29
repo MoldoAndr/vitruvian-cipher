@@ -1,0 +1,62 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam backgroundColor #FFFFFF
+skinparam nodesep 40
+skinparam ranksep 30
+skinparam component {
+    BackgroundColor #e5eaeeff
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #000000
+    FontSize 10
+}
+skinparam database {
+    BackgroundColor #e0e7ebff
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #000000
+    FontSize 10
+}
+skinparam rectangle {
+    BackgroundColor #e2e5e7ff
+    BorderColor #000000
+    BorderThickness 2
+    FontColor #000000
+    FontSize 11
+    FontStyle bold
+}
+skinparam arrow {
+    Color #000000
+    Thickness 2
+}
+skinparam linetype ortho
+
+allowmixing
+top to bottom direction
+
+component "Input" as Input
+
+rectangle "Generare întrebări" as genQ{
+    component "DatasetGenerator" as Generator
+    component "Prompts" as Prompts
+    component "Validator" as Validator
+}
+
+rectangle "LLM" {
+    component "Provider" as Provider
+}
+
+rectangle "Corpus" {
+    component "TOON" as Corpus
+}
+
+Input -down-> genQ
+Prompts -down-> Generator
+Generator <-> Provider
+Generator -down-> Validator
+Validator -down-> Corpus
+
+@enduml
