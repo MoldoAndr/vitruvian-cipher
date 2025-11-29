@@ -22,10 +22,45 @@
 \usepackage{lscape}
 \usepackage{subcaption}
 \usepackage{tablefootnote}
+\usepackage{tabularx}
 \usepackage[titles]{tocloft}
 \usepackage{titlesec}
 \usepackage{xcolor}
+\usepackage{listings}
 \colorlet{gray}{black} % ensure any gray placeholders render as black
+
+% Configurare listings pentru syntax highlighting
+\definecolor{codegreen}{rgb}{0.0,0.5,0.0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codeblue}{rgb}{0.0,0.0,0.7}
+\definecolor{codeorange}{rgb}{0.8,0.4,0.0}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+\lstdefinestyle{restapi}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue}\bfseries,
+    stringstyle=\color{codeorange},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black},
+    morekeywords={curl,POST,GET,Content-Type},
+    morestring=[b]",
+    literate={-X}{{\textcolor{codepurple}{-X}}}2
+             {-H}{{\textcolor{codepurple}{-H}}}2
+             {-d}{{\textcolor{codepurple}{-d}}}2
+             {http}{{\textcolor{codeblue}{http}}}4
+             {localhost}{{\textcolor{codegreen}{localhost}}}9
+}
 
 \hypersetup{hidelinks}
 \graphicspath{{images/}}
@@ -163,7 +198,6 @@ Lucrarea propune o platformă integrată care combină diferiți agenți AI spec
     \item[ETSI] European Telecommunications Standards Institute
     \item[FIPS] Federal Information Processing Standards
     \item[HIBP] Have I Been Pwned
-    \item[HMAC] Hash-based Message Authentication Code
     \item[LLM] Large Language Model
     \item[MAC] Message Authentication Code
     \item[ML] Machine Learning
@@ -172,7 +206,6 @@ Lucrarea propune o platformă integrată care combină diferiți agenți AI spec
     \item[PKI] Public Key Infrastructure
     \item[PQC] Post-Quantum Cryptography
     \item[RAG] Retrieval-Augmented Generation
-    \item[REST] Representational State Transfer
     \item[RFC] Request for Comments
     \item[RSA] Rivest--Shamir--Adleman
     \item[TLS] Transport Layer Security
@@ -274,11 +307,111 @@ Fiecare dintre agenți la rândul lui poate fi văzut ca un microserviciu contai
     \label{fig:ai-agents}
 \end{figure}
 
-\section{Metodologie și justificarea alegerilor}
-
 \subsection{Selecția tehnologiilor}
+Alegerea stack-ului tehnologic a fost ghidată de criterii precum \textbf{performanță}, \textbf{maturitate}, \textbf{ușurința integrării} și \textbf{compatibilitatea cu containerizarea}. Tabelul~\ref{tab:tehnologii} prezintă principalele tehnologii utilizate.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Principalele tehnologii utilizate în proiect}
+\label{tab:tehnologii}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Tehnologie} & \textbf{Utilizare} & \textbf{Justificare} \\
+\hline
+FastAPI + Uvicorn & Password Checker, Theory Specialist & Framework \textbf{async} rapid, tipizare Pydantic, răspuns JSON facil \\
+\hline
+Flask & Prime Checker, Choice Maker & Microframework \textbf{simplu} pentru endpointuri sync, ușor de containerizat \\
+\hline
+TensorFlow/Keras & Password Checker (PassStrengthAI) & Model de \textbf{clasificare} parole; Keras simplifică inferența \\
+\hline
+PyTorch + Transformers & Choice Maker (Intent/NER) & Inferență \textbf{NLP} cu modele pre-antrenate, ecosistem matur \\
+\hline
+ChromaDB + ONNX & Theory Specialist (RAG) & \textbf{Vector DB} + embeddings pentru căutare semantică eficientă \\
+\hline
+LangChain & Theory Specialist & \textbf{Orchestrare RAG}: ingestie, recuperare, chain-uri \\
+\hline
+Docker + Compose & Toate serviciile & \textbf{Izolare}, reproducibilitate și orchestrare locală \\
+\hline
+React 19 + Vite & Interfața web & Stack modern pentru UI \textbf{rapid}, build/dev performant \\
+\hline
+Nginx & Servire SPA & Servire \textbf{statică} performantă în container \\
+\hline
+YAFU + GMP & Prime Checker & Unelte de \textbf{factorizare} numerică performante \\
+\hline
+\end{tabularx}
+\end{table}
 
 \subsection{Principii de rețelistică}
+Arhitectura de rețea a proiectului se bazează pe principii de \textbf{microservicii containerizate} care comunică prin \textbf{REST API} peste HTTP. Fiecare agent este izolat într-un container Docker propriu, iar orchestrarea se realizează prin \textbf{Docker Compose}, care creează automat o rețea bridge cu \textbf{DNS intern} pentru rezolvarea numelor serviciilor. Acest model permite scalare independentă, înlocuire ușoară a componentelor și debugging izolat.
+
+Comunicația între servicii folosește \textbf{REST} (Representational State Transfer) -- un stil arhitectural bazat pe resurse identificate prin URI-uri și operații standard HTTP (GET, POST). Alegerea REST se justifică prin: interoperabilitate universală, tooling bogat (OpenAPI, Swagger), ușurința testării cu \texttt{curl}/Postman și compatibilitate nativă cu frontend-ul React.
+
+Pentru apeluri HTTP interne și externe se utilizează clienți robuști precum \textbf{httpx} (Python, async/sync) și \textbf{requests} cu retry/backoff, asigurând \textbf{toleranță la erori} și timeouts configurabile. Serviciile externe integrate includ \textbf{OpenAI API} (generare întrebări), \textbf{HaveIBeenPwned} (verificare breșe parole) și \textbf{FactorDB} (primalitate). Tabelul~\ref{tab:retea} detaliază elementele de rețea și rolul lor.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Elemente de rețelistică și comunicație}
+\label{tab:retea}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Element} & \textbf{Rol / Utilizare} & \textbf{Justificare} \\
+\hline
+REST API & Toate serviciile (FastAPI, Flask, Express) & Interoperabilitate simplă, tooling bogat, ușor de testat \\
+\hline
+Docker Network (bridge) & Rețea virtuală cu DNS per serviciu & DNS automat între containere, trafic izolat de host \\
+\hline
+Port Mapping & Ex: 9000→8000, 8081→8080, 8100→8000 & Acces local de pe host și din browser \\
+\hline
+CORS Middleware & FastAPI, Flask, Express & Permite apeluri cross-origin din React \\
+\hline
+httpx (async/sync) & Password Checker, Choice Maker & Timeout/retry robust pentru fan-out intern \\
+\hline
+Health Endpoints & /health pe toate serviciile & Liveness checks, debugging rapid \\
+\hline
+OpenAI / HIBP / FactorDB & API-uri externe consumate & Refolosire surse specializate externe \\
+\hline
+Nginx (reverse proxy) & Servire SPA React & Cache static, fallback index.html pentru routing \\
+\hline
+\end{tabularx}
+\end{table}
+
+\textbf{Exemple de apeluri REST:}
+
+Tabelul~\ref{tab:rest-examples} prezintă două exemple concrete de apeluri REST către microserviciile proiectului.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Exemple de apeluri REST API}
+\label{tab:rest-examples}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Operație} & \textbf{Serviciu} & \textbf{Descriere} \\
+\hline
+Ingestie document RAG & Theory Specialist (:8100) & Încărcare document PDF în baza vectorială \\
+\hline
+Intent + Entity Extraction & Choice Maker (:8081) & Extragere intenție și entități din text \\
+\hline
+\end{tabularx}
+\end{table}
+
+\textbf{1. Ingestie document RAG} (Theory Specialist, port 8100):
+\begin{lstlisting}[style=restapi]
+curl -X POST http://localhost:8100/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"document_path": "/app/documents/crypto.pdf",
+       "document_type": "pdf"}'
+\end{lstlisting}
+
+\textbf{2. Intent + Entity Extraction} (Choice Maker, port 8081):
+\begin{lstlisting}[style=restapi]
+curl -X POST http://localhost:8081/predict \
+  -H "Content-Type: application/json" \
+  -d '{"operation": "entity_extraction",
+       "text": "Encrypt payroll with AES-256-GCM"}'
+\end{lstlisting}
 
 \subsection{Principii de securitate}
 

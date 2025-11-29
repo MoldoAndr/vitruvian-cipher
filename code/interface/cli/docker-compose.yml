@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  agent-cli:
+    build: .
+    container_name: agent-cli
+    stdin_open: true
+    tty: true
+    environment:
+      - PASSWORD_CHECKER_URL=http://password-checker:9000
+      - THEORY_SPECIALIST_URL=http://theory-specialist:8100
+      - CHOICE_MAKER_URL=http://choice-maker:8081
+      - TERM=xterm-256color
+    networks:
+      - agent-network
+    volumes:
+      - cli-history:/root/.agent-cli
+
+networks:
+  agent-network:
+    external: true
+
+volumes:
+  cli-history:
