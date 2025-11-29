@@ -2,6 +2,8 @@
 
 An integrated bachelor-thesis platform that combines specialised AI agents, cryptanalysis utilities, password auditing services, and a locally hosted RAG system tailored for modern cryptography workflows.
 
+![Project logo](logo.jpeg)
+
 ## Highlights
 - Modular microservices for cipher identification, password scoring, prime analysis, and educational RAG assistance
 - End-to-end orchestration scripts and Docker Compose stacks for repeatable local deployments

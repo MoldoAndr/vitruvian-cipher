@@ -13,8 +13,10 @@
 \usepackage{datetime}
 \usepackage{etoolbox}
 \usepackage{fancyhdr}
+\usepackage{float}
 \usepackage{graphics}
 \usepackage{graphicx}
+\usepackage{svg}
 \usepackage{hyperref}
 \usepackage{lastpage}
 \usepackage{lscape}
@@ -27,6 +29,7 @@
 
 \hypersetup{hidelinks}
 \graphicspath{{images/}}
+\svgpath{{images/}}
 \addbibresource{bibliography.bib}
 
 % Formatare titluri și liste
@@ -147,21 +150,33 @@ Lucrarea propune o platformă integrată care combină diferiți agenți AI spec
 \chapter*{Listă de Abrevieri}
 \thispagestyle{front}
 \begin{abbreviations}
-    {\color{gray}
-    \item[AI] artificial intelligence
-    \item[ML] machine learning
-    \item[PKI] public key infrastructure
-    \item[RAG] retrieval-augmented generation
-    \item[TLS] transport layer security
+    \item[AEAD] Authenticated Encryption with Associated Data
     \item[AES] Advanced Encryption Standard
+    \item[AI] Artificial Intelligence
+    \item[API] Application Programming Interface
+    \item[CI/CD] Continuous Integration / Continuous Deployment
+    \item[CLI] Command Line Interface
+    \item[CTF] Capture The Flag
     \item[DES/3DES] Data Encryption Standard / Triple DES
-    \item[RSA] Rivest--Shamir--Adleman (public-key cryptography)
-    \item[ECC] elliptic curve cryptography
-    \item[HMAC] hash-based message authentication code
-    \item[AEAD] authenticated encryption with associated data
-    \item[LLM] large language model
-    \item[PQC] post-quantum cryptography
-    }
+    \item[ECC] Elliptic Curve Cryptography
+    \item[ECDH] Elliptic Curve Diffie--Hellman
+    \item[ETSI] European Telecommunications Standards Institute
+    \item[FIPS] Federal Information Processing Standards
+    \item[HIBP] Have I Been Pwned
+    \item[HMAC] Hash-based Message Authentication Code
+    \item[LLM] Large Language Model
+    \item[MAC] Message Authentication Code
+    \item[ML] Machine Learning
+    \item[NIST] National Institute of Standards and Technology
+    \item[ONNX] Open Neural Network Exchange
+    \item[PKI] Public Key Infrastructure
+    \item[PQC] Post-Quantum Cryptography
+    \item[RAG] Retrieval-Augmented Generation
+    \item[REST] Representational State Transfer
+    \item[RFC] Request for Comments
+    \item[RSA] Rivest--Shamir--Adleman
+    \item[TLS] Transport Layer Security
+    \item[WAF] Web Application Firewall
 \end{abbreviations}
 \newpage
 
@@ -194,9 +209,8 @@ Scopul lucrării este reprezentat de proiectarea unei platforme integrate, modul
 \begin{itemize}
     \item Realizarea și testarea robustă a unei părți din agenții AI propuși.
     \item Integrarea tuturor agenților într-o infrastructură comună.
-    \item Crearea unei soluții robuste de deploy și testare.
-    \item Crearea unui Web Frontend și a unui Client CLI.
-    \item Legarea componentelor într-un flux coerent.
+    \item Crearea unei soluții de deploy și testare.
+    \item Crearea unei arhitecturi de rețea care să asigure comunicația securizată.
 \end{itemize}
 
 \chapter{Fundamente Teoretice}
@@ -216,173 +230,116 @@ Organismele de standardizare în criptografie sunt esențiale pentru a asigura i
 \section{Elemente fundamentale de inteligență artificială}
 Se folosesc mai multe concepte de IA aplicate:
 \begin{itemize}
-    \item învățare supravegheată și clasificare semantică (modelul SecureBERT din componenta de decizie pentru extragerea intențiilor și entităților);
-    \item embeddings obținute cu arhitecturi Transformer, folosite la căutare semantică în serviciul teoretic;
-    \item RAG, care combină recuperarea de fragmente, reranking și un model LLM pentru a genera răspunsuri cu surse;
-    \item reranking al rezultatelor de căutare pe baza scorurilor ML pentru a prioritiza contextul relevant;
+    \item învățare supervizată și clasificare semantică;
+    \item embeddings obținute cu arhitecturi Transformer;
+    \item RAG, care combină recuperarea de fragmente, reranking;
+    \item reranking al rezultatelor de căutare pe baza scorurilor ML;
     \item data augmentation în generatorul de întrebări (questions\_generator) pentru a extinde seturile de antrenare cu variații și parafrazări sintetice;
-    \item ensemble și agregare de scoruri (password checker combină rețea neuronală, zxcvbn și HIBP);
-    \item inferență optimizată prin ONNX și containerizare pentru performanță și portabilitate;
-    \item rolul LLM-ului în RAG: răspunsuri naturale, contextualizate, cu halucinații reduse prin ancorare în fragmentele recuperate.
+    \item ensemble și agregare de scoruri (password checker, rețea neuronală, zxcvbn și HIBP);
+    \item inferență optimizată prin ONNX pentru performanță și portabilitate;
 \end{itemize}
 
 \section{Conexiunea AI--Criptografie}
-AI-ul este din ce în ce mai implicat în criptografie, atât ca instrument de analiză, cât și ca obiect al securizării. Modele AI specializate (ex. SecureBERT) pot automatiza identificarea algoritmilor și clasificarea cererilor tehnice, asistând în alegerea metodelor criptanalitice adecvate (brute-force sau dicționar), conform tiparelor datelor \cite{kim2024_cryptanalysis,hu2025_cnn}. Integrarea tehnicilor de Retrieval-Augmented Generation permite asistenților AI să furnizeze recomandări fundamentate pe literatura de specialitate și standarde (ex. FIPS 140-3, BSI TR-02102), susținând tranziția către algoritmi post-cuantici și reducând riscul de halucinații \cite{dong2025_chatiot}. În evaluarea parolelor, se folosesc modele neuronale antrenate pe parole comune combinate cu estimatori euristici (zxcvbn) și baze de date publice precum HIBP, ceea ce îmbunătățește precizia scorării și a analizei de risc \cite{mo2025_password_strength,wheeler2016_zxcvbn}. Generarea de scenarii și date sintetice prin modele generative facilitează testarea rezilienței sistemelor, iar sistemele de detecție bazate pe învățare profundă pot identifica comportamente suspecte în trafic sau log-uri \cite{xu2025_ids}. Criptografia contribuie la protecția AI prin tehnici precum criptarea omomorfă, calculul multipartit securizat sau privacy diferențială, folosite pentru protejarea datelor și a modelelor în timpul antrenării sau inferenței \cite{lee2022_ppml}. Pentru integritatea modelelor, se propun watermark-uri digitale și semnături criptografice atașate acestora. Totuși, AI introduce riscuri semnificative, precum prompt injection sau exfiltrarea secretelor stocate, motiv pentru care sunt necesare guardrails, monitorizare și evaluare continuă a comportamentului modelului \cite{li2025_llm_security}.
+AI-ul este din ce în ce mai implicat în criptografie, atât în analiză, cât și ca obiect al securizării. Modele AI specializate pot automatiza identificarea algoritmilor și clasificarea cererilor tehnice, asistând în alegerea metodelor criptanalitice adecvate, conform tiparelor datelor \parencite{kim2024_cryptanalysis,hu2025_cnn}. Integrarea tehnicilor de RAG permite asistenților AI să furnizeze recomandări fundamentate pe literatura de specialitate și standarde, susținând tranziția către algoritmi post-cuantici și reducând riscul de halucinații \parencite{dong2025_chatiot}. În evaluarea parolelor, se folosesc modele neuronale antrenate pe parole comune combinate cu estimatori euristici (zxcvbn) și baze de date publice precum HIBP, ceea ce îmbunătățește precizia scorării și a analizei de risc \parencite{mo2025_password_strength,wheeler2016_zxcvbn}. Generarea de scenarii și date sintetice prin modele generative facilitează testarea rezilienței sistemelor, iar sistemele de detecție bazate pe învățare profundă pot identifica comportamente suspecte în trafic sau log-uri \parencite{xu2025_ids}. Criptografia contribuie la protecția AI prin tehnici precum criptarea omomorfă, calculul multipartit securizat sau privacy diferențială, folosite pentru protejarea datelor și a modelelor în timpul antrenării sau inferenței \parencite{lee2022_ppml}. Pentru integritatea modelelor, se propun watermark-uri digitale și semnături criptografice atașate acestora. Totuși, AI introduce riscuri semnificative, precum prompt injection sau exfiltrarea secretelor stocate, motiv pentru care sunt necesare guardrails, monitorizare și evaluare continuă a comportamentului modelului \parencite{li2025_llm_security}.
 
 \chapter{Soluția Propusă}
 \label{ch:proposed-solution}
 
 \section{Arhitectura generală}
-{\color{gray}
-Descrie arhitectura macro a sistemului și include o diagramă care evidențiază principalele componente și fluxuri de date.
-}
+Arhitectura generală a aplicației este formată dintr-un set de microservicii containerizate, fiecare reprezentând o componentă cheie în funcționarea soluției. Pentru a face posibilă existența unei soluții scalabile, ușor de întreținut și modulare, este nevoie de o orchestrare eficientă a acestor microservicii, prin componente auxiliare.
+Astfel că am identificat următoarele componente principale:
+\begin{itemize}
+    \item Frontend: care poate să fie un UI web, sau o interfață din linie de comandă.
+    \item Backend: care gestionează logica de business, comunicarea între componente și expune API-urile necesare.
+    \item Protection Layer: asigură securitatea datelor în tranzit, soluția exactă de securitate fiind aleasă ulterior.
+    \item Baza de date: pentru stocarea persistentă a datelor relevante.
+    \item Orchestrator: care asigură un flow de lucru bine înrădăcinat semantic, pentru evitarea și minimizarea erorilor.
+    \item Decision Pipeline: un pipeline care să asigure extragerea intenției și a entităților relevante din cererile utilizatorilor.
+    \item AI Agents Pool: un set de agenți AI specializați, fiecare cu rolul său specific în cadrul soluției.
+\end{itemize}
+Fiecare dintre agenți la rândul lui poate fi văzut ca un microserviciu containerizat, care poate fi dezvoltat, testat și implementat independent. Aceștia pot comunica între ei prin intermediul unor API-uri bine definite, permițând astfel o flexibilitate și o scalabilitate sporită a întregii soluții.
+În viziunea mea prezentă, partea de security ar trebui să fie implementată la nivelul microserviciului, și partea de rate-limit și monitorizare a traficului între componente, la nivel centralizat.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.69\textheight]{diagrama_arhitectura_generala.pdf}
+    \caption{Arhitectura generală a solutiei propuse.}
+    \label{fig:arch-general}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{diagrama_agenti.pdf}
+    \caption{Pool-ul de agenți AI specializați.}
+    \label{fig:ai-agents}
+\end{figure}
 
 \section{Metodologie și justificarea alegerilor}
-{\color{gray}
-Explică abordarea metodologică, pașii parcurși și motivele pentru alegerea tehnologiilor și a modelelor AI.
-}
 
 \subsection{Selecția tehnologiilor}
-{\color{gray}
-Detaliază limbajele, cadrele și infrastructura utilizate și argumentează selecția lor.
-}
 
-\subsection{Modele AI utilizate}
-{\color{gray}
-Prezintă modelele AI integrate, modul în care sunt antrenate, configurate și orchestrate.
-}
+\subsection{Principii de rețelistică}
 
 \subsection{Principii de securitate}
-{\color{gray}
-Descrie măsurile de securitate și mecanismele de protecție integrate încă din etapa de proiectare.
-}
 
 \section{Descrierea componentelor}
-{\color{gray}
-Analizează fiecare componentă a soluției folosind paragrafe dedicate ce includ rolul, funcționarea, diagrama și justificarea tehnologică.
-}
 
 \subsection{Modul AI}
-{\color{gray}
-Detaliază agentul AI, capabilitățile, datele utilizate și modul de interacțiune cu celelalte componente.
-}
 
 \subsection{Modul criptografic}
-{\color{gray}
-Descrie serviciile criptografice, protocoalele implementate și modul de integrare cu orchestrarea AI.
-}
 
 \subsection{Orchestrator și interfețe}
-{\color{gray}
-Prezintă modul de coordonare între componente, fluxurile de lucru și interfețele expuse (CLI, API, UI).
-}
 
 \chapter{Implementare}
 \label{ch:implementation}
 
 \section{Mediu de dezvoltare}
-{\color{gray}
-Detaliază uneltele de dezvoltare, sistemul de operare, dependințele și configurațiile cheie.
-}
 
 \section{Framework-uri și librării}
-{\color{gray}
-Listează și descrie framework-urile, librăriile și modelele AI utilizate, inclusiv versiunile.
-}
 
 \section{Containerizare și infrastructură}
-{\color{gray}
-Prezintă modul în care aplicația este containerizată și orchestrată (Docker, docker-compose, Kubernetes etc.).
-}
 
 \section{Măsuri de securitate aplicate}
-{\color{gray}
-Enumeră controalele de securitate implementate (hardening, politici, rotație de chei, audit).
-}
 
 \section{Automatizare}
-{\color{gray}
-Descrie scripturile, pipeline-urile CI/CD sau orice automatizare care susține proiectul.
-}
 
 \chapter{Testare și Evaluare}
 \label{ch:testing}
 
 \section{Metodologia de testare}
-{\color{gray}
-Descrie strategia generală de testare și criteriile utilizate pentru a valida soluția.
-}
 
 \subsection{Teste unitare}
-{\color{gray}
-Prezintă acoperirea testelor unitare, instrumentele folosite și exemple relevante.
-}
 
 \subsection{Teste de integrare}
-{\color{gray}
-Detaliază scenariile de integrare și modul în care componentele sunt validate împreună.
-}
 
 \subsection{Teste de performanță}
-{\color{gray}
-Specifică metodologiile și instrumentele folosite pentru măsurarea performanței și scalabilității.
-}
 
 \section{Metrici și criterii de evaluare}
-{\color{gray}
-Definește indicatorii cantitativi și calitativi utilizați în analizarea rezultatelor testelor.
-}
 
 \section{Validarea rezultatelor}
-{\color{gray}
-Analizează rezultatele obținute în raport cu obiectivele propuse și discută implicațiile.
-}
 
 \chapter{Rezultate și Discuții}
 \label{ch:results}
 
 \section{Benchmark-uri comparative}
-{\color{gray}
-Prezintă rezultate numerice și comparații cu soluții similare sau baseline-uri.
-}
 
 \section{Analiza performanței}
-{\color{gray}
-Evaluează latența, throughput-ul, utilizarea resurselor și scalabilitatea.
-}
 
 \section{Beneficii și limitări}
-{\color{gray}
-Rezumă beneficiile soluției și limitele identificate în urma testării.
-}
 
 \section{Direcții de îmbunătățire}
-{\color{gray}
-Propune optimizări și extensii viitoare.
-}
 
 \chapter{Concluzii}
 \label{ch:conclusions}
 
 \section{Gradul de atingere a obiectivelor}
-{\color{gray}
-Recapitulează modul în care au fost îndeplinite obiectivele definite în introducere.
-}
 
 \section{Contribuții}
-{\color{gray}
-Enumeră contribuțiile teoretice și practice ale lucrării.
-}
 
 \section{Impact și dezvoltări viitoare}
-{\color{gray}
-Evaluează impactul potențial și prezintă direcții de continuare a cercetării.
-}
 
 \chapter*{Bibliografie}
 \addcontentsline{toc}{chapter}{Bibliografie}
-{\color{gray}
-}
 
 \printbibliography[heading=none]
 
@@ -390,18 +347,9 @@ Evaluează impactul potențial și prezintă direcții de continuare a cercetăr
 \label{ch:annexes}
 
 \section{Listă de diagrame suplimentare}
-{\color{gray}
-Include diagrame detaliate (de exemplu, PlantUML, diagrame de secvență sau arhitecturi alternative) care completează prezentarea din capitolele principale.
-}
 
 \section{Configurații tehnice}
-{\color{gray}
-Prezintă fișiere de configurare relevante (de exemplu, \inlinecode{docker-compose.yml}, fișiere de mediu, politici de securitate) și explică modul în care acestea sunt utilizate.
-}
 
 \section{Scripturi și manual de utilizare}
-{\color{gray}
-Include scripturile auxiliare și un ghid succint de utilizare a aplicației pentru diferitele roluri implicate.
-}
 
 \end{document}

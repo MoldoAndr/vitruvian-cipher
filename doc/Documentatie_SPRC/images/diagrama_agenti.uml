@@ -1,0 +1,43 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam backgroundColor #FFFFFF
+skinparam nodesep 30
+skinparam ranksep 30
+
+skinparam card {
+    BackgroundColor #e5eaeeff
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #000000
+    FontSize 11
+    RoundCorner 10
+}
+skinparam rectangle {
+    BackgroundColor #e2e5e7ff
+    BorderColor #000000
+    BorderThickness 2
+    FontColor #000000
+    FontSize 11
+    FontStyle bold
+}
+
+rectangle {
+    card "Theory Specialist\n " as Theory #e5eaeeff
+    card "Command Executor\n " as Command #e5eaeeff
+    card "Password Evaluator\n " as Password #e5eaeeff
+    card "Hash Breaker\n " as Hash #e5eaeeff
+    card "CTF Tool\n " as CTF #e5eaeeff
+    card "Cipher Identifier\n " as Cipher #e5eaeeff
+}
+
+Theory -[hidden]right- Command
+Command -[hidden]right- Password
+Hash -[hidden]right- CTF
+CTF -[hidden]right- Cipher
+Theory -[hidden]down- Hash
+Command -[hidden]down- CTF
+Password -[hidden]down- Cipher
+
+@enduml
