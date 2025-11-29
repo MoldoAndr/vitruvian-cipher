@@ -414,6 +414,19 @@ curl -X POST http://localhost:8081/predict \
 \end{lstlisting}
 
 \subsection{Principii de securitate}
+După terminarea implementării funcționalităților componentelor, voi \textbf{ranforsa securitatea} acestora prin mai multe măsuri stratificate:
+
+\textbf{Autentificare și autorizare:} adaug autentificare (\textbf{API key/JWT}) și restricționez \textbf{CORS} doar la origin-urile front-end legitime; implementez \textbf{rate limiting/throttling} și logare cu request-id fără date sensibile.
+
+\textbf{Transport securizat:} termin \textbf{TLS} printr-un reverse-proxy (Nginx/Traefik) și păstrez traficul intern pe rețeaua \textbf{Compose izolată}, fără expunere directă a porturilor interne.
+
+\textbf{Validare input:} limitez \texttt{/ingest} la surse și tipuri de fișiere aprobate, cu verificare \textbf{mărime/MIME} și scan antivirus, pe volume cu permisiuni minime; forțez \textbf{body-size mic} și \texttt{Cache-Control: no-store} pe rutele cu parole.
+
+\textbf{Protecție apeluri externe:} protejez apelurile externe (HIBP, OpenAI, Ollama, FactorDB) cu \textbf{timeouts stricte}, \textbf{circuit breaker} și stocare chei doar în secret manager/env la runtime.
+
+\textbf{Hardening containere:} rulez containerele cu \textbf{user non-root}, resurse limitate și volume \textbf{read-only} unde se poate; elimin \texttt{host-gateway} dacă nu e necesar.
+
+\textbf{Observabilitate:} reduc log-level la WARN/INFO în producție, expun doar \texttt{/health} necesare și adaug \textbf{audit/metrics} pentru monitorizare continuă.
 
 \section{Descrierea componentelor}
 
