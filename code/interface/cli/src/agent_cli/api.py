@@ -25,7 +25,7 @@ class APIResponse:
 class APIClient:
     """Async HTTP client for agent services."""
     
-    def __init__(self, timeout: float = 30.0):
+    def __init__(self, timeout: float = 120.0):
         self.timeout = timeout
         self._client: Optional[httpx.AsyncClient] = None
     

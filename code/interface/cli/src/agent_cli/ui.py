@@ -139,7 +139,7 @@ def matrix_rain(duration: float = 5.0, speed: float = 0.03):
     rows = max(20, rows)
 
     rain_chars = list("01{}[]<>|/=+*#&$")
-    num_cols = cols // 2
+    num_cols = cols  # Use full terminal width
     drops = [random.randint(-rows, 0) for _ in range(num_cols)]
 
     start = time.time()
@@ -163,7 +163,7 @@ def matrix_rain(duration: float = 5.0, speed: float = 0.03):
                     ch = " "
                     style = ""
 
-                line_parts.append(style + ch + " " + RESET)
+                line_parts.append(style + ch + RESET)  # Removed extra space for full width
             lines.append("".join(line_parts))
 
         frame = "\n".join(lines)
@@ -526,31 +526,66 @@ def print_choice_result(result: Dict[str, Any]):
     # Intent section
     intent = result.get("intent")
     if intent:
-        intent_data = intent.get("intent", intent)
-        label = intent_data.get("label", "Unknown")
-        score = intent_data.get("score", 0)
+        # Handle various response structures for intent
+        intent_data = None
         
-        content_parts.append(
-            f"[bold {COLORS['neon']}]🎯 Intent[/]\n"
-            f"   [bold white]{label}[/] "
-            f"[{COLORS['muted']}]({score*100:.1f}% confidence)[/]\n"
-        )
+        if isinstance(intent, list) and intent:
+            # Intent is a list - take first item
+            intent_data = intent[0]
+        elif isinstance(intent, dict):
+            # Intent is a dict - check for nested "intent" key
+            if "intent" in intent:
+                nested = intent.get("intent")
+                if isinstance(nested, list) and nested:
+                    intent_data = nested[0]
+                elif isinstance(nested, dict):
+                    intent_data = nested
+                else:
+                    intent_data = intent
+            else:
+                intent_data = intent
+        
+        # Extract label and score from intent_data
+        if intent_data and isinstance(intent_data, dict):
+            label = intent_data.get("label", intent_data.get("intent", "Unknown"))
+            score = intent_data.get("score", intent_data.get("confidence", 0))
+            
+            content_parts.append(
+                f"[bold {COLORS['neon']}]🎯 Intent[/]\n"
+                f"   [bold white]{label}[/] "
+                f"[{COLORS['muted']}]({score*100:.1f}% confidence)[/]\n"
+            )
+        elif intent_data:
+            # Handle string or other primitive types
+            content_parts.append(
+                f"[bold {COLORS['neon']}]🎯 Intent[/]\n"
+                f"   [bold white]{str(intent_data)}[/]\n"
+            )
     
     # Entities section
     entities = result.get("entities")
     if entities:
-        entity_list = entities.get("entities", {}).get("entities", [])
-        if not entity_list:
+        # Handle various response structures
+        if isinstance(entities, list):
+            entity_list = entities
+        elif isinstance(entities, dict):
             entity_list = entities.get("entities", [])
+            if isinstance(entity_list, dict):
+                entity_list = entity_list.get("entities", [])
+            elif not isinstance(entity_list, list):
+                entity_list = []
+        else:
+            entity_list = []
         
         if entity_list:
             content_parts.append(f"\n[bold {COLORS['neon']}]📦 Entities[/]")
             for entity in entity_list:
-                content_parts.append(
-                    f"\n   [{COLORS['info']}]{entity.get('entity', 'UNK')}[/]: "
-                    f"[white]\"{entity.get('text', '')}\"[/] "
-                    f"[{COLORS['muted']}]({entity.get('score', 0)*100:.1f}%)[/]"
-                )
+                if isinstance(entity, dict):
+                    content_parts.append(
+                        f"\n   [{COLORS['info']}]{entity.get('entity', 'UNK')}[/]: "
+                        f"[white]\"{entity.get('text', '')}\"[/] "
+                        f"[{COLORS['muted']}]({entity.get('score', 0)*100:.1f}%)[/]"
+                    )
         else:
             content_parts.append(f"\n[{COLORS['muted']}]No entities detected[/]")
     

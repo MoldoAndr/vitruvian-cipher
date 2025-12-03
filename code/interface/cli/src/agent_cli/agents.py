@@ -217,25 +217,53 @@ class ChoiceAgent(BaseAgent):
         with create_spinner("Analyzing text..."):
             if mode == "both":
                 intent_resp, entity_resp = await api_client.extract_both(user_input)
+                
+                # Handle various response structures - check for 'result', 'intent', 'prediction', or direct data
+                intent_data = None
+                if intent_resp.success and intent_resp.data:
+                    intent_data = (intent_resp.data.get("result") or 
+                                   intent_resp.data.get("intent") or 
+                                   intent_resp.data.get("prediction") or
+                                   intent_resp.data)
+                
+                entities_data = None
+                if entity_resp.success and entity_resp.data:
+                    entities_data = (entity_resp.data.get("result") or 
+                                     entity_resp.data.get("entities") or 
+                                     entity_resp.data.get("prediction") or
+                                     entity_resp.data)
+                
                 result = {
-                    "intent": intent_resp.data.get("result") if intent_resp.success else None,
-                    "entities": entity_resp.data.get("result") if entity_resp.success else None
+                    "intent": intent_data,
+                    "entities": entities_data
                 }
                 success = intent_resp.success or entity_resp.success
                 error = intent_resp.error or entity_resp.error if not success else None
             elif mode == "intent_extraction":
                 response = await api_client.extract_intent(user_input)
+                intent_data = None
+                if response.success and response.data:
+                    intent_data = (response.data.get("result") or 
+                                   response.data.get("intent") or 
+                                   response.data.get("prediction") or
+                                   response.data)
                 result = {
-                    "intent": response.data.get("result") if response.success else None,
+                    "intent": intent_data,
                     "entities": None
                 }
                 success = response.success
                 error = response.error
             else:  # entity_extraction
                 response = await api_client.extract_entities(user_input)
+                entities_data = None
+                if response.success and response.data:
+                    entities_data = (response.data.get("result") or 
+                                     response.data.get("entities") or 
+                                     response.data.get("prediction") or
+                                     response.data)
                 result = {
                     "intent": None,
-                    "entities": response.data.get("result") if response.success else None
+                    "entities": entities_data
                 }
                 success = response.success
                 error = response.error
