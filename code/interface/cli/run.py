@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick launcher script for Agent CLI.
+Quick launcher script for the Vitruvian Cipher CLI.
 Can be run directly without installation.
 """
 

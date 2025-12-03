@@ -1,6 +1,6 @@
-# Agent CLI Package
+# Vitruvian Cipher CLI package
 """
-Agent CLI - A terminal-based interface for cryptography and security analysis agents.
+Vitruvian Cipher CLI - A terminal-based interface for cryptography and security analysis agents.
 Inspired by tools like Codex, Claude Code, and Gemini CLI.
 """
 

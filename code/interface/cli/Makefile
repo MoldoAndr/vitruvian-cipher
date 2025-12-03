@@ -2,7 +2,7 @@
 
 # Default target
 help:
-	@echo "Agent CLI - Available Commands"
+	@echo "Vitruvian Cipher CLI - Available Commands"
 	@echo "==============================="
 	@echo ""
 	@echo "  make install      Install the CLI package"

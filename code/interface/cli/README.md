@@ -1,6 +1,6 @@
-# Agent CLI
+# Vitruvian Cipher CLI
 
-A powerful terminal-based interface for cryptography and security analysis agents. Inspired by tools like Codex, Claude Code, and Gemini CLI.
+A terminal-based interface for the Vitruvian Cipher cryptography and security analysis agents. Inspired by tools like Codex, Claude Code, and Gemini CLI.
 
 ```
     ╔═══════════════════════════════════════════════════════════════════╗
@@ -35,8 +35,7 @@ pip install -e .
 ### Using pip
 
 ```bash
-pip install -r requirements.txt
-python -m agent_cli.main
+pip install "git+https://github.com/MoldoAndr/vitruvian-cipher@main#subdirectory=code/interface/cli"
 ```
 
 ## Usage
@@ -45,9 +44,10 @@ python -m agent_cli.main
 
 ```bash
 # Using the installed command
-agent-cli
+vitruvian-cipher
 
-# Or using the short alias
+# Or the legacy aliases
+agent-cli
 acli
 
 # Or directly with Python

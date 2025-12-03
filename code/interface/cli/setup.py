@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="agent-cli",
+    name="vitruvian-cipher",
     version="2.0.0",
-    description="CLI Agent Interface for Cryptography and Security Analysis",
+    description="Vitruvian Cipher CLI for cryptography and security analysis agents",
     author="Agent Interface Team",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
@@ -21,6 +21,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            "vitruvian-cipher=agent_cli.main:main",
             "agent-cli=agent_cli.main:main",
             "acli=agent_cli.main:main",
         ],
