@@ -28,17 +28,20 @@ run_test() {
         return 1
     fi
 
-    # Use jq to parse both the actual and expected JSON to avoid string comparison issues.
-    # This makes the comparison independent of key order or whitespace.
+    # Compare only the fields present in the expected JSON (ignore extra fields).
     expected_json=$(echo "$expected_json_str" | jq .)
     actual_json=$(echo "$json_response" | jq .)
 
-    if ! diff -q <(echo "$actual_json") <(echo "$expected_json") > /dev/null; then
-        echo "  [FAIL] JSON mismatch."
-        echo "  Expected: $expected_json"
-        echo "  Got:      $actual_json"
-        return 1
-    fi
+    for key in $(echo "$expected_json" | jq -r 'keys[]'); do
+        expected_val=$(echo "$expected_json" | jq -c ".\"$key\"")
+        actual_val=$(echo "$actual_json" | jq -c ".\"$key\"")
+        if [ "$expected_val" != "$actual_val" ]; then
+            echo "  [FAIL] JSON mismatch for key '$key'."
+            echo "  Expected: $expected_val"
+            echo "  Got:      $actual_val"
+            return 1
+        fi
+    done
 
     echo "  [PASS]"
     return 0
@@ -55,11 +58,11 @@ run_test "Small Composite (4)" "4" 200 '{"is_prime": false, "factors": ["2", "2"
 run_test "Large Composite" "100" 200 '{"is_prime": false, "factors": ["2", "2", "5", "5"]}' || ((failures++))
 
 # Invalid Inputs
-run_test "Negative Number" "-10" 400 '{"error": "Input must be a positive integer"}' || ((failures++))
-run_test "Zero" "0" 400 '{"error": "Input must be a positive integer"}' || ((failures++))
-run_test "Non-numeric String" "abc" 400 '{"error": "Input must be a positive integer"}' || ((failures++))
-run_test "Empty Number" "" 400 '{"error": "Input must be a positive integer"}' || ((failures++))
-run_test "Missing Number Field" "N/A" 400 '{"error": "Missing 'number' field in JSON payload"}' || ((failures++))
+run_test "Negative Number" "-10" 400 '{"error": "Input must contain only digits"}' || ((failures++))
+run_test "Zero" "0" 400 '{"error": "Zero is neither prime nor composite"}' || ((failures++))
+run_test "Non-numeric String" "abc" 400 '{"error": "Input must contain only digits"}' || ((failures++))
+run_test "Empty Number" "" 400 '{"error": "Input must contain only digits"}' || ((failures++))
+run_test "Missing Number Field" "N/A" 400 "{\"error\": \"Missing 'number' field in JSON payload\"}" || ((failures++))
 
 
 # --- Summary ---

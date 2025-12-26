@@ -1,7 +1,6 @@
-# Stage 1: Builder
+# Stage 1: Build YAFU and dependencies
 FROM ubuntu:24.04 AS builder
 
-# Install build tools and dependencies, including xz-utils, autoconf, automake, and libtool
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     make \
@@ -16,14 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtool \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /opt/math
 
-# Copy local GMP and ECM tarballs
-COPY gmp-6.3.0.tar.xz .
-COPY ecm-7.0.4.tar.gz .
+COPY junk/gmp-6.3.0.tar.xz .
+COPY junk/ecm-7.0.4.tar.gz .
 
-# Install GMP
 RUN tar -xf gmp-6.3.0.tar.xz \
     && cd gmp-6.3.0 \
     && ./configure --prefix=/opt/math/gmp \
@@ -32,7 +28,6 @@ RUN tar -xf gmp-6.3.0.tar.xz \
     && cd .. \
     && rm -rf gmp-6.3.0 gmp-6.3.0.tar.xz
 
-# Install GMP-ECM
 RUN tar -xf ecm-7.0.4.tar.gz \
     && cd ecm-7.0.4 \
     && autoreconf -i \
@@ -42,68 +37,48 @@ RUN tar -xf ecm-7.0.4.tar.gz \
     && cd .. \
     && rm -rf ecm-7.0.4 ecm-7.0.4.tar.gz
 
-# Install ytools
-RUN git clone https://github.com/bbuhrow/ytools.git \
-    && cd ytools \
-    && make \
-    && cd ..
-
-# Install ysieve
-RUN git clone https://github.com/bbuhrow/ysieve.git \
-    && cd ysieve \
-    && sed -i '/^CFLAGS/ s|$| -I/opt/math/gmp/include|' Makefile \
-    && sed -i '/^LIBS/ s|$| -L/opt/math/gmp/lib -lgmp|' Makefile \
-    && make \
-    && cd ..
-
-# Install YAFU
-RUN git clone https://github.com/bbuhrow/yafu.git \
+RUN git clone --depth 1 https://github.com/bbuhrow/yafu.git \
     && cd yafu \
-    && sed -i '/^CFLAGS/ s|$| -I/opt/math/gmp/include -I/opt/math/gmp-ecm/include|' Makefile \
-    && sed -i '/^LIBS/ s|$| -L/opt/math/gmp/lib -L/opt/math/gmp-ecm/lib|' Makefile \
-    && make yafu USE_SSE41=1 USE_AVX2=1 USE_BMI2=1 SKYLAKEX=1 ICELAKE=1 \
+    && sed -i 's|../gmp-install/6.2.0-gcc|/opt/math/gmp|g' Makefile.gcc \
+    && sed -i 's|../ecm-install/7.0.5-gcc|/opt/math/gmp-ecm|g' Makefile.gcc \
+    && make -f Makefile.gcc yafu ECM=1 \
     && cd ..
 
-# Stage 2: Runtime
+# Stage 2: Build Go service
+FROM golang:1.22-bookworm AS go-builder
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY main.go ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/prime-checker .
+
+# Stage 3: Runtime
 FROM ubuntu:24.04
 
-# Install Python and dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create and activate a virtual environment
-RUN python3 -m venv /app/venv
-ENV PATH="/app/venv/bin:$PATH"
+RUN useradd -r -u 10001 -g nogroup appuser
 
-# Install Flask in the virtual environment
-RUN pip install --no-cache-dir flask
-RUN pip install --no-cache-dir requests
+WORKDIR /app
+RUN mkdir -p /app/data \
+    && chown -R appuser:nogroup /app
 
-# Copy YAFU and dependencies from builder
+COPY --from=go-builder /out/prime-checker /app/prime-checker
+
 COPY --from=builder /opt/math/yafu/yafu /usr/local/bin/yafu
 COPY --from=builder /opt/math/gmp/lib /opt/math/gmp/lib
 COPY --from=builder /opt/math/gmp-ecm/lib /opt/math/gmp-ecm/lib
-COPY --from=builder /opt/math/ytools/libytools.a /opt/math/ytools/
-COPY --from=builder /opt/math/ysieve/libysieve.a /opt/math/ysieve/
 COPY --from=builder /opt/math/yafu/yafu.ini /opt/math/yafu/
 COPY --from=builder /opt/math/yafu/docfile.txt /opt/math/yafu/
 
-# Set environment variables
 ENV LD_LIBRARY_PATH=/opt/math/gmp/lib:/opt/math/gmp-ecm/lib
-ENV PYTHONPATH=/app
+ENV DB_PATH=/app/data/prime_cache.db
 
-# Set working directory for Flask app
-WORKDIR /app
-
-# Copy Flask application
-COPY app.py .
-
-# Expose Flask port
 EXPOSE 5000
 
-# Run Flask server using the virtual environment's Python
-CMD ["/app/venv/bin/python3", "app.py"]
+USER appuser
+
+CMD ["/app/prime-checker"]
