@@ -9,6 +9,7 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
 - **Persistent storage** using SQLite (metadata/conversations) and ChromaDB (vector store).
 - **Conversation history** with message-level context tracking.
 - **Local generation** through Ollama (Phi-3 defaults, configurable).
+- **Multiple LLM providers** (Ollama local/cloud, OpenAI, Gemini) via environment config.
 - **Containerized deployment** with Docker Compose.
 
 ## 📦 Requirements
@@ -59,6 +60,39 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
   ```
   Generates an answer with cited sources. Omit `conversation_id` to create a new session.
 
+- `POST /provider`
+  ```json
+  {
+    "provider": "ollama-cloud",
+    "ollama_model": "deepseek-v3.2:cloud",
+    "ollama_api_key": "..."
+  }
+  ```
+  Updates the active LLM provider at runtime (ollama, ollama-cloud, gemini, openai).
+  Examples:
+  ```bash
+  # Local Ollama (docker service)
+  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+    "provider": "ollama",
+    "ollama_url": "http://ollama:11434",
+    "ollama_model": "phi3"
+  }'
+
+  # Ollama Cloud
+  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+    "provider": "ollama-cloud",
+    "ollama_model": "gpt-oss:120b-cloud",
+    "ollama_api_key": "..."
+  }'
+
+  # Gemini
+  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+    "provider": "gemini",
+    "gemini_model": "gemini-3-pro-preview",
+    "gemini_api_key": "..."
+  }'
+  ```
+
 - `GET /conversations/{conversation_id}`
   Fetch full conversation history.
 
@@ -83,6 +117,11 @@ Environment variables can override defaults (see `app/config.py`):
 - `RERANKER_MODEL_NAME`
 - `OLLAMA_URL` (default points to the host gateway `http://host.docker.internal:11434`)
 - `OLLAMA_MODEL`
+- `OLLAMA_API_KEY` (only needed for Ollama Cloud)
+- `OLLAMA_USE_CHAT` (default true; uses `/api/chat`)
+- `LLM_PROVIDER` (`ollama`, `openai`, or `gemini`)
+- `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL`
+- `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`
 - `INGESTION_INTERVAL_SECONDS`
 - `INGESTION_BATCH_SIZE`
 

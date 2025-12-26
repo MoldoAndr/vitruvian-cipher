@@ -55,6 +55,27 @@ class GenerateRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
+class ProviderUpdateRequest(BaseModel):
+    provider: str = Field(..., min_length=3)
+    ollama_url: Optional[str] = None
+    ollama_model: Optional[str] = None
+    ollama_api_key: Optional[str] = None
+    ollama_use_chat: Optional[bool] = None
+    openai_api_key: Optional[str] = None
+    openai_model: Optional[str] = None
+    openai_base_url: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+    gemini_model: Optional[str] = None
+    gemini_base_url: Optional[str] = None
+
+
+class ProviderUpdateResponse(BaseModel):
+    status: str
+    provider: str
+    generation_model: str
+    base_url: Optional[str] = None
+
+
 class SourceChunk(BaseModel):
     chunk_id: str
     relevance_score: float

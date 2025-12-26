@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import threading
 from typing import List, Optional
 from urllib.parse import urlparse
 
@@ -18,6 +19,7 @@ from sqlalchemy.orm import Session
 from .aggregator import DocumentAggregator
 from .config import get_settings
 from .database import Base, engine, get_db
+from .llm_client import build_llm_client
 from .models import Conversation, Message, ReferenceDocument
 from .rag_system import RAGSystem, RetrievedChunk
 from .schemas import (
@@ -28,6 +30,8 @@ from .schemas import (
     HealthResponse,
     IngestRequest,
     IngestResponse,
+    ProviderUpdateRequest,
+    ProviderUpdateResponse,
     SourceChunk,
     StatusResponse,
 )
@@ -42,6 +46,7 @@ logging.basicConfig(
 settings = get_settings()
 rag_system = RAGSystem(settings=settings)
 aggregator = DocumentAggregator(rag_system=rag_system, settings=settings)
+provider_lock = threading.Lock()
 
 app = FastAPI(
     title="Cryptography RAG System",
@@ -95,13 +100,82 @@ def health(db: Session = Depends(get_db)) -> HealthResponse:
         status_str = "degraded"
         vector_chunks = 0
 
+    provider = (settings.llm_provider or "ollama").lower().strip()
+    if provider == "openai":
+        generation_model = settings.openai_model
+    elif provider == "gemini":
+        generation_model = settings.gemini_model
+    else:
+        generation_model = settings.ollama_model
+
     return HealthResponse(
         status=status_str,
         database=database_status,
         embedding_model=settings.embedding_model_name,
-        generation_model=settings.ollama_model,
+        generation_model=generation_model,
         vector_db_chunks=vector_chunks,
         timestamp=dt.datetime.utcnow(),
+    )
+
+
+@app.post("/provider", response_model=ProviderUpdateResponse)
+def update_provider(payload: ProviderUpdateRequest) -> ProviderUpdateResponse:
+    provider = payload.provider.strip().lower().replace(" ", "-")
+    if provider in ("ollama_cloud", "ollama-cloud"):
+        provider = "ollama-cloud"
+    if provider not in ("ollama", "ollama-cloud", "gemini", "openai"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported provider. Use ollama, ollama-cloud, gemini, or openai.",
+        )
+
+    with provider_lock:
+        settings.llm_provider = provider
+        if payload.ollama_url is not None:
+            settings.ollama_url = payload.ollama_url
+        if payload.ollama_model is not None:
+            settings.ollama_model = payload.ollama_model
+        if payload.ollama_api_key is not None:
+            settings.ollama_api_key = payload.ollama_api_key
+        if payload.ollama_use_chat is not None:
+            settings.ollama_use_chat = payload.ollama_use_chat
+        if payload.openai_api_key is not None:
+            settings.openai_api_key = payload.openai_api_key
+        if payload.openai_model is not None:
+            settings.openai_model = payload.openai_model
+        if payload.openai_base_url is not None:
+            settings.openai_base_url = payload.openai_base_url
+        if payload.gemini_api_key is not None:
+            settings.gemini_api_key = payload.gemini_api_key
+        if payload.gemini_model is not None:
+            settings.gemini_model = payload.gemini_model
+        if payload.gemini_base_url is not None:
+            settings.gemini_base_url = payload.gemini_base_url
+
+        if provider == "ollama-cloud":
+            if settings.ollama_url.startswith(
+                ("http://127.0.0.1", "http://localhost", "http://ollama")
+            ):
+                settings.ollama_url = "https://ollama.com"
+
+        rag_system.settings = settings
+        rag_system.llm = build_llm_client(settings)
+
+    if provider == "openai":
+        generation_model = settings.openai_model
+        base_url = settings.openai_base_url
+    elif provider == "gemini":
+        generation_model = settings.gemini_model
+        base_url = settings.gemini_base_url
+    else:
+        generation_model = settings.ollama_model
+        base_url = settings.ollama_url
+
+    return ProviderUpdateResponse(
+        status="updated",
+        provider=provider,
+        generation_model=generation_model,
+        base_url=base_url,
     )
 
 
@@ -109,6 +183,14 @@ def health(db: Session = Depends(get_db)) -> HealthResponse:
 def ingest_document(
     payload: IngestRequest, db: Session = Depends(get_db)
 ) -> IngestResponse:
+    try:
+        rag_system.validate_document_path(payload.document_path)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from None
+
     document_name = _resolve_document_name(payload.document_path)
     reference = ReferenceDocument(
         document_path=payload.document_path,
@@ -230,8 +312,12 @@ def generate_answer(
     db.commit()
     db.refresh(user_message)
 
-    retrieved = rag_system.retrieve(payload.query, top_k=settings.retrieval_top_k)
-    reranked = rag_system.rerank(payload.query, retrieved)
+    query_context = rag_system.prepare_query(payload.query)
+    retrieved, _strategy = rag_system.retrieve(
+        query_context.query_for_retrieval,
+        top_k=settings.retrieval_top_k,
+    )
+    reranked = rag_system.rerank(query_context.query_for_retrieval, retrieved)
     if not reranked and retrieved:
         reranked = retrieved[: settings.reranker_top_k]
 
