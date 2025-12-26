@@ -4,8 +4,8 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
 
 ## ✨ Key Features
 - **Automatic background ingestion** of queued documents with APScheduler.
-- **SentenceTransformer embeddings** + **cross-encoder reranking** for higher answer accuracy.
-- **FastEmbed + ONNX models** for lightweight CPU-only embeddings and reranking (no PyTorch dependency).
+- **FastEmbed embeddings** (`BAAI/bge-small-en-v1.5`) + **ONNX reranking** (`BAAI/bge-reranker-base`) for higher answer accuracy (CPU-only, no PyTorch dependency).
+- **Optional hybrid retrieval** (vector + lexical BM25) to improve recall on short queries.
 - **Persistent storage** using SQLite (metadata/conversations) and ChromaDB (vector store).
 - **Conversation history** with message-level context tracking.
 - **Local generation** through Ollama (Phi-3 defaults, configurable).
@@ -28,6 +28,7 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
    ```bash
    docker compose up --build -d
    ```
+   Docker Compose exposes the API at `http://localhost:8100` (container port 8000).
 4. Ensure the host-side Ollama daemon is running, then pull models from the host (not the container):
    ```bash
    ollama pull phi3
@@ -35,7 +36,7 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
    Repeat for any alternative models you configure in `.env`.
 5. Verify the API is up:
    ```bash
-   curl http://localhost:8000/health
+   curl http://localhost:8100/health
    ```
 
 ## 🔌 API Endpoints
@@ -72,21 +73,21 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
   Examples:
   ```bash
   # Local Ollama (docker service)
-  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+  curl -sS http://localhost:8100/provider -H 'Content-Type: application/json' -d '{
     "provider": "ollama",
     "ollama_url": "http://ollama:11434",
     "ollama_model": "phi3"
   }'
 
   # Ollama Cloud
-  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+  curl -sS http://localhost:8100/provider -H 'Content-Type: application/json' -d '{
     "provider": "ollama-cloud",
     "ollama_model": "gpt-oss:120b-cloud",
     "ollama_api_key": "..."
   }'
 
   # Gemini
-  curl -sS http://localhost:8000/provider -H 'Content-Type: application/json' -d '{
+  curl -sS http://localhost:8100/provider -H 'Content-Type: application/json' -d '{
     "provider": "gemini",
     "gemini_model": "gemini-3-pro-preview",
     "gemini_api_key": "..."
@@ -102,8 +103,8 @@ A fully local Retrieval-Augmented Generation stack specialized for cryptography 
 ## 🧠 How It Works
 1. `/ingest` inserts document metadata into SQLite (`reference_documents`).
 2. APScheduler polls every 5 seconds, loading the next pending document.
-3. Documents are chunked (300 tokens, 50 overlap), embedded with `all-MiniLM-L6-v2`, and stored in ChromaDB.
-4. `/generate` embeds the query with `BAAI/bge-small-en-v1.5`, retrieves top-10 chunks, reranks with an ONNX `BAAI/bge-reranker-base` cross-encoder, and sends curated context to Ollama for answer generation.
+3. Documents are chunked (~300 characters, 50 overlap), embedded with `BAAI/bge-small-en-v1.5` via FastEmbed, and stored in ChromaDB.
+4. `/generate` embeds the query with the same model, retrieves vector + lexical (BM25) candidates when enabled, reranks with an ONNX `BAAI/bge-reranker-base` cross-encoder, and sends curated context to the selected LLM for answer generation.
 5. Conversations and message metadata are persisted for traceability.
 
 ## ⚙️ Configuration
@@ -115,11 +116,11 @@ Environment variables can override defaults (see `app/config.py`):
 - `EMBEDDING_MODEL_NAME`
 - `EMBEDDING_BATCH_SIZE`
 - `RERANKER_MODEL_NAME`
-- `OLLAMA_URL` (default points to the host gateway `http://host.docker.internal:11434`)
+- `OLLAMA_URL` (default: `http://127.0.0.1:11434`; use `http://host.docker.internal:11434` in Docker)
 - `OLLAMA_MODEL`
 - `OLLAMA_API_KEY` (only needed for Ollama Cloud)
 - `OLLAMA_USE_CHAT` (default true; uses `/api/chat`)
-- `LLM_PROVIDER` (`ollama`, `openai`, or `gemini`)
+- `LLM_PROVIDER` (`ollama`, `ollama-cloud`, `openai`, or `gemini`)
 - `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL`
 - `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`
 - `INGESTION_INTERVAL_SECONDS`

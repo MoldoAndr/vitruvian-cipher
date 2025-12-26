@@ -9,6 +9,10 @@ services:
       - HIBP_API_ROOT=${HIBP_API_ROOT:-https://api.pwnedpasswords.com}
       - HIBP_TIMEOUT_SECONDS=${HIBP_TIMEOUT_SECONDS:-6.0}
       - HIBP_MAX_RETRIES=${HIBP_MAX_RETRIES:-3}
-      - ENABLED_COMPONENTS=${ENABLED_COMPONENTS:-pass_strength_ai,zxcvbn,haveibeenpwned}
+      - ENABLED_COMPONENTS=${ENABLED_COMPONENTS:-pass_gpt,zxcvbn,haveibeenpwned}
+      - HUGGINGFACE_HUB_TOKEN=${HUGGINGFACE_HUB_TOKEN:-}
+      - PASS_GPT_MODEL_PATH=${PASS_GPT_MODEL_PATH:-/models/passgpt-10characters}
     ports:
       - "9000:8000"
+    volumes:
+      - ./PassGPT/models/passgpt-10characters:/models/passgpt-10characters:ro

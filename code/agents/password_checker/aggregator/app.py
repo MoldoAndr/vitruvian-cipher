@@ -22,11 +22,21 @@ class ComponentConfig:
     score_endpoint: str
 
 
+COMPONENT_ALIASES = {"pass_strength_ai": "pass_gpt"}
+
+
+def _normalize_component_name(component: str) -> str:
+    return COMPONENT_ALIASES.get(component, component)
+
+
 COMPONENTS: Dict[str, ComponentConfig] = {
-    "pass_strength_ai": ComponentConfig(
-        name="pass_strength_ai",
-        label="PassStrengthAI",
-        score_endpoint=os.getenv("PASS_STRENGTH_AI_URL", "http://pass_strength_ai:8000/score"),
+    "pass_gpt": ComponentConfig(
+        name="pass_gpt",
+        label="PassGPT",
+        score_endpoint=os.getenv(
+            "PASS_GPT_URL",
+            os.getenv("PASS_STRENGTH_AI_URL", "http://pass_gpt:8000/score"),
+        ),
     ),
     "zxcvbn": ComponentConfig(
         name="zxcvbn",
@@ -41,12 +51,20 @@ COMPONENTS: Dict[str, ComponentConfig] = {
 }
 
 DEFAULT_ENABLED = [
-    component.strip()
+    _normalize_component_name(component.strip())
     for component in os.getenv("ENABLED_COMPONENTS", ",".join(COMPONENTS.keys())).split(",")
     if component.strip()
 ]
+DEFAULT_ENABLED = [component for component in DEFAULT_ENABLED if component in COMPONENTS]
 
-PASS_STRENGTH_MAX_PASSWORD_LENGTH = 10
+PASS_GPT_MAX_PASSWORD_LENGTH = int(os.getenv("PASS_GPT_MAX_PASSWORD_LENGTH", "10"))
+PASS_SHORT_PASSWORD_LENGTH = int(os.getenv("PASS_SHORT_PASSWORD_LENGTH", "8"))
+PASS_SHORT_PASSWORD_MAX_SCORE = int(os.getenv("PASS_SHORT_PASSWORD_MAX_SCORE", "60"))
+ZXCVBN_LOW_SCORE_THRESHOLD = int(os.getenv("ZXCVBN_LOW_SCORE_THRESHOLD", "1"))
+PASS_GPT_WARNING_PENALTY = int(os.getenv("PASS_GPT_WARNING_PENALTY", "15"))
+PASS_GPT_LOW_SCORE_PENALTY = int(os.getenv("PASS_GPT_LOW_SCORE_PENALTY", "10"))
+PASS_GPT_LOW_WEIGHT = float(os.getenv("PASS_GPT_LOW_WEIGHT", "0.6"))
+ZXCVBN_LOW_WEIGHT = float(os.getenv("ZXCVBN_LOW_WEIGHT", "1.4"))
 
 
 class AggregationRequest(BaseModel):
@@ -57,9 +75,10 @@ class AggregationRequest(BaseModel):
 
     @validator("components", each_item=True)
     def _validate_component(cls, value: str) -> str:
-        if value not in COMPONENTS:
+        normalized = _normalize_component_name(value)
+        if normalized not in COMPONENTS:
             raise ValueError(f"Unknown component '{value}'. Valid options: {', '.join(COMPONENTS.keys())}")
-        return value
+        return normalized
 
 
 class ComponentResult(BaseModel):
@@ -79,7 +98,7 @@ class AggregationResponse(BaseModel):
 
 app = FastAPI(
     title="Password Strength Aggregator",
-    description="Combines results from PassStrengthAI, zxcvbn, and HaveIBeenPwned components.",
+    description="Combines results from PassGPT, zxcvbn, and HaveIBeenPwned components.",
     version="1.0.0",
 )
 
@@ -118,11 +137,18 @@ async def _call_component(client: httpx.AsyncClient, component: ComponentConfig,
         )
 
 
-def _normalize(scores: List[int]) -> int:
-    if not scores:
+def _clamp_score(score: float) -> int:
+    return max(1, min(100, int(round(score))))
+
+
+def _normalize_weighted(weighted_scores: List[float], weights: List[float]) -> int:
+    if not weighted_scores or not weights:
         raise HTTPException(status_code=503, detail="No component scores available to produce a result.")
-    average = sum(scores) / len(scores)
-    return max(1, min(100, int(round(average))))
+    total_weight = sum(weights)
+    if total_weight <= 0:
+        raise HTTPException(status_code=503, detail="No component weights available to produce a result.")
+    average = sum(weighted_scores) / total_weight
+    return _clamp_score(average)
 
 
 @app.get("/health", tags=["internal"])
@@ -132,26 +158,26 @@ def health() -> Dict[str, str]:
 
 @app.post("/score", response_model=AggregationResponse, tags=["scoring"])
 async def aggregate_scores(payload: AggregationRequest) -> AggregationResponse:
-    enabled = payload.components or DEFAULT_ENABLED
+    enabled = list(payload.components or DEFAULT_ENABLED)
     enabled = [component for component in enabled if component in COMPONENTS]
 
     disabled_results: List[ComponentResult] = []
 
-    if len(payload.password) > PASS_STRENGTH_MAX_PASSWORD_LENGTH and "pass_strength_ai" in enabled:
-        enabled.remove("pass_strength_ai")
+    if len(payload.password) > PASS_GPT_MAX_PASSWORD_LENGTH and "pass_gpt" in enabled:
+        enabled.remove("pass_gpt")
         LOGGER.info(
-            "Disabling PassStrengthAI for password length %s > %s",
+            "Disabling PassGPT for password length %s > %s",
             len(payload.password),
-            PASS_STRENGTH_MAX_PASSWORD_LENGTH,
+            PASS_GPT_MAX_PASSWORD_LENGTH,
         )
         disabled_results.append(
             ComponentResult(
-                name="pass_strength_ai",
-                label=COMPONENTS["pass_strength_ai"].label,
+                name="pass_gpt",
+                label=COMPONENTS["pass_gpt"].label,
                 normalized_score=None,
                 success=False,
                 detail=None,
-                error=f"Disabled automatically for passwords longer than {PASS_STRENGTH_MAX_PASSWORD_LENGTH} characters.",
+                error=f"Disabled automatically for passwords longer than {PASS_GPT_MAX_PASSWORD_LENGTH} characters.",
             )
         )
 
@@ -171,12 +197,42 @@ async def aggregate_scores(payload: AggregationRequest) -> AggregationResponse:
 
     combined_results = disabled_results + list(results)
 
-    scores = [
-        result.normalized_score
-        for result in combined_results
-        if result.success and result.normalized_score is not None
-    ]
-    combined = _normalize(scores)
+    results_by_name = {result.name: result for result in combined_results}
+    zxcvbn_result = results_by_name.get("zxcvbn")
+    zxcvbn_detail = zxcvbn_result.detail if zxcvbn_result and zxcvbn_result.success else {}
+    zxcvbn_raw_score = None
+    zxcvbn_warning = False
+    if isinstance(zxcvbn_detail, dict):
+        raw_score = zxcvbn_detail.get("raw_score")
+        if isinstance(raw_score, int):
+            zxcvbn_raw_score = raw_score
+        warning = zxcvbn_detail.get("warning")
+        zxcvbn_warning = bool(warning)
+
+    zxcvbn_low = zxcvbn_raw_score is not None and zxcvbn_raw_score <= ZXCVBN_LOW_SCORE_THRESHOLD
+
+    weighted_scores: List[float] = []
+    weights: List[float] = []
+    for result in combined_results:
+        if not (result.success and result.normalized_score is not None):
+            continue
+        adjusted = float(result.normalized_score)
+        weight = 1.0
+        if result.name == "pass_gpt" and zxcvbn_result and zxcvbn_result.success:
+            if zxcvbn_warning:
+                adjusted -= PASS_GPT_WARNING_PENALTY
+            if zxcvbn_low:
+                adjusted -= PASS_GPT_LOW_SCORE_PENALTY
+                weight = PASS_GPT_LOW_WEIGHT
+        if result.name == "zxcvbn" and zxcvbn_low:
+            weight = ZXCVBN_LOW_WEIGHT
+        adjusted = _clamp_score(adjusted)
+        weighted_scores.append(adjusted * weight)
+        weights.append(weight)
+
+    combined = _normalize_weighted(weighted_scores, weights)
+    if len(payload.password) < PASS_SHORT_PASSWORD_LENGTH:
+        combined = min(combined, PASS_SHORT_PASSWORD_MAX_SCORE)
 
     return AggregationResponse(
         active_components=[result.name for result in combined_results if result.success],

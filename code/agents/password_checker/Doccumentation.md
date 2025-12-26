@@ -1,4 +1,4 @@
-https://github.com/OffRange/PassStrengthAI
+https://huggingface.co/javirandor/passgpt-10characters
 https://github.com/dropbox/zxcvbn
 https://haveibeenpwned.com/API/v3
 https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/wheeler
@@ -7,9 +7,9 @@ https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentati
 
 This workspace packages three complementary scoring engines behind FastAPI services and fans their outputs into a dedicated aggregator. Running the stack (locally or via Docker Compose) yields a composite password strength verdict that blends neural confidence, heuristic entropy analysis, and breach intelligence. Each component exposes `POST /score` and `GET /health`, so you can deploy them independently, layer them into other systems, or lean on the aggregator to orchestrate cross-checks.
 
-### PassStrengthAI Neural Model
+### PassGPT Neural Model
 
-Based on the PassStrengthAI project, the service loads the pre-trained TensorFlow model at startup and keeps it resident for low-latency inference. Passwords are one-hot encoded over the printable ASCII alphabet and padded to the model’s fixed input width; characters outside the training charset degrade gracefully by leaving the corresponding row zeroed. The model outputs a five-class distribution (0–4) derived from zxcvbn-labelled training data. The service reports the winning class, its confidence, the full probability histogram, and a 1–100 normalized score computed from the expectation of the distribution. Requests longer than the model’s supported length return HTTP 422, and the aggregator automatically skips PassStrengthAI when passwords exceed 10 characters to avoid misleading scores. Tune behavior with `MODEL_PATH` to swap in a different `.keras` artifact.
+The PassGPT component loads a GPT-2 style language model trained on leaked password distributions and computes the log-probability of each submitted password. That log-probability is mapped to a 1–100 score so that higher surprise (lower likelihood) yields a stronger rating. Requests longer than the configured maximum return HTTP 422, and the aggregator automatically skips PassGPT when passwords exceed the limit (default 10 characters) to avoid extrapolating beyond the model’s training regime. Customize the service with `PASS_GPT_MODEL_NAME` or `PASS_GPT_MODEL_PATH`, along with `PASS_GPT_MAX_PASSWORD_LENGTH`, `PASS_GPT_SCORE_SCALE`, and `PASS_GPT_DEVICE` for inference tuning. For gated Hugging Face models, supply `HUGGINGFACE_HUB_TOKEN`.
 
 ### zxcvbn Heuristic Estimator
 
@@ -21,7 +21,9 @@ This component hashes the candidate password with SHA-1, applies HIBP’s k-anon
 
 ### Aggregator Orchestration
 
-The aggregator accepts an optional `components` list per request or respects the `ENABLED_COMPONENTS` environment variable to select its fan-out set. It launches concurrent HTTP requests with `httpx.AsyncClient`, collects normalized scores, and averages the successful component values (re-clamping to 1–100). Partial failures are surfaced in the response alongside the individual payloads so callers can decide how to react. If every component fails, the service responds with HTTP 503; if policy filters remove all candidates (e.g., only PassStrengthAI enabled for a long password) it returns HTTP 422. Component endpoints are configurable through `PASS_STRENGTH_AI_URL`, `ZXCVBN_URL`, and `HAVEIBEENPWNED_URL`, enabling cross-host deployments without code changes.
+The aggregator accepts an optional `components` list per request or respects the `ENABLED_COMPONENTS` environment variable to select its fan-out set. It launches concurrent HTTP requests with `httpx.AsyncClient`, collects normalized scores, and averages the successful component values (re-clamping to 1–100). Partial failures are surfaced in the response alongside the individual payloads so callers can decide how to react. If every component fails, the service responds with HTTP 503; if policy filters remove all candidates (e.g., only PassGPT enabled for a long password) it returns HTTP 422. Component endpoints are configurable through `PASS_GPT_URL`, `ZXCVBN_URL`, and `HAVEIBEENPWNED_URL`, enabling cross-host deployments without code changes.
+
+The aggregation step applies reliability safeguards: when zxcvbn reports a very weak score (default ≤1), its weight increases relative to PassGPT, PassGPT is penalized if zxcvbn emits a warning, and short passwords are capped (default max 60 for length <8). These behaviors are configurable via `PASS_SHORT_PASSWORD_LENGTH`, `PASS_SHORT_PASSWORD_MAX_SCORE`, `ZXCVBN_LOW_SCORE_THRESHOLD`, `PASS_GPT_WARNING_PENALTY`, `PASS_GPT_LOW_SCORE_PENALTY`, `PASS_GPT_LOW_WEIGHT`, and `ZXCVBN_LOW_WEIGHT`.
 
 ### Deployment Notes
 
