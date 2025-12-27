@@ -21,5 +21,12 @@ export const CONFIG = {
             health: '/health',
             extract: '/predict'
         }
+    },
+    orchestrator: {
+        baseUrl: 'http://localhost:8200',
+        endpoints: {
+            health: '/health',
+            orchestrate: '/v1/orchestrate'
+        }
     }
 };

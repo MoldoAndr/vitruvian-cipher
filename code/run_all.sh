@@ -5,6 +5,7 @@ set -euo pipefail
 # - Password Checker (agents/password_checker/docker-compose.yml)
 # - Theory Specialist (agents/theory_specialist/docker-compose.yml)
 # - Choice Maker (agents/choice_maker/docker-compose.yaml|yml)
+# - Orchestrator (agents/orchestrator/Dockerfile)
 # - Mock Interface (static HTML opened via file:// or your own static server)
 # - React Frontend (interface/react_interface served via Nginx container)
 
@@ -12,6 +13,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS_DIR="$ROOT_DIR/agents"
 INTERFACE_DIR="$ROOT_DIR/interface"
 REACT_DIR="$INTERFACE_DIR/react_interface"
+ORCHESTRATOR_DIR="$AGENTS_DIR/orchestrator"
 
 log() {
   echo "[run_all] $*"
@@ -59,6 +61,41 @@ start_command_executor() {
   fi
 }
 
+start_orchestrator() {
+  local dockerfile="$ORCHESTRATOR_DIR/Dockerfile"
+  if [ ! -f "$dockerfile" ]; then
+    log "orchestrator/Dockerfile not found, skipping orchestrator."
+    return
+  fi
+
+  local container_name="orchestrator"
+  local existing_container=""
+  existing_container="$(docker ps -aq -f name=^${container_name}$ 2>/dev/null || true)"
+  if [ -n "$existing_container" ]; then
+    local running=""
+    running="$(docker ps -q -f name=^${container_name}$ 2>/dev/null || true)"
+    if [ -n "$running" ]; then
+      log "Orchestrator container already running."
+      return
+    fi
+    log "Starting existing orchestrator container..."
+    docker start "$container_name" >/dev/null
+    return
+  fi
+
+  local port="${ORCHESTRATOR_PORT:-8200}"
+  local network_args=()
+  if [ "$(uname -s)" = "Linux" ]; then
+    network_args+=(--network host)
+  else
+    network_args+=(-p "$port:8200")
+  fi
+  log "Building orchestrator image..."
+  docker build -t vitruvian-orchestrator:local "$ORCHESTRATOR_DIR"
+  log "Starting orchestrator..."
+  docker run -d --name "$container_name" "${network_args[@]}" vitruvian-orchestrator:local >/dev/null
+}
+
 start_mock_interface() {
   local mock_path="$INTERFACE_DIR/mock/index.html"
   log "Mock Interface is static; open file://$mock_path in your browser."
@@ -96,6 +133,7 @@ start_password_checker
 start_theory_specialist
 start_choice_maker
 start_command_executor
+start_orchestrator
 start_mock_interface
 start_react_frontend
 
@@ -105,5 +143,6 @@ log " - Password Checker: http://localhost:9000"
 log " - Theory Specialist: http://localhost:8100"
 log " - Choice Maker: http://localhost:8081 (host) -> container 8080"
 log " - Command Executor: http://localhost:8085"
+log " - Orchestrator: http://localhost:${ORCHESTRATOR_PORT:-8200}"
 log " - Mock Interface: open file://$INTERFACE_DIR/mock/index.html (or serve it statically)."
 log " - React Frontend: http://localhost:${REACT_PORT:-${REACT_FRONTEND_PORT:-5173}} (Docker container)"

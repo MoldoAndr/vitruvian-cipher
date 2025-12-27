@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Shield, BrainCircuit, FileText, Split } from 'lucide-react';
+import { Shield, BrainCircuit, FileText, Split, MessageSquare } from 'lucide-react';
 import StatusIndicator from './StatusIndicator';
 import PasswordChecker from './PasswordChecker';
 import CryptoExpert from './CryptoExpert';
 import DocumentIngestion from './DocumentIngestion';
 import ChoiceMaker from './ChoiceMaker';
+import OrchestratorChat from './OrchestratorChat';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Layout = () => {
@@ -15,6 +16,7 @@ const Layout = () => {
         { id: 'crypto', label: 'Cryptography Query', icon: BrainCircuit, component: CryptoExpert },
         { id: 'document', label: 'Document Ingestion', icon: FileText, component: DocumentIngestion },
         { id: 'choice', label: 'Choice Maker', icon: Split, component: ChoiceMaker },
+        { id: 'orchestrator', label: 'Orchestrator', icon: MessageSquare, component: OrchestratorChat },
     ];
 
     return (

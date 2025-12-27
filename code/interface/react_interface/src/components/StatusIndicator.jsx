@@ -48,6 +48,10 @@ const StatusIndicator = () => {
                 name="Choice" 
                 url={`${CONFIG.choiceMaker.baseUrl}${CONFIG.choiceMaker.endpoints.health}`} 
             />
+            <StatusDot 
+                name="Orchestrator" 
+                url={`${CONFIG.orchestrator.baseUrl}${CONFIG.orchestrator.endpoints.health}`} 
+            />
         </div>
     );
 };

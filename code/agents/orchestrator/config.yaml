@@ -1,0 +1,101 @@
+server:
+  address: ":8200"
+  read_timeout: "5s"
+  write_timeout: "30s"
+  idle_timeout: "60s"
+
+choice_maker:
+  base_url: "http://localhost:8081"
+  timeout: "10s"
+
+agents:
+  password_checker:
+    base_url: "http://localhost:9000"
+    timeout: "10s"
+  crypto_god:
+    base_url: "http://localhost:8090"
+    timeout: "10s"
+  prime_checker:
+    base_url: "http://localhost:5000"
+    timeout: "10s"
+  theory_specialist:
+    base_url: "http://localhost:8100"
+    timeout: "90s"
+
+routing:
+  routes:
+    - intents: ["password_strength", "password_check"]
+      agent: "password_checker"
+      operation: "score"
+      slots:
+        password: ["password", "$text"]
+    - intents: ["cipher_detection", "identify_cipher"]
+      agent: "crypto_god"
+      operation: "detect"
+      slots:
+        input: ["$text"]
+    - intents: ["primality_test", "factorization"]
+      agent: "prime_checker"
+      operation: "isprime"
+      slots:
+        number: ["number", "integer", "$text"]
+    - intents: ["theory_question", "explanation"]
+      agent: "theory_specialist"
+      operation: "generate"
+      slots:
+        query: ["$text"]
+        conversation_id: ["$state:theory_conversation_id"]
+      optional_slots: ["conversation_id"]
+
+orchestrator:
+  intent_threshold: 0.85
+  entity_threshold: 0.6
+  max_parallel: 4
+  planner_profile: "planner"
+  responder_profile: "responder"
+
+llm:
+  profiles:
+    planner:
+      openai: "gpt-4.1-mini"
+      anthropic: "claude-3-5-haiku-20241022"
+      gemini: "gemini-2.0-flash"
+      ollama_local: "mistral:7b"
+      ollama_cloud: "mistral:7b"
+    responder:
+      openai: "gpt-4.1"
+      anthropic: "claude-3-7-sonnet-20250219"
+      gemini: "gemini-2.0-pro"
+      ollama_local: "llama3.1:70b"
+      ollama_cloud: "llama3.1:70b"
+  providers:
+    openai:
+      base_url: "https://api.openai.com/v1"
+      api_key: "${OPENAI_API_KEY}"
+      timeout: "20s"
+      max_tokens: 1200
+      temperature: 0.2
+    anthropic:
+      base_url: "https://api.anthropic.com/v1"
+      api_key: "${ANTHROPIC_API_KEY}"
+      timeout: "20s"
+      max_tokens: 1200
+      temperature: 0.2
+    gemini:
+      base_url: "https://generativelanguage.googleapis.com/v1beta"
+      api_key: "${GEMINI_API_KEY}"
+      timeout: "20s"
+      max_tokens: 1200
+      temperature: 0.2
+    ollama_local:
+      base_url: "http://localhost:11434"
+      api_key: ""
+      timeout: "30s"
+      max_tokens: 1200
+      temperature: 0.2
+    ollama_cloud:
+      base_url: "https://ollama.com"
+      api_key: "${OLLAMA_API_KEY}"
+      timeout: "30s"
+      max_tokens: 1200
+      temperature: 0.2
