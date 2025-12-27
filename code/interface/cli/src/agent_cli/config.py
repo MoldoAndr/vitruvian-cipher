@@ -49,6 +49,17 @@ class Config:
             "extract": "/predict"
         }
     ))
+    
+    command_executor: EndpointConfig = field(default_factory=lambda: EndpointConfig(
+        base_url=os.getenv("COMMAND_EXECUTOR_URL", "http://localhost:8085"),
+        endpoints={
+            "health": "/health",
+            "pqc_health": "/pqc/health",
+            "execute": "/execute",
+            "operations": "/operations",
+            "ciphers": "/ciphers"
+        }
+    ))
 
 
 # Global config instance
@@ -59,7 +70,8 @@ config = Config()
 SERVICE_NAMES = {
     "password_checker": "Password Checker",
     "theory_specialist": "Theory Specialist",
-    "choice_maker": "Choice Maker"
+    "choice_maker": "Choice Maker",
+    "command_executor": "Command Executor"
 }
 
 # Agent modes
@@ -83,6 +95,11 @@ AGENT_MODES = {
         "name": "Document Ingestion",
         "description": "Add documents to the knowledge base",
         "icon": "📄"
+    },
+    "executor": {
+        "name": "Command Executor",
+        "description": "Execute cryptographic operations via OpenSSL",
+        "icon": "⚡"
     }
 }
 
@@ -114,4 +131,41 @@ DOCUMENT_TYPES = {
     "pdf": "PDF Document",
     "markdown": "Markdown File",
     "text": "Plain Text"
+}
+
+# Command executor operations (grouped)
+EXECUTOR_OPERATIONS = {
+    "encoding": {
+        "base64_encode": "Encode data to Base64",
+        "base64_decode": "Decode Base64 data",
+        "hex_encode": "Encode data to hexadecimal",
+        "hex_decode": "Decode hexadecimal data",
+    },
+    "random": {
+        "random_bytes": "Generate random bytes (Base64)",
+        "random_hex": "Generate random hex string",
+        "random_base64": "Generate random Base64 string",
+    },
+    "hashing": {
+        "hash": "Compute hash digest (sha256, sha512)",
+        "hmac": "Compute HMAC",
+    },
+    "symmetric": {
+        "aes_keygen": "Generate AES key + IV + HMAC key",
+        "aes_encrypt": "AES-CBC encrypt with HMAC",
+        "aes_decrypt": "AES-CBC decrypt (verifies HMAC)",
+    },
+    "asymmetric": {
+        "rsa_keygen": "Generate RSA key pair",
+        "rsa_pubkey": "Extract RSA public key from private key",
+        "rsa_sign": "Sign data with RSA",
+        "rsa_verify": "Verify RSA signature",
+        "rsa_encrypt": "Encrypt with RSA (OAEP)",
+        "rsa_decrypt": "Decrypt with RSA (OAEP)",
+    },
+    "pqc": {
+        "pqc_sig_keygen": "Generate PQC signature key pair (ML-DSA/Falcon)",
+        "pqc_sig_sign": "Sign data with PQC private key",
+        "pqc_sig_verify": "Verify PQC signature with public key",
+    }
 }

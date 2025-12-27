@@ -1,0 +1,50 @@
+[package]
+name = "command-executor"
+version = "1.0.0"
+edition = "2021"
+authors = ["Andrei Moldovan"]
+description = "SOTA Cryptographic Command Executor Agent with OpenSSL Backend"
+license = "MIT"
+
+[dependencies]
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1.35", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "timeout"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Validation
+regex = "1.10"
+lazy_static = "1.4"
+
+# Utilities
+tempfile = "3.9"
+uuid = { version = "1.6", features = ["v4"] }
+base64 = "0.21"
+hex = "0.4"
+subtle = "2.5"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio-test = "0.4"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

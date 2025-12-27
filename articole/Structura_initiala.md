@@ -1,4 +1,4 @@
-# Documentație: Utilitar AI pentru Analiză Criptografică și Securitate
+# Idei: Utilitar AI pentru Analiză Criptografică și Securitate
 
 ## 1. Introducere și Prezentare Generală
 
@@ -22,7 +22,7 @@ profesioniști în domeniul securității informatice.
 
 ### 1.3. Valoare Academică și Practică
 Lucrarea aduce contribuții semnificative prin:
-- Integrarea tehnicilor de ML/DL în analiza criptografică
+- Integrarea tehnicilor de AI/ML în analiza criptografică
 - Abordarea unitară a mai multor aspecte ale criptografiei
 - Implementarea practică a algoritmilor post-quantum
 - Crearea unei interfețe conversaționale pentru rezolvarea problemelor criptografice

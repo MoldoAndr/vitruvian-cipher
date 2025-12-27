@@ -631,6 +631,126 @@ def print_document_result(success: bool, message: str, details: Optional[Dict] =
     console.print()
 
 
+def print_executor_result(result: Dict[str, Any]):
+    """Print command executor result."""
+    content_parts = []
+    
+    # Result section - the main output
+    result_data = result.get("result", {})
+    
+    if isinstance(result_data, dict):
+        content_parts.append(f"[bold {COLORS['neon']}]⚡ Result[/]\n")
+        for key, value in result_data.items():
+            # Truncate very long values
+            str_value = str(value)
+            if len(str_value) > 100:
+                str_value = str_value[:100] + "..."
+            content_parts.append(f"   [{COLORS['info']}]{key}[/]: [white]{str_value}[/]\n")
+    elif result_data:
+        content_parts.append(f"[bold {COLORS['neon']}]⚡ Result[/]\n   [white]{result_data}[/]\n")
+    
+    # Command executed section
+    command_info = result.get("command", {}) or {}
+    command = command_info.get("executed", "")
+    if command:
+        content_parts.append(f"\n[bold {COLORS['warning']}]🔧 Command[/]\n")
+        # Format command nicely
+        content_parts.append(f"   [{COLORS['muted']}]{command}[/]\n")
+    
+    # Explanation section
+    explanation = command_info.get("explanation", "")
+    if explanation:
+        content_parts.append(f"\n[bold {COLORS['info']}]📖 Explanation[/]\n")
+        content_parts.append(f"   [white]{explanation}[/]\n")
+    
+    panel = Panel(
+        Text.from_markup("".join(content_parts)),
+        title=f"[bold {COLORS['neon']}]⚡ Command Executor[/]",
+        border_style=COLORS['neon'],
+        box=ROUNDED,
+        padding=(1, 2)
+    )
+    console.print(panel)
+    console.print()
+
+
+def print_operations_table(operations: Optional[List[Dict]] = None):
+    """Print available operations table."""
+    from .config import EXECUTOR_OPERATIONS
+    
+    table = Table(
+        show_header=True,
+        header_style=f"bold {COLORS['neon']}",
+        box=ROUNDED,
+        border_style=COLORS['muted'],
+        title="[bold white]Available Operations[/]"
+    )
+    
+    table.add_column("Category", style=f"bold {COLORS['info']}", width=12)
+    table.add_column("Operation", style="white", width=18)
+    table.add_column("Description", style=COLORS['muted'])
+    
+    if operations:
+        sorted_ops = sorted(operations, key=lambda op: (op.get("category", ""), op.get("name", "")))
+        current_category = None
+        for op in sorted_ops:
+            category = (op.get("category") or "").upper()
+            name = op.get("name", "")
+            desc = op.get("description", "")
+            cat_display = category if category != current_category else ""
+            table.add_row(cat_display, name, desc)
+            current_category = category
+    else:
+        for category, ops in EXECUTOR_OPERATIONS.items():
+            first_in_category = True
+            for op_name, op_desc in ops.items():
+                cat_display = category.upper() if first_in_category else ""
+                table.add_row(cat_display, op_name, op_desc)
+                first_in_category = False
+    
+    console.print(table)
+    console.print(f"\n[{COLORS['muted']}]Usage: <operation> <args>  |  Example: base64_encode hello world[/]")
+    console.print(f"[{COLORS['muted']}]Run 'aes_keygen' or 'rsa_keygen' first to generate and store keys[/]")
+    console.print()
+
+
+def print_pqc_health(health: Dict[str, Any]):
+    """Print PQC provider health info."""
+    status = health.get("status", "unknown")
+    provider_loaded = health.get("provider_loaded", False)
+    providers = health.get("providers", [])
+    sigs = health.get("pqc_signatures", [])
+    kems = health.get("pqc_kems", [])
+    message = health.get("message", "")
+    openssl_version = health.get("openssl_version", "")
+
+    color = COLORS["success"] if provider_loaded else COLORS["warning"]
+
+    content = []
+    content.append(f"[{color}]Status[/]: {status}\n")
+    content.append(f"[{color}]Provider loaded[/]: {provider_loaded}\n")
+    if providers:
+        content.append(f"[{COLORS['info']}]Providers[/]: {', '.join(providers)}\n")
+    if sigs:
+        content.append(f"[{COLORS['info']}]PQC Signatures[/]: {', '.join(sigs)}\n")
+    if kems:
+        content.append(f"[{COLORS['info']}]PQC KEMs[/]: {', '.join(kems)}\n")
+    if message:
+        content.append(f"[{COLORS['muted']}]Message[/]: {message}\n")
+    if openssl_version:
+        content.append(f"[{COLORS['muted']}]OpenSSL[/]: {openssl_version}\n")
+
+    panel = Panel(
+        Text.from_markup("".join(content)),
+        title=f"[bold {COLORS['neon']}]🧪 PQC Provider Health[/]",
+        border_style=COLORS["neon"],
+        box=ROUNDED,
+        padding=(1, 2)
+    )
+    console.print(panel)
+    console.print()
+
+
 def print_error(message: str, title: str = "Error"):
     """Print error message."""
     panel = Panel(
@@ -780,6 +900,9 @@ __all__ = [
     'print_crypto_response',
     'print_choice_result',
     'print_document_result',
+    'print_executor_result',
+    'print_operations_table',
+    'print_pqc_health',
     'print_error',
     'print_info',
     'print_success',

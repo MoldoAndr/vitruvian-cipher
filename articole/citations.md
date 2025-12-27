@@ -21,6 +21,12 @@ PASSWORD CHECKER
 
 https://www.kaggle.com/datasets/jeffersonvalandro/password-dataset
 
-PASSWORD STRENGTH 
+PASSWORD STRENGTH
 
+https://arxiv.org/html/2504.16651
+https://arxiv.org/html/2404.04886v2
+https://arxiv.org/html/2506.00373v1
+https://arxiv.org/html/2504.16651v4
+https://huggingface.co/papers/2306.01545
+https://arxiv.org/abs/2403.09954
 https://www.mdpi.com/2076-3417/13/13/7811

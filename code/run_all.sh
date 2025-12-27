@@ -49,6 +49,16 @@ start_choice_maker() {
   fi
 }
 
+start_command_executor() {
+  local file="$AGENTS_DIR/command_executor/docker-compose.yml"
+  if [ -f "$file" ]; then
+    log "Starting command_executor (OpenSSL Rust backend) via docker compose..."
+    (cd "$AGENTS_DIR/command_executor" && docker compose up --build -d)
+  else
+    log "command_executor/docker-compose.yml not found, skipping command executor."
+  fi
+}
+
 start_mock_interface() {
   local mock_path="$INTERFACE_DIR/mock/index.html"
   log "Mock Interface is static; open file://$mock_path in your browser."
@@ -85,6 +95,7 @@ log "Starting all components..."
 start_password_checker
 start_theory_specialist
 start_choice_maker
+start_command_executor
 start_mock_interface
 start_react_frontend
 
@@ -93,5 +104,6 @@ log "Services:"
 log " - Password Checker: http://localhost:9000"
 log " - Theory Specialist: http://localhost:8100"
 log " - Choice Maker: http://localhost:8081 (host) -> container 8080"
+log " - Command Executor: http://localhost:8085"
 log " - Mock Interface: open file://$INTERFACE_DIR/mock/index.html (or serve it statically)."
 log " - React Frontend: http://localhost:${REACT_PORT:-${REACT_FRONTEND_PORT:-5173}} (Docker container)"

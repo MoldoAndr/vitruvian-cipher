@@ -109,6 +109,7 @@ class APIClient:
             "password_checker": ("Password Checker", config.password_checker),
             "theory_specialist": ("Theory Specialist", config.theory_specialist),
             "choice_maker": ("Choice Maker", config.choice_maker),
+            "command_executor": ("Command Executor", config.command_executor),
         }
         
         async def check_service(key: str, name: str, svc_config) -> Tuple[str, Dict]:
@@ -193,6 +194,34 @@ class APIClient:
         intent_task = self.extract_intent(text)
         entity_task = self.extract_entities(text)
         return await asyncio.gather(intent_task, entity_task)
+    
+    # Command Executor API
+    async def execute_command(
+        self, 
+        operation: str, 
+        params: Dict[str, Any]
+    ) -> APIResponse:
+        """Execute a cryptographic operation."""
+        url = config.command_executor.get_url("execute")
+        return await self._request("POST", url, json={
+            "operation": operation,
+            "params": params
+        })
+    
+    async def get_operations(self) -> APIResponse:
+        """Get list of supported operations."""
+        url = config.command_executor.get_url("operations")
+        return await self._request("GET", url)
+    
+    async def get_ciphers(self) -> APIResponse:
+        """Get list of available ciphers."""
+        url = config.command_executor.get_url("ciphers")
+        return await self._request("GET", url)
+
+    async def get_pqc_health(self) -> APIResponse:
+        """Get PQC provider health."""
+        url = config.command_executor.get_url("pqc_health")
+        return await self._request("GET", url)
 
 
 # Global API client instance

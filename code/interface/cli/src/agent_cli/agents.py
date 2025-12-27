@@ -8,17 +8,20 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 
 from .api import api_client, APIResponse
-from .config import PASSWORD_COMPONENTS, CHOICE_MODES, DOCUMENT_TYPES
+from .config import PASSWORD_COMPONENTS, CHOICE_MODES, DOCUMENT_TYPES, EXECUTOR_OPERATIONS
 from .ui import (
     console,
     print_password_result,
     print_crypto_response,
     print_choice_result,
     print_document_result,
+    print_executor_result,
     print_error,
     print_info,
     print_components_table,
     print_mode_table,
+    print_operations_table,
+    print_pqc_health,
     create_spinner,
     COLORS
 )
@@ -363,12 +366,365 @@ class DocumentAgent(BaseAgent):
         return False
 
 
+class ExecutorAgent(BaseAgent):
+    """Agent for executing cryptographic commands via OpenSSL."""
+    
+    name = "Command Executor"
+    icon = "⚡"
+    description = "Execute cryptographic operations via OpenSSL backend"
+    
+    def __init__(self):
+        super().__init__()
+        self.session.settings["operation"] = None
+        self.session.settings["last_keys"] = {}  # Store generated keys for convenience
+    
+    async def process(self, user_input: str) -> None:
+        """Execute a command or parse interactive input."""
+        if not user_input.strip():
+            print_error("Please enter an operation or parameters")
+            self._show_quick_help()
+            return
+        
+        # Check if it's a direct operation command (e.g., "base64_encode hello")
+        parts = user_input.strip().split(maxsplit=1)
+        operation = parts[0].lower()
+        
+        # Check if it's a known operation
+        all_ops = {}
+        for category_ops in EXECUTOR_OPERATIONS.values():
+            all_ops.update(category_ops)
+        
+        if operation in all_ops:
+            await self._execute_operation(operation, parts[1] if len(parts) > 1 else "")
+        elif operation == "ops" or operation == "operations":
+            await self._show_operations()
+        elif operation == "keys":
+            self._show_stored_keys()
+        elif operation == "pqc_health":
+            await self._show_pqc_health()
+        elif operation == "help":
+            self._show_quick_help()
+        else:
+            # Try to parse as parameters for current operation
+            if self.session.settings.get("operation"):
+                await self._execute_with_params(user_input)
+            else:
+                print_error(f"Unknown operation: {operation}")
+                self._show_quick_help()
+    
+    async def _execute_operation(self, operation: str, args: str) -> None:
+        """Execute a specific operation."""
+        params = self._parse_args(operation, args)
+        
+        if params is None:
+            return
+        
+        self.session.history.append({
+            "role": "user",
+            "content": f"{operation}: {args if args else '(default params)'}"
+        })
+        
+        with create_spinner(f"Executing {operation}..."):
+            response = await api_client.execute_command(operation, params)
+        
+        if response.success:
+            result = response.data
+            print_executor_result(result)
+            
+            # Store keys if this was a keygen operation
+            if operation == "aes_keygen" and result.get("result"):
+                self.session.settings["last_keys"]["aes"] = result["result"]
+                print_info("Keys stored! Use 'keys' command to view them.")
+            elif operation == "rsa_keygen" and result.get("result"):
+                self.session.settings["last_keys"]["rsa"] = result["result"]
+                print_info("Keys stored! Use 'keys' command to view them.")
+            elif operation == "pqc_sig_keygen" and result.get("result"):
+                self.session.settings["last_keys"]["pqc_sig"] = result["result"]
+                print_info("PQC keys stored! Use 'keys' command to view them.")
+            
+            self.session.history.append({
+                "role": "system",
+                "content": result.get("result", {})
+            })
+        else:
+            error_msg = response.error
+            if response.data and response.data.get("error"):
+                error_msg = response.data["error"].get("message", error_msg)
+            print_error(error_msg, "Execution Failed")
+            self.session.history.append({
+                "role": "error",
+                "content": error_msg
+            })
+    
+    def _parse_args(self, operation: str, args: str) -> dict:
+        """Parse arguments for an operation."""
+        params = {}
+        
+        # Simple operations that just need data
+        if operation in ["base64_encode", "hex_encode"]:
+            params["data"] = args if args else ""
+            if not params["data"]:
+                print_error("Please provide data to encode")
+                print_info(f"Usage: {operation} <data>")
+                return None
+        
+        elif operation in ["base64_decode"]:
+            params["encoded"] = args if args else ""
+            if not params["encoded"]:
+                print_error("Please provide Base64 data to decode")
+                return None
+        
+        elif operation in ["hex_decode"]:
+            params["hex"] = args if args else ""
+            if not params["hex"]:
+                print_error("Please provide hex data to decode")
+                return None
+        
+        elif operation in ["random_bytes", "random_hex", "random_base64"]:
+            try:
+                params["length"] = int(args) if args else 32
+            except ValueError:
+                print_error("Length must be a number")
+                return None
+        
+        elif operation == "hash":
+            parts = args.split() if args else []
+            params["data"] = parts[0] if parts else ""
+            params["algorithm"] = parts[1] if len(parts) > 1 else "sha256"
+            if not params["data"]:
+                print_error("Please provide data to hash")
+                print_info("Usage: hash <data> [algorithm]")
+                return None
+        
+        elif operation == "hmac":
+            parts = args.split() if args else []
+            if len(parts) < 2:
+                print_error("Please provide data and key")
+                print_info("Usage: hmac <data> <key> [algorithm]")
+                return None
+            params["data"] = parts[0]
+            params["key"] = parts[1]
+            params["algorithm"] = parts[2] if len(parts) > 2 else "sha256"
+        
+        elif operation == "aes_keygen":
+            try:
+                params["bits"] = int(args) if args else 256
+            except ValueError:
+                params["bits"] = 256
+        
+        elif operation == "aes_encrypt":
+            # Check for stored keys
+            stored = self.session.settings.get("last_keys", {}).get("aes")
+            if stored and not args:
+                print_error("Please provide plaintext to encrypt")
+                print_info("Usage: aes_encrypt <plaintext>")
+                print_info("(Will use stored keys from last aes_keygen)")
+                return None
+            
+            if stored:
+                params["plaintext"] = args
+                params["key"] = stored["key_hex"]
+                params["iv"] = stored["iv_hex"]
+                params["hmac_key"] = stored["hmac_key_hex"]
+            else:
+                print_error("No stored keys. Run 'aes_keygen' first, or provide full params.")
+                return None
+        
+        elif operation == "aes_decrypt":
+            stored = self.session.settings.get("last_keys", {}).get("aes")
+            if not args:
+                print_error("Please provide: <ciphertext_base64> <hmac_hex>")
+                return None
+            parts = args.split()
+            if len(parts) < 2:
+                print_error("Please provide: <ciphertext_base64> <hmac_hex> [iv_hex]")
+                return None
+            if stored:
+                params["ciphertext"] = parts[0]
+                params["hmac"] = parts[1]
+                params["key"] = stored["key_hex"]
+                params["iv"] = parts[2] if len(parts) > 2 else stored["iv_hex"]
+                params["hmac_key"] = stored["hmac_key_hex"]
+            else:
+                print_error("No stored keys. Run 'aes_keygen' first.")
+                return None
+        
+        elif operation == "rsa_keygen":
+            try:
+                params["bits"] = int(args) if args else 2048
+            except ValueError:
+                params["bits"] = 2048
+
+        elif operation == "rsa_pubkey":
+            stored = self.session.settings.get("last_keys", {}).get("rsa")
+            if stored:
+                params["private_key"] = stored["private_key_pem"]
+            else:
+                print_error("No stored keys. Run 'rsa_keygen' first.")
+                return None
+
+        elif operation == "pqc_sig_keygen":
+            params["algorithm"] = args if args else "mldsa44"
+
+        elif operation == "pqc_sig_sign":
+            stored = self.session.settings.get("last_keys", {}).get("pqc_sig")
+            if not args:
+                print_error("Please provide data to sign")
+                return None
+            if stored:
+                params["data"] = args
+                params["private_key"] = stored["private_key_pem"]
+                params["algorithm"] = stored.get("algorithm", "mldsa44")
+            else:
+                print_error("No stored PQC keys. Run 'pqc_sig_keygen' first.")
+                return None
+
+        elif operation == "pqc_sig_verify":
+            stored = self.session.settings.get("last_keys", {}).get("pqc_sig")
+            parts = args.split() if args else []
+            if len(parts) < 2:
+                print_error("Please provide: <data> <signature_base64>")
+                return None
+            if stored:
+                params["data"] = parts[0]
+                params["signature"] = parts[1]
+                params["public_key"] = stored["public_key_pem"]
+                params["algorithm"] = stored.get("algorithm", "mldsa44")
+            else:
+                print_error("No stored PQC keys. Run 'pqc_sig_keygen' first.")
+                return None
+        
+        elif operation in ["rsa_sign", "rsa_encrypt"]:
+            stored = self.session.settings.get("last_keys", {}).get("rsa")
+            if not args:
+                print_error("Please provide data")
+                return None
+            if stored:
+                params["data" if operation == "rsa_sign" else "plaintext"] = args
+                params["private_key" if operation == "rsa_sign" else "public_key"] = \
+                    stored["private_key_pem" if operation == "rsa_sign" else "public_key_pem"]
+            else:
+                print_error("No stored keys. Run 'rsa_keygen' first.")
+                return None
+        
+        elif operation == "rsa_verify":
+            stored = self.session.settings.get("last_keys", {}).get("rsa")
+            parts = args.split() if args else []
+            if len(parts) < 2:
+                print_error("Please provide: <data> <signature_base64>")
+                return None
+            if stored:
+                params["data"] = parts[0]
+                params["signature"] = parts[1]
+                params["public_key"] = stored["public_key_pem"]
+            else:
+                print_error("No stored keys. Run 'rsa_keygen' first.")
+                return None
+        
+        elif operation == "rsa_decrypt":
+            stored = self.session.settings.get("last_keys", {}).get("rsa")
+            if not args:
+                print_error("Please provide ciphertext_base64")
+                return None
+            if stored:
+                params["ciphertext"] = args
+                params["private_key"] = stored["private_key_pem"]
+            else:
+                print_error("No stored keys. Run 'rsa_keygen' first.")
+                return None
+        
+        return params
+    
+    async def _execute_with_params(self, params_str: str) -> None:
+        """Execute current operation with provided parameters."""
+        operation = self.session.settings.get("operation")
+        await self._execute_operation(operation, params_str)
+    
+    async def _show_operations(self) -> None:
+        """Show all available operations."""
+        with create_spinner("Fetching operations..."):
+            response = await api_client.get_operations()
+        
+        if response.success:
+            print_operations_table(response.data.get("operations", []))
+        else:
+            # Fallback to local list
+            print_operations_table(None)
+    
+    def _show_stored_keys(self) -> None:
+        """Show stored keys."""
+        keys = self.session.settings.get("last_keys", {})
+        if not keys:
+            print_info("No stored keys. Generate some with 'aes_keygen' or 'rsa_keygen'.")
+            return
+        
+        console.print(f"\n[bold {COLORS['neon']}]Stored Keys[/]\n")
+        
+        if "aes" in keys:
+            console.print(f"[{COLORS['info']}]AES Keys:[/]")
+            console.print(f"  key_hex: {keys['aes']['key_hex'][:16]}...")
+            console.print(f"  iv_hex: {keys['aes']['iv_hex']}")
+            console.print(f"  hmac_key_hex: {keys['aes']['hmac_key_hex'][:16]}...")
+            console.print()
+        
+        if "rsa" in keys:
+            console.print(f"[{COLORS['info']}]RSA Keys:[/]")
+            console.print(f"  bits: {keys['rsa'].get('bits', 'unknown')}")
+            console.print(f"  private_key: [dim](stored, {len(keys['rsa']['private_key_pem'])} chars)[/]")
+            console.print(f"  public_key: [dim](stored, {len(keys['rsa']['public_key_pem'])} chars)[/]")
+            console.print()
+
+        if "pqc_sig" in keys:
+            console.print(f"[{COLORS['info']}]PQC Signature Keys:[/]")
+            console.print(f"  algorithm: {keys['pqc_sig'].get('algorithm', 'unknown')}")
+            console.print(f"  private_key: [dim](stored, {len(keys['pqc_sig']['private_key_pem'])} chars)[/]")
+            console.print(f"  public_key: [dim](stored, {len(keys['pqc_sig']['public_key_pem'])} chars)[/]")
+            console.print()
+    
+    def _show_quick_help(self) -> None:
+        """Show quick help."""
+        console.print(f"\n[{COLORS['muted']}]Quick commands:[/]")
+        console.print(f"  [bold]ops[/]              - List all operations")
+        console.print(f"  [bold]keys[/]             - Show stored keys")
+        console.print(f"  [bold]base64_encode[/] <text>  - Encode to Base64")
+        console.print(f"  [bold]random_hex[/] 32    - Generate 32 random hex bytes")
+        console.print(f"  [bold]random_base64[/] 32 - Generate 32 random bytes (Base64)")
+        console.print(f"  [bold]hash[/] <data> sha256 - Hash data")
+        console.print(f"  [bold]aes_keygen[/]       - Generate AES keys")
+        console.print(f"  [bold]rsa_keygen[/] 2048  - Generate RSA keypair")
+        console.print(f"  [bold]pqc_sig_keygen[/] mldsa44 - Generate PQC signature keys")
+        console.print(f"  [bold]pqc_health[/]       - Check PQC provider status")
+        console.print()
+    
+    def handle_command(self, command: str, args: List[str]) -> bool:
+        """Handle executor agent specific commands."""
+        if command == "ops" or command == "operations":
+            import asyncio
+            asyncio.create_task(self._show_operations())
+            return True
+        if command == "pqc_health":
+            import asyncio
+            asyncio.create_task(self._show_pqc_health())
+            return True
+        return False
+
+    async def _show_pqc_health(self) -> None:
+        """Show PQC provider health."""
+        with create_spinner("Checking PQC provider..."):
+            response = await api_client.get_pqc_health()
+        if response.success:
+            print_pqc_health(response.data)
+        else:
+            print_error(response.error, "PQC Health Check Failed")
+
+
 # Agent registry
 AGENTS = {
     "password": PasswordAgent,
     "crypto": CryptoAgent,
     "choice": ChoiceAgent,
     "document": DocumentAgent,
+    "executor": ExecutorAgent,
 }
 
 
