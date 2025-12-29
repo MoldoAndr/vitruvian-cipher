@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --app-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
 @layer base {
   body {
     @apply bg-dark-bg text-white overflow-hidden m-0 p-0 h-screen w-screen;

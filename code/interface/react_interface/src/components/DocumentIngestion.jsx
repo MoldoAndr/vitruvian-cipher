@@ -11,14 +11,7 @@ const DocumentIngestion = () => {
     const [status, setStatus] = useState(null);
     const [history, setHistory] = useState([]);
     const fileInputRef = useRef(null);
-    const bottomRef = useRef(null);
     const inputRef = useRef(null);
-
-    const scrollToBottom = () => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    useEffect(scrollToBottom, [status, loading, history]);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
@@ -53,7 +46,6 @@ const DocumentIngestion = () => {
         setInputPath('');
         const descriptor = selectedFile ? `Upload: ${selectedFile.name}` : `Path: ${inputPath}`;
         setHistory(prev => [...prev, { role: 'user', content: descriptor }]);
-        scrollToBottom();
         inputRef.current?.focus();
 
         try {
@@ -88,14 +80,14 @@ const DocumentIngestion = () => {
     };
 
     return (
-        <div className="flex flex-col h-full p-6 overflow-y-auto custom-scrollbar">
-            <div className="max-w-2xl mx-auto w-full space-y-8">
+        <div className="flex flex-col h-full p-4 md:p-6 overflow-y-auto custom-scrollbar">
+            <div className="max-w-2xl mx-auto w-full space-y-6 md:space-y-8">
                 {history.length === 0 && (
                     <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neon-dim mb-4">
-                            <FileText className="w-8 h-8 text-neon" />
+                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-neon-dim mb-4">
+                            <FileText className="w-6 h-6 md:w-8 md:h-8 text-neon" />
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Document Ingestion</h2>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Document Ingestion</h2>
                         <p className="text-gray-400">Add documents to the knowledge base for enhanced analysis.</p>
                     </div>
                 )}
@@ -129,12 +121,12 @@ const DocumentIngestion = () => {
                     </div>
                 )}
 
-                <div className="flex justify-center gap-4">
+                <div className="flex flex-wrap justify-center gap-2 md:gap-4">
                     {['pdf', 'markdown', 'text'].map(type => (
                         <button
                             key={type}
                             onClick={() => setDocType(type)}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                            className={`px-4 md:px-6 py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 border ${
                                 docType === type
                                 ? 'bg-neon-dim border-neon text-neon shadow-[0_0_10px_rgba(0,255,136,0.2)]'
                                 : 'bg-dark-panel border-dark-border text-gray-500 hover:border-gray-500'
@@ -146,7 +138,7 @@ const DocumentIngestion = () => {
                 </div>
 
                 <div 
-                    className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 cursor-pointer ${
+                    className={`border-2 border-dashed rounded-2xl p-6 md:p-10 text-center transition-all duration-300 cursor-pointer ${
                         selectedFile 
                         ? 'border-neon bg-neon-dim' 
                         : 'border-dark-border hover:border-neon/50 hover:bg-dark-panel'
@@ -179,7 +171,7 @@ const DocumentIngestion = () => {
                         </div>
                     ) : (
                         <>
-                            <Upload className="w-10 h-10 text-gray-500 mx-auto mb-4" />
+                            <Upload className="w-8 h-8 md:w-10 md:h-10 text-gray-500 mx-auto mb-4" />
                             <div className="text-gray-300 font-medium mb-2">Click to upload or drag and drop</div>
                             <div className="text-sm text-gray-500">PDF, Markdown, or Text files</div>
                         </>
@@ -195,19 +187,19 @@ const DocumentIngestion = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                     <input
                         ref={inputRef}
                         type="text"
                         value={inputPath}
                         onChange={(e) => { setInputPath(e.target.value); setSelectedFile(null); }}
                         placeholder="Enter document path or URL..."
-                        className="flex-1 bg-dark-panel border border-dark-border rounded-xl px-5 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all"
+                        className="flex-1 bg-dark-panel border border-dark-border rounded-xl px-4 md:px-5 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all"
                     />
                     <button
                         onClick={handleIngest}
                         disabled={loading || (!selectedFile && !inputPath)}
-                        className="bg-neon text-black font-bold rounded-xl px-8 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2"
+                        className="bg-neon text-black font-bold rounded-xl px-4 md:px-8 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
                         {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                         INGEST
@@ -238,7 +230,6 @@ const DocumentIngestion = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <div ref={bottomRef} />
             </div>
         </div>
     );

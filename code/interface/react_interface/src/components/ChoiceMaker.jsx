@@ -77,18 +77,18 @@ const ChoiceMaker = () => {
 
     return (
         <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 custom-scrollbar">
                 {history.length === 0 && (
-                    <div className="text-center py-10">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neon-dim mb-4">
-                            <Split className="w-8 h-8 text-neon" />
+                    <div className="text-center py-8 md:py-10">
+                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-neon-dim mb-4">
+                            <Split className="w-6 h-6 md:w-8 md:h-8 text-neon" />
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Choice Maker</h2>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Choice Maker</h2>
                         <p className="text-gray-400 max-w-md mx-auto">
                             Describe a task and let the AI classify the intent and extract relevant entities.
                         </p>
 
-                        <div className="flex justify-center gap-2 mt-6">
+                        <div className="flex flex-wrap justify-center gap-2 mt-6">
                             {[
                                 { id: 'intent_extraction', label: 'Intent Only' },
                                 { id: 'entity_extraction', label: 'Entities Only' },
@@ -117,7 +117,7 @@ const ChoiceMaker = () => {
                                 key={idx}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={`flex gap-4 ${entry.role === 'user' ? 'flex-row-reverse' : ''}`}
+                                className={`flex gap-3 md:gap-4 ${entry.role === 'user' ? 'flex-row-reverse' : ''}`}
                             >
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     entry.role === 'user' ? 'bg-neon text-black' :
@@ -125,7 +125,7 @@ const ChoiceMaker = () => {
                                 }`}>
                                     <Split className="w-5 h-5" />
                                 </div>
-                                <div className={`max-w-[80%] rounded-2xl p-4 ${
+                                <div className={`max-w-[80%] rounded-2xl p-3 md:p-4 ${
                                     entry.role === 'user'
                                     ? 'bg-neon/10 border border-neon/20 text-white'
                                     : entry.role === 'error'
@@ -187,8 +187,8 @@ const ChoiceMaker = () => {
                 <div ref={bottomRef} />
             </div>
 
-            <div className="p-6 border-t backdrop-blur-md">
-                <div className="flex gap-4">
+            <div className="p-4 md:p-6 border-t backdrop-blur-md">
+                <div className="flex gap-3 md:gap-4">
                     <textarea
                         ref={inputRef}
                         value={text}
@@ -200,14 +200,14 @@ const ChoiceMaker = () => {
                             }
                         }}
                         placeholder="Describe what you want to do (e.g. 'crack this SHA-256 hash')..."
-                        className="flex-1 bg-dark-bg border border-dark-border rounded-xl px-5 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all resize-none h-[60px] custom-scrollbar"
+                        className="flex-1 bg-dark-bg border border-dark-border rounded-xl px-4 md:px-5 py-3 md:py-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all resize-none h-12 md:h-[60px] custom-scrollbar"
                     />
                     <button
                         onClick={handleAnalyze}
                         disabled={loading || !text.trim()}
-                        className="bg-neon text-black font-bold rounded-xl px-6 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center min-w-[60px]"
+                        className="bg-neon text-black font-bold rounded-xl px-4 md:px-6 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center min-w-[48px] md:min-w-[60px]"
                     >
-                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
+                        {loading ? <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin" /> : <ArrowRight className="w-5 h-5 md:w-6 md:h-6" />}
                     </button>
                 </div>
             </div>

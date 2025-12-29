@@ -3,8 +3,8 @@ import { CONFIG } from '../config';
 import { BrainCircuit, Send, Loader2, Bot, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const CryptoExpert = () => {
-    const [query, setQuery] = useState('');
+const CryptoExpert = ({ inputValue = '', onInputChange }) => {
+    const [query, setQuery] = useState(inputValue);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [conversationId, setConversationId] = useState(null);
@@ -15,6 +15,10 @@ const CryptoExpert = () => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    useEffect(() => {
+        setQuery(inputValue);
+    }, [inputValue]);
+
     useEffect(scrollToBottom, [messages, loading]);
 
     const handleSend = async () => {
@@ -23,6 +27,7 @@ const CryptoExpert = () => {
         const userMsg = { role: 'user', content: query };
         setMessages(prev => [...prev, userMsg]);
         setQuery('');
+        if (onInputChange) onInputChange('');
         setLoading(true);
         scrollToBottom();
         inputRef.current?.focus();
@@ -57,11 +62,11 @@ const CryptoExpert = () => {
 
     return (
         <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 custom-scrollbar">
                 {messages.length === 0 && (
-                    <div className="text-center py-20 opacity-50">
-                        <BrainCircuit className="w-16 h-16 mx-auto mb-4 text-neon" />
-                        <h2 className="text-xl font-bold text-white">Cryptography Expert</h2>
+                    <div className="text-center py-12 md:py-20">
+                        <BrainCircuit className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-neon" />
+                        <h2 className="text-lg md:text-xl font-bold text-white">Cryptography Expert</h2>
                         <p className="text-sm text-gray-400 mt-2">Ask about algorithms, protocols, and security proofs.</p>
                     </div>
                 )}
@@ -71,7 +76,7 @@ const CryptoExpert = () => {
                         key={idx}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                        className={`flex gap-3 md:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             msg.role === 'user' ? 'bg-neon text-black' : 
@@ -80,7 +85,7 @@ const CryptoExpert = () => {
                             {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
                         
-                        <div className={`max-w-[80%] rounded-2xl p-4 ${
+                        <div className={`max-w-[80%] rounded-2xl p-3 md:p-4 ${
                             msg.role === 'user' 
                             ? 'bg-neon/10 border border-neon/20 text-white' 
                             : msg.role === 'error'
@@ -114,11 +119,11 @@ const CryptoExpert = () => {
                 ))}
                 
                 {loading && (
-                    <div className="flex gap-4">
+                    <div className="flex gap-3 md:gap-4">
                         <div className="w-8 h-8 rounded-full bg-dark-panel border border-dark-border flex items-center justify-center">
                             <Bot className="w-5 h-5 text-neon" />
                         </div>
-                        <div className="bg-dark-panel border border-dark-border rounded-2xl p-4 flex items-center gap-2">
+                        <div className="bg-dark-panel border border-dark-border rounded-2xl p-3 md:p-4 flex items-center gap-2">
                             <span className="text-sm text-gray-400">Thinking</span>
                             <div className="flex gap-1">
                                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1 h-1 bg-neon rounded-full" />
@@ -131,12 +136,15 @@ const CryptoExpert = () => {
                 <div ref={chatEndRef} />
             </div>
 
-            <div className="p-6 border-t backdrop-blur-md">
-                <div className="flex gap-4">
+            <div className="p-4 md:p-6 border-t backdrop-blur-md">
+                <div className="flex gap-3 md:gap-4">
                     <textarea
                         ref={inputRef}
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            setQuery(e.target.value);
+                            if (onInputChange) onInputChange(e.target.value);
+                        }}
                         onKeyPress={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
@@ -144,14 +152,14 @@ const CryptoExpert = () => {
                             }
                         }}
                         placeholder="Ask about cryptography..."
-                        className="flex-1 bg-dark-bg border border-dark-border rounded-xl px-5 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all resize-none h-[60px] custom-scrollbar"
+                        className="flex-1 bg-dark-bg border border-dark-border rounded-xl px-4 md:px-5 py-3 md:py-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all resize-none h-12 md:h-[60px] custom-scrollbar"
                     />
                     <button
                         onClick={handleSend}
                         disabled={loading || !query.trim()}
-                        className="bg-neon text-black font-bold rounded-xl px-6 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center min-w-[60px]"
+                        className="bg-neon text-black font-bold rounded-xl px-4 md:px-6 hover:bg-[#00dd77] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center min-w-[48px] md:min-w-[60px]"
                     >
-                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
+                        {loading ? <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin" /> : <Send className="w-5 h-5 md:w-6 md:h-6" />}
                     </button>
                 </div>
             </div>
