@@ -28,7 +28,6 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
             <div className={`sidebar-header ${!isMobile && !sidebarExpanded ? 'collapsed' : ''}`}>
                 {(sidebarExpanded || isMobile) ? (
                     <div className="logo-container">
-                        <BrainCircuit className="w-6 h-6 text-neon" />
                     </div>
                 ) : (
                     <button
@@ -47,7 +46,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                         className="collapse-button"
                         aria-label="Collapse sidebar"
                     >
-                        <ChevronLeft className="w-5 h-5 text-gray-200" />
+                        <ChevronLeft className="w-6 h-6 text-neon" />
                     </button>
                 )}
 

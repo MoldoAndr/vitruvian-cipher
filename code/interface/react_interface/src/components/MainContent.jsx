@@ -1,12 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../contexts/AppContext';
+import { CONFIG } from '../config';
 import InputBar from './InputBar';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import StatusIndicator from './StatusIndicator';
 
 const MainContent = () => {
-    const { selectedTool, messages, addMessage, inputValue, setInputValue } = useApp();
+    const {
+        selectedTool,
+        messages,
+        addMessage,
+        inputValue,
+        setInputValue,
+        toolSettings,
+        toolConversations,
+        setToolConversations
+    } = useApp();
     const [loading, setLoading] = useState(false);
     const bottomRef = useRef(null);
 
@@ -16,6 +26,81 @@ const MainContent = () => {
             bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages.length]);
+
+    const formatScore = (score) => {
+        if (typeof score !== 'number' || Number.isNaN(score)) return 'N/A';
+        return `${(score * 100).toFixed(1)}%`;
+    };
+
+    const formatIntent = (intent) => {
+        if (!intent || typeof intent !== 'object') return ['Intent: None'];
+        const label = intent.intent?.label || intent.label || 'Unknown';
+        const score = intent.intent?.score ?? intent.score;
+        const predictions = intent.all_predictions || intent.intent?.all_predictions || [];
+        const lines = [`Intent: ${label} (${formatScore(score)})`];
+        if (Array.isArray(predictions) && predictions.length) {
+            lines.push('Predictions:');
+            predictions.slice(0, 5).forEach((pred) => {
+                const predLabel = pred.label || 'Unknown';
+                lines.push(`- ${predLabel} (${formatScore(pred.score)})`);
+            });
+        }
+        return lines;
+    };
+
+    const formatEntities = (entities) => {
+        if (!entities || typeof entities !== 'object') return ['Entities: None'];
+        const list = Array.isArray(entities.entities)
+            ? entities.entities
+            : Array.isArray(entities.entities?.entities)
+                ? entities.entities.entities
+                : Array.isArray(entities.entities?.entities?.entities)
+                    ? entities.entities.entities.entities
+                    : [];
+        const count = typeof entities.count === 'number' ? entities.count : list.length;
+        const lines = [`Entities: ${count}`];
+        if (list.length) {
+            list.forEach((entity) => {
+                const name = entity.entity || 'entity';
+                const text = (entity.text || '').trim();
+                const score = formatScore(entity.score);
+                const range = Number.isFinite(entity.start) && Number.isFinite(entity.end)
+                    ? ` [${entity.start}-${entity.end}]`
+                    : '';
+                lines.push(`- ${name} "${text}" (${score})${range}`);
+            });
+        }
+        return lines;
+    };
+
+    const formatChoiceOutput = (payload) => {
+        if (!payload || typeof payload !== 'object') {
+            return String(payload ?? '');
+        }
+        const lines = [];
+        if (payload.intent) {
+            lines.push(...formatIntent(payload.intent));
+        }
+        if (payload.entities) {
+            if (lines.length) lines.push('');
+            lines.push(...formatEntities(payload.entities));
+        }
+        return lines.length ? lines.join('\n') : JSON.stringify(payload, null, 2);
+    };
+
+    const buildToolHistory = (toolId, nextMessages) => nextMessages
+        .filter((msg) => msg.tool === toolId && (msg.role === 'user' || msg.role === 'assistant'))
+        .slice(-8)
+        .map((msg) => ({ role: msg.role, content: msg.content }));
+
+    const callJson = async (url, options) => {
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.detail || data.error || data.message || `HTTP ${response.status}`);
+        }
+        return data;
+    };
 
     const handleSubmit = async () => {
         if (!inputValue.trim() || loading) return;
@@ -27,22 +112,166 @@ const MainContent = () => {
             timestamp: new Date().toISOString()
         };
 
+        const nextMessages = [...messages, userMessage];
         addMessage(userMessage);
-        const submittedInput = inputValue;
+        const submittedInput = inputValue.trim();
         setInputValue('');
         setLoading(true);
 
-        // TODO: Call the actual tool API here
-        // For now, simulate a response
-        setTimeout(() => {
+        try {
+            let responseContent = '';
+
+            if (selectedTool === 'password') {
+                const payload = {
+                    password: submittedInput,
+                    components: toolSettings.password?.components || []
+                };
+
+                const data = await callJson(
+                    `${CONFIG.passwordChecker.baseUrl}${CONFIG.passwordChecker.endpoints.score}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                const summary = `Score ${data.normalized_score ?? 'N/A'}/100`;
+                const details = Array.isArray(data.components)
+                    ? data.components.map((comp) => {
+                        const label = comp.label || comp.id || 'Engine';
+                        if (comp.success === false) {
+                            return `${label}: failed`;
+                        }
+                        const score = comp.normalized_score ?? comp.score ?? 'N/A';
+                        return `${label}: ${score}`;
+                    }).join('\n')
+                    : '';
+
+                responseContent = details ? `${summary}\n${details}` : summary;
+            } else if (selectedTool === 'choice') {
+                const mode = toolSettings.choice?.mode || 'both';
+                const callChoice = (operation) => callJson(
+                    `${CONFIG.choiceMaker.baseUrl}${CONFIG.choiceMaker.endpoints.extract}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: submittedInput, operation })
+                    }
+                );
+
+                if (mode === 'both') {
+                    const [intentData, entityData] = await Promise.all([
+                        callChoice('intent_extraction'),
+                        callChoice('entity_extraction')
+                    ]);
+                    responseContent = formatChoiceOutput({
+                        intent: intentData?.result,
+                        entities: entityData?.result
+                    });
+                } else {
+                    const data = await callChoice(mode);
+                    const result = data?.result ?? data;
+                    responseContent = formatChoiceOutput(
+                        mode === 'intent_extraction'
+                            ? { intent: result }
+                            : { entities: result }
+                    );
+                }
+            } else if (selectedTool === 'crypto') {
+                const payload = { query: submittedInput };
+                if (toolConversations.crypto) {
+                    payload.conversation_id = toolConversations.crypto;
+                }
+
+                const data = await callJson(
+                    `${CONFIG.theorySpecialist.baseUrl}${CONFIG.theorySpecialist.endpoints.generate}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                if (data.conversation_id && data.conversation_id !== toolConversations.crypto) {
+                    setToolConversations((prev) => ({ ...prev, crypto: data.conversation_id }));
+                }
+
+                responseContent = data.answer || data.reply || '(No response)';
+            } else if (selectedTool === 'orchestrator') {
+                const settings = toolSettings.orchestrator || {};
+                let conversationId = toolConversations.orchestrator;
+                if (!conversationId) {
+                    conversationId = `conv_${Math.random().toString(36).slice(2, 10)}`;
+                    setToolConversations((prev) => ({ ...prev, orchestrator: conversationId }));
+                }
+
+                const history = buildToolHistory('orchestrator', nextMessages);
+                const extraKeys = Object.entries(settings.extraKeys || {}).reduce((acc, [key, value]) => {
+                    if (value && value.trim()) {
+                        acc[key] = value.trim();
+                    }
+                    return acc;
+                }, {});
+                const context = {};
+                if (history.length) context.history = history;
+                if (settings.summary && settings.summary.trim()) {
+                    context.summary = settings.summary.trim();
+                }
+                if (settings.theoryConversationId && settings.theoryConversationId.trim()) {
+                    context.state = { theory_conversation_id: settings.theoryConversationId.trim() };
+                }
+
+                const payload = {
+                    conversation_id: conversationId,
+                    text: submittedInput,
+                    llm: {
+                        provider: settings.provider || 'openai',
+                        profile: settings.responderProfile || 'responder',
+                        planner_profile: settings.plannerProfile || 'planner',
+                        model: settings.modelOverride?.trim() || undefined,
+                        planner_model: settings.plannerModelOverride?.trim() || undefined,
+                        api_key: settings.apiKey?.trim() || undefined,
+                        api_keys: Object.keys(extraKeys).length ? extraKeys : undefined,
+                        allow_fallback: Boolean(settings.fallbackEnabled),
+                        fallback_providers: settings.fallbackProviders
+                            ? settings.fallbackProviders.split(',').map((p) => p.trim()).filter(Boolean)
+                            : []
+                    },
+                    context: Object.keys(context).length ? context : undefined,
+                    preferences: settings.debug ? { debug: true } : undefined
+                };
+
+                const data = await callJson(
+                    `${CONFIG.orchestrator.baseUrl}${CONFIG.orchestrator.endpoints.orchestrate}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                responseContent = data.reply || '(No response)';
+            } else {
+                responseContent = `Response from ${selectedTool} for: "${submittedInput}"`;
+            }
+
             addMessage({
                 role: 'assistant',
-                content: `Response from ${selectedTool} for: "${submittedInput}"`,
+                content: responseContent,
                 tool: selectedTool,
                 timestamp: new Date().toISOString()
             });
+        } catch (error) {
+            addMessage({
+                role: 'assistant',
+                content: `Error: ${error.message}`,
+                tool: selectedTool,
+                timestamp: new Date().toISOString()
+            });
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     const hasMessages = messages.length > 0;

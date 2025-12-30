@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { getDefaultToolSettings } from '../toolSettings';
 
 const AppContext = createContext(null);
 
@@ -23,6 +24,15 @@ export const AppProvider = ({ children }) => {
 
     // Unified conversation state (shared across all tools)
     const [messages, setMessages] = useState([]);
+
+    // Per-tool settings
+    const [toolSettings, setToolSettings] = useState(getDefaultToolSettings);
+
+    // Per-tool conversation state
+    const [toolConversations, setToolConversations] = useState(() => ({
+        orchestrator: `conv_${Math.random().toString(36).slice(2, 10)}`,
+        crypto: null
+    }));
 
     // User state (placeholder for now, no backend)
     const [user] = useState({
@@ -66,6 +76,10 @@ export const AppProvider = ({ children }) => {
         setInputValue('');
         setSelectedTool('orchestrator');
         setMessages([]);
+        setToolConversations({
+            orchestrator: `conv_${Math.random().toString(36).slice(2, 10)}`,
+            crypto: null
+        });
     }, []);
 
     // Update input value
@@ -109,6 +123,8 @@ export const AppProvider = ({ children }) => {
         inputValue,
         selectedTool,
         messages,
+        toolSettings,
+        toolConversations,
         user,
 
         // Actions
@@ -118,7 +134,9 @@ export const AppProvider = ({ children }) => {
         setInputValue: handleSetInputValue,
         setSelectedTool: handleSetSelectedTool,
         addMessage,
-        startNewChat
+        startNewChat,
+        setToolSettings,
+        setToolConversations
     };
 
     return (

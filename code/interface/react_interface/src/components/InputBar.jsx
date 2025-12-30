@@ -2,7 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, ChevronDown, Settings } from "lucide-react";
 import { useApp } from "../contexts/AppContext";
-import { CONFIG } from "../config";
+import {
+  PASSWORD_COMPONENTS,
+  CHOICE_MODES,
+  ORCHESTRATOR_PROVIDERS,
+} from "../toolSettings";
 
 const TOOLS = [
   { id: "orchestrator", label: "Orchestrator" },
@@ -11,31 +15,21 @@ const TOOLS = [
   { id: "choice", label: "Choice" },
 ];
 
-const TOOL_CONFIG = {
-  orchestrator: {
-    baseUrl: CONFIG.orchestrator.baseUrl,
-    endpoint: CONFIG.orchestrator.endpoints.orchestrate,
-  },
-  password: {
-    baseUrl: CONFIG.passwordChecker.baseUrl,
-    endpoint: CONFIG.passwordChecker.endpoints.score,
-  },
-  crypto: {
-    baseUrl: CONFIG.theorySpecialist.baseUrl,
-    endpoint: CONFIG.theorySpecialist.endpoints.generate,
-  },
-  choice: {
-    baseUrl: CONFIG.choiceMaker.baseUrl,
-    endpoint: CONFIG.choiceMaker.endpoints.extract,
-  },
-};
-
 const InputBar = ({ onSubmit, loading: externalLoading }) => {
-  const { inputValue, setInputValue, selectedTool, setSelectedTool } = useApp();
+  const {
+    inputValue,
+    setInputValue,
+    selectedTool,
+    setSelectedTool,
+    toolSettings,
+    setToolSettings,
+  } = useApp();
   const [toolDropdownOpen, setToolDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [orchestratorAdvancedOpen, setOrchestratorAdvancedOpen] = useState(false);
   const textareaRef = useRef(null);
-  const containerRef = useRef(null);
+  const settingsRef = useRef(null);
+  const toolSelectorRef = useRef(null);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -63,26 +57,71 @@ const InputBar = ({ onSubmit, loading: externalLoading }) => {
   };
 
   const currentTool = TOOLS.find((t) => t.id === selectedTool) || TOOLS[0];
-  const currentToolConfig = TOOL_CONFIG[selectedTool] || {};
+  const currentToolSettings = toolSettings[selectedTool] || {};
 
-  // Close dropdown when clicking outside
+  const togglePasswordComponent = (componentId) => {
+    setToolSettings((prev) => {
+      const current = prev.password.components;
+      const next = current.includes(componentId)
+        ? current.filter((id) => id !== componentId)
+        : [...current, componentId];
+      return { ...prev, password: { ...prev.password, components: next } };
+    });
+  };
+
+  const updateChoiceMode = (mode) => {
+    setToolSettings((prev) => ({
+      ...prev,
+      choice: { ...prev.choice, mode },
+    }));
+  };
+
+  const updateOrchestrator = (updates) => {
+    setToolSettings((prev) => ({
+      ...prev,
+      orchestrator: { ...prev.orchestrator, ...updates },
+    }));
+  };
+
+  const updateOrchestratorKey = (key, value) => {
+    setToolSettings((prev) => ({
+      ...prev,
+      orchestrator: {
+        ...prev.orchestrator,
+        extraKeys: {
+          ...prev.orchestrator.extraKeys,
+          [key]: value,
+        },
+      },
+    }));
+  };
+
+  // Close dropdown/panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target)
+        toolDropdownOpen &&
+        toolSelectorRef.current &&
+        !toolSelectorRef.current.contains(event.target)
       ) {
         setToolDropdownOpen(false);
+      }
+
+      if (
+        settingsOpen &&
+        settingsRef.current &&
+        !settingsRef.current.contains(event.target)
+      ) {
         setSettingsOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [settingsOpen, toolDropdownOpen]);
 
   return (
-    <div className="input-bar-wrapper" ref={containerRef}>
+    <div className="input-bar-wrapper">
       <div className={`input-bar ${inputValue ? "focused" : ""}`}>
         {/* Text Input - Clean and centered */}
         <div className="input-wrapper">
@@ -100,7 +139,7 @@ Ctrl+Enter to submit"
         </div>
 
         {/* Tool Settings */}
-        <div className="tool-settings-wrapper">
+        <div className="tool-settings-wrapper" ref={settingsRef}>
           <button
             className="tool-settings-button"
             onClick={() => {
@@ -121,23 +160,251 @@ Ctrl+Enter to submit"
                 exit={{ opacity: 0, y: 8, scale: 0.96 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="tool-settings-title">Advanced settings</div>
+                <div className="tool-settings-title">Tool settings</div>
                 <div className="tool-settings-row">
                   <span className="tool-settings-label">Tool</span>
                   <span className="tool-settings-value">{currentTool.label}</span>
                 </div>
-                <div className="tool-settings-row">
-                  <span className="tool-settings-label">Base URL</span>
-                  <span className="tool-settings-value">
-                    {currentToolConfig.baseUrl || "Not set"}
-                  </span>
-                </div>
-                <div className="tool-settings-row">
-                  <span className="tool-settings-label">Endpoint</span>
-                  <span className="tool-settings-value">
-                    {currentToolConfig.endpoint || "Not set"}
-                  </span>
-                </div>
+
+                {selectedTool === "password" && (
+                  <div className="tool-settings-section">
+                    <div className="tool-settings-section-title">
+                      Password engines
+                    </div>
+                    <div className="tool-settings-options">
+                      {PASSWORD_COMPONENTS.map((component) => (
+                        <label key={component.id} className="tool-settings-option">
+                          <input
+                            type="checkbox"
+                            checked={currentToolSettings.components?.includes(
+                              component.id,
+                            )}
+                            onChange={() => togglePasswordComponent(component.id)}
+                          />
+                          <span>{component.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedTool === "choice" && (
+                  <div className="tool-settings-section">
+                    <div className="tool-settings-section-title">Mode</div>
+                    <div className="tool-settings-options">
+                      {CHOICE_MODES.map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          className={`tool-settings-pill ${
+                            currentToolSettings.mode === mode.id ? "active" : ""
+                          }`}
+                          onClick={() => updateChoiceMode(mode.id)}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedTool === "orchestrator" && (
+                  <div className="tool-settings-section">
+                    <div className="tool-settings-section-title">LLM</div>
+                    <label className="tool-settings-field">
+                      <span className="tool-settings-label">Provider</span>
+                      <select
+                        className="tool-settings-input"
+                        value={currentToolSettings.provider}
+                        onChange={(e) =>
+                          updateOrchestrator({ provider: e.target.value })
+                        }
+                      >
+                        {ORCHESTRATOR_PROVIDERS.map((provider) => (
+                          <option key={provider.id} value={provider.id}>
+                            {provider.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="tool-settings-field">
+                      <span className="tool-settings-label">API key</span>
+                      <input
+                        className="tool-settings-input"
+                        type="password"
+                        value={currentToolSettings.apiKey || ""}
+                        onChange={(e) =>
+                          updateOrchestrator({ apiKey: e.target.value })
+                        }
+                        placeholder="Optional"
+                      />
+                    </label>
+                    <label className="tool-settings-field">
+                      <span className="tool-settings-label">Model override</span>
+                      <input
+                        className="tool-settings-input"
+                        value={currentToolSettings.modelOverride || ""}
+                        onChange={(e) =>
+                          updateOrchestrator({ modelOverride: e.target.value })
+                        }
+                        placeholder="Optional"
+                      />
+                    </label>
+                    <label className="tool-settings-field">
+                      <span className="tool-settings-label">Summary</span>
+                      <textarea
+                        className="tool-settings-textarea"
+                        value={currentToolSettings.summary || ""}
+                        onChange={(e) =>
+                          updateOrchestrator({ summary: e.target.value })
+                        }
+                        placeholder="Optional"
+                      />
+                    </label>
+                    <label className="tool-settings-field">
+                      <span className="tool-settings-label">
+                        Theory conversation ID
+                      </span>
+                      <input
+                        className="tool-settings-input"
+                        value={currentToolSettings.theoryConversationId || ""}
+                        onChange={(e) =>
+                          updateOrchestrator({
+                            theoryConversationId: e.target.value,
+                          })
+                        }
+                        placeholder="Optional"
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className="tool-settings-advanced-toggle"
+                      onClick={() =>
+                        setOrchestratorAdvancedOpen(!orchestratorAdvancedOpen)
+                      }
+                    >
+                      {orchestratorAdvancedOpen ? "Hide" : "Show"} advanced
+                    </button>
+
+                    {orchestratorAdvancedOpen && (
+                      <div className="tool-settings-advanced">
+                        <label className="tool-settings-field">
+                          <span className="tool-settings-label">
+                            Responder profile
+                          </span>
+                          <input
+                            className="tool-settings-input"
+                            value={currentToolSettings.responderProfile || ""}
+                            onChange={(e) =>
+                              updateOrchestrator({
+                                responderProfile: e.target.value,
+                              })
+                            }
+                            placeholder="responder"
+                          />
+                        </label>
+                        <label className="tool-settings-field">
+                          <span className="tool-settings-label">
+                            Planner profile
+                          </span>
+                          <input
+                            className="tool-settings-input"
+                            value={currentToolSettings.plannerProfile || ""}
+                            onChange={(e) =>
+                              updateOrchestrator({
+                                plannerProfile: e.target.value,
+                              })
+                            }
+                            placeholder="planner"
+                          />
+                        </label>
+                        <label className="tool-settings-field">
+                          <span className="tool-settings-label">
+                            Planner model override
+                          </span>
+                          <input
+                            className="tool-settings-input"
+                            value={currentToolSettings.plannerModelOverride || ""}
+                            onChange={(e) =>
+                              updateOrchestrator({
+                                plannerModelOverride: e.target.value,
+                              })
+                            }
+                            placeholder="Optional"
+                          />
+                        </label>
+                        <label className="tool-settings-toggle">
+                          <span className="tool-settings-label">Fallback</span>
+                          <input
+                            type="checkbox"
+                            checked={currentToolSettings.fallbackEnabled}
+                            onChange={(e) =>
+                              updateOrchestrator({
+                                fallbackEnabled: e.target.checked,
+                              })
+                            }
+                          />
+                        </label>
+                        {currentToolSettings.fallbackEnabled && (
+                          <label className="tool-settings-field">
+                            <span className="tool-settings-label">
+                              Fallback providers
+                            </span>
+                            <input
+                              className="tool-settings-input"
+                              value={currentToolSettings.fallbackProviders || ""}
+                              onChange={(e) =>
+                                updateOrchestrator({
+                                  fallbackProviders: e.target.value,
+                                })
+                              }
+                              placeholder="comma-separated"
+                            />
+                          </label>
+                        )}
+                        <label className="tool-settings-toggle">
+                          <span className="tool-settings-label">Debug</span>
+                          <input
+                            type="checkbox"
+                            checked={currentToolSettings.debug}
+                            onChange={(e) =>
+                              updateOrchestrator({ debug: e.target.checked })
+                            }
+                          />
+                        </label>
+                        {currentToolSettings.extraKeys && (
+                          <div className="tool-settings-grid">
+                            {Object.keys(currentToolSettings.extraKeys).map(
+                              (key) => (
+                                <input
+                                  key={key}
+                                  type="password"
+                                  className="tool-settings-input"
+                                  value={currentToolSettings.extraKeys[key] || ""}
+                                  onChange={(e) =>
+                                    updateOrchestratorKey(key, e.target.value)
+                                  }
+                                  placeholder={`${key} key`}
+                                />
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedTool === "crypto" && (
+                  <div className="tool-settings-section">
+                    <div className="tool-settings-section-title">Notes</div>
+                    <div className="tool-settings-value">
+                      No additional settings for this tool.
+                    </div>
+                  </div>
+                )}
+
               </motion.div>
             )}
           </AnimatePresence>
@@ -145,7 +412,7 @@ Ctrl+Enter to submit"
 
         {/* Actions */}
         <div className="input-actions">
-          <div className="tool-selector-wrapper">
+          <div className="tool-selector-wrapper" ref={toolSelectorRef}>
             <button
               className="tool-selector-button"
               onClick={() => {
@@ -351,7 +618,7 @@ Ctrl+Enter to submit"
                     border-radius: 14px;
                     padding: 12px 14px;
                     min-width: 240px;
-                    max-width: 300px;
+                    max-width: 320px;
                     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
                     z-index: 110;
                 }
@@ -381,6 +648,128 @@ Ctrl+Enter to submit"
                     color: rgba(255, 255, 255, 0.8);
                     word-break: break-all;
                 }
+
+                .tool-settings-section {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+
+                .tool-settings-section-title {
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.6px;
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+                .tool-settings-options {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .tool-settings-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 12px;
+                    color: rgba(255, 255, 255, 0.75);
+                }
+
+                .tool-settings-option input {
+                    accent-color: #00ff88;
+                }
+
+                .tool-settings-pill {
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    background: rgba(255, 255, 255, 0.03);
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 11px;
+                    padding: 4px 10px;
+                    border-radius: 999px;
+                    cursor: pointer;
+                    transition: all 150ms ease;
+                }
+
+                .tool-settings-pill.active {
+                    color: #00ff88;
+                    border-color: rgba(0, 255, 136, 0.4);
+                    background: rgba(0, 255, 136, 0.1);
+                }
+
+                .tool-settings-field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+
+                .tool-settings-input {
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 8px;
+                    padding: 6px 8px;
+                    color: white;
+                    font-size: 11px;
+                }
+
+                .tool-settings-input:focus {
+                    outline: none;
+                    border-color: rgba(0, 255, 136, 0.4);
+                }
+
+                .tool-settings-textarea {
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 8px;
+                    padding: 6px 8px;
+                    color: white;
+                    font-size: 11px;
+                    min-height: 64px;
+                    resize: none;
+                }
+
+                .tool-settings-textarea:focus {
+                    outline: none;
+                    border-color: rgba(0, 255, 136, 0.4);
+                }
+
+                .tool-settings-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 6px;
+                }
+
+                .tool-settings-toggle {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    font-size: 12px;
+                    color: rgba(255, 255, 255, 0.75);
+                }
+
+                .tool-settings-advanced-toggle {
+                    align-self: flex-start;
+                    background: transparent;
+                    border: none;
+                    color: rgba(255, 255, 255, 0.55);
+                    font-size: 11px;
+                    cursor: pointer;
+                    padding: 2px 0;
+                }
+
+                .tool-settings-advanced-toggle:hover {
+                    color: rgba(255, 255, 255, 0.85);
+                }
+
+                .tool-settings-advanced {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 6px;
+                }
+
 
                 .tool-selector-wrapper {
                     position: relative;
@@ -412,7 +801,7 @@ Ctrl+Enter to submit"
                     text-overflow: ellipsis;
                     white-space: nowrap;
                     letter-spacing: 0.3px;
-                    font-size: 11px;
+                    font-size: 14px;
                 }
 
                 .tool-dropdown {
@@ -494,7 +883,7 @@ Ctrl+Enter to submit"
 
                     .tool-settings-panel {
                         min-width: 210px;
-                        max-width: 70vw;
+                        max-width: 80vw;
                     }
 
                     .tool-selector-button {

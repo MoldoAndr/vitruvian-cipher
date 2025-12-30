@@ -1,0 +1,16 @@
+                   precision    recall  f1-score   support
+
+   access_context       0.50      0.20      0.29         5
+        algorithm       0.72      0.67      0.69        27
+   algorithm_hint       0.72      0.62      0.67        29
+       ciphertext       0.95      0.98      0.97        59
+comparison_target       0.40      0.50      0.44         8
+compliance_target       0.85      1.00      0.92        17
+  password_sample       0.98      1.00      0.99        40
+        plaintext       0.92      0.85      0.88        53
+      policy_hint       0.86      0.92      0.89        13
+            topic       0.38      0.43      0.40        28
+
+        micro avg       0.81      0.81      0.81       279
+        macro avg       0.73      0.72      0.71       279
+     weighted avg       0.81      0.81      0.81       279

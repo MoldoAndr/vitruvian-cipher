@@ -117,7 +117,6 @@ site-packages/
 
 # Agent-generated artifacts and datasets
 code/agents/theory_specialist/storage/
-code/agents/choice_maker/components/make_decision/artifacts/
 code/agents/prime_checker/junk/
 code/agents/cryptosystem_god/CyberChef/
 code/agents/password_checker/PWLDSStrength/
