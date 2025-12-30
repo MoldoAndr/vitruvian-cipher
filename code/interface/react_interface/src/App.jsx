@@ -1,13 +1,14 @@
 import React from 'react';
-import Layout from './components/Layout';
+import { AppProvider } from './contexts/AppContext';
+import MainLayout from './components/MainLayout';
 import FluidBackground from './components/FluidBackground';
 
 function App() {
   return (
-    <>
+    <AppProvider>
       <FluidBackground />
-      <Layout />
-    </>
+      <MainLayout />
+    </AppProvider>
   );
 }
 

@@ -34,50 +34,117 @@ const StatusDot = ({ name, url }) => {
 };
 
 const StatusIndicator = () => {
-    const [isHovered, setIsHovered] = useState(false);
+    const [showExpanded, setShowExpanded] = useState(false);
 
     return (
-        <div 
-            className="relative"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+        <div
+            className="status-indicator-wrapper"
+            onMouseEnter={() => setShowExpanded(true)}
+            onMouseLeave={() => setShowExpanded(false)}
         >
             {/* Collapsed state - just heartbeat icon */}
-            <div className="flex items-center justify-center bg-dark-panel px-3 py-2 rounded-full border border-dark-border backdrop-blur-sm">
-                <Activity className="w-4 h-4 text-neon animate-pulse" />
-            </div>
-            
+            <motion.div
+                className="heartbeat-container"
+                whileHover={{ scale: 1.2 }}
+                transition={{ duration: 0.2 }}
+            >
+                <div className="heartbeat-icon">
+                    <Activity className="w-4 h-4 text-neon animate-pulse" />
+                </div>
+            </motion.div>
+
             {/* Expanded state - full status */}
             <AnimatePresence>
-                {isHovered && (
+                {showExpanded && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: -40, x: -50 }}
-                        exit={{ opacity: 0, scale: 0.8, y: -10 }}
-                        transition={{ duration: 0.5 }}
-                        className="absolute top-full mt-2 right-0 bg-dark-panel px-4 py-2 rounded-full border border-dark-border backdrop-blur-sm shadow-lg opacity-100"
+                        initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                        transition={{ duration: 0.8 }}
+                        className="status-expanded"
                     >
-                        <div className="flex gap-6 items-center">
-                            <StatusDot 
-                                name="Password" 
-                                url={`${CONFIG.passwordChecker.baseUrl}${CONFIG.passwordChecker.endpoints.health}`} 
+                        <div className="status-list">
+                            <StatusDot
+                                name="Password"
+                                url={`${CONFIG.passwordChecker.baseUrl}${CONFIG.passwordChecker.endpoints.health}`}
                             />
-                            <StatusDot 
-                                name="Theory" 
-                                url={`${CONFIG.theorySpecialist.baseUrl}${CONFIG.theorySpecialist.endpoints.health}`} 
+                            <StatusDot
+                                name="Theory"
+                                url={`${CONFIG.theorySpecialist.baseUrl}${CONFIG.theorySpecialist.endpoints.health}`}
                             />
-                            <StatusDot 
-                                name="Choice" 
-                                url={`${CONFIG.choiceMaker.baseUrl}${CONFIG.choiceMaker.endpoints.health}`} 
+                            <StatusDot
+                                name="Choice"
+                                url={`${CONFIG.choiceMaker.baseUrl}${CONFIG.choiceMaker.endpoints.health}`}
                             />
-                            <StatusDot 
-                                name="Orchestrator" 
-                                url={`${CONFIG.orchestrator.baseUrl}${CONFIG.orchestrator.endpoints.health}`} 
+                            <StatusDot
+                                name="Orchestrator"
+                                url={`${CONFIG.orchestrator.baseUrl}${CONFIG.orchestrator.endpoints.health}`}
                             />
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <style>{`
+                .status-indicator-wrapper {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .heartbeat-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                }
+
+                .heartbeat-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0, 0, 0, 0.6);
+                    backdrop-filter: blur(10px);
+                    padding: 10px;
+                    border-radius: 50%;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    transition: all 200ms;
+                }
+
+                .heartbeat-icon:hover {
+                    border-color: rgba(0, 255, 136, 0.3);
+                    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+                }
+
+                .status-expanded {
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    margin-top: 12px;
+                    background: rgba(0, 0, 0, 0.8);
+                    backdrop-filter: blur(20px);
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+                    z-index: 100;
+                    min-width: 200px;
+                }
+
+                .status-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: flex-start;
+                }
+
+                @media (max-width: 640px) {
+                    .status-expanded {
+                        right: -100px;
+                        min-width: 250px;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
