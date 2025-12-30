@@ -9,18 +9,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy minimal requirements for inference only
-COPY requirements-minimal.txt .
+COPY components/make_decision/requirements-minimal.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements-minimal.txt && \
     pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 
 # Copy the application source code
-COPY scripts/ ./scripts/
-COPY src/ ./src/
+COPY components/make_decision/scripts/ ./scripts/
+COPY components/make_decision/src/ ./src/
 
 # Copy the trained model artifacts
 # These should be present after training or provided via volume mount
-COPY artifacts/ ./artifacts/
+COPY components/make_decision/artifacts/ ./artifacts/
 
 # Set Python path to include current directory and scripts
 ENV PYTHONPATH=/app:/app/scripts
