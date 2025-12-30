@@ -146,10 +146,14 @@ services:
       GENERATION_TEMPERATURE: 0.2
       GENERATION_MAX_TOKENS: 900
 
+      # Models
+      EMBEDDING_MODEL_NAME: BAAI/bge-small-en-v1.5
+      RERANKER_MODEL_NAME: BAAI/bge-reranker-base
+
       # Retrieval
       RETRIEVAL_TOP_K: 10
       RERANKER_TOP_K: 3
-      ENABLE_LEXICAL_RETRIEVAL: "true"
+      ENABLE_LEXICAL_RETRIEVAL: "false"
     ports:
       - "8100:8000"
     volumes:

@@ -62,7 +62,7 @@ const Layout = () => {
                 {/* Header */}
                 <header className="px-4 py-4 md:px-8 md:py-6 border-b border-dark-border flex flex-col md:flex-row justify-between items-center gap-4 z-10 bg-dark-bg/50 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">vitruvian cipher</h1>
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Vitruvian-Cipher</h1>
                     </div>
                     <StatusIndicator />
                 </header>

@@ -92,7 +92,11 @@ def _ensure_entity_pipe(model_dir: Path):
     global _ENTITY_PIPE
     if _ENTITY_PIPE is None:
         tokenizer = AutoTokenizer.from_pretrained(model_dir)
-        model = AutoModelForTokenClassification.from_pretrained(model_dir)
+        model = AutoModelForTokenClassification.from_pretrained(
+            model_dir,
+            low_cpu_mem_usage=False,
+            device_map=None,
+        )
         _ENTITY_PIPE = pipeline(
             "token-classification",
             model=model,
@@ -106,7 +110,11 @@ def _ensure_intent_pipe(model_dir: Path):
     global _INTENT_PIPE
     if _INTENT_PIPE is None:
         tokenizer = AutoTokenizer.from_pretrained(model_dir)
-        model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_dir,
+            low_cpu_mem_usage=False,
+            device_map=None,
+        )
         _INTENT_PIPE = pipeline("text-classification", model=model, tokenizer=tokenizer)
     return _INTENT_PIPE
 

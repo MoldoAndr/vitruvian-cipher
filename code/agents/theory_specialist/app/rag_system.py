@@ -766,7 +766,10 @@ class RAGSystem:
     def _chunk_sections(
         self, document: ReferenceDocument, sections: list[dict]
     ) -> list[dict]:
+        """Split document sections into chunks."""
         chunks: list[dict] = []
+        min_length = self.settings.min_chunk_length
+
         for section in sections:
             text = section.get("text") or ""
             if not text.strip():
@@ -774,7 +777,7 @@ class RAGSystem:
             fragment_chunks = self.splitter.split_text(text)
             for chunk_text in fragment_chunks:
                 normalized = self._clean_text(chunk_text)
-                if len(normalized) < 80:
+                if len(normalized) < min_length:
                     continue
                 chunks.append(
                     {
@@ -814,33 +817,64 @@ class RAGSystem:
         return normalized.strip()
 
     def _build_lexical_index(self) -> None:
+        """Build lexical index with batching to prevent memory issues."""
+        if not self.settings.enable_lexical_retrieval:
+            return
+
+        batch_size = self.settings.lexical_index_batch_size
+        documents = []
+        offset = 0
+
         try:
-            with SessionLocal() as session:
-                chunks = session.query(DocumentChunk).all()
+            while True:
+                with SessionLocal() as session:
+                    # Query chunks in batches
+                    chunks = (
+                        session.query(DocumentChunk)
+                        .order_by(DocumentChunk.id)
+                        .limit(batch_size)
+                        .offset(offset)
+                        .all()
+                    )
+
+                    if not chunks:
+                        break  # No more chunks to process
+
+                    for chunk in chunks:
+                        chunk_id = f"{chunk.reference_doc_id}_{chunk.chunk_index}"
+                        metadata = {
+                            "source": chunk.source_title,
+                            "source_page": chunk.source_page,
+                        }
+                        documents.append(
+                            LexicalDocument(
+                                chunk_id=chunk_id,
+                                text=chunk.chunk_text,
+                                metadata=metadata,
+                                tokens=LexicalIndex.tokenize(chunk.chunk_text),
+                            )
+                        )
+
+                    # If we got fewer than batch_size, we're done
+                    if len(chunks) < batch_size:
+                        break
+
+                    offset += batch_size
+
+        except (OSError, IOError) as exc:
+            logger.warning("Lexical index build skipped due to I/O error: %s", exc)
+            with self._lexical_lock:
+                self.lexical_index = LexicalIndex([])
+            return
         except Exception as exc:  # pylint: disable=broad-except
             logger.warning("Lexical index build skipped: %s", exc)
             with self._lexical_lock:
                 self.lexical_index = LexicalIndex([])
             return
 
-        documents = []
-        for chunk in chunks:
-            chunk_id = f"{chunk.reference_doc_id}_{chunk.chunk_index}"
-            metadata = {
-                "source": chunk.source_title,
-                "source_page": chunk.source_page,
-            }
-            documents.append(
-                LexicalDocument(
-                    chunk_id=chunk_id,
-                    text=chunk.chunk_text,
-                    metadata=metadata,
-                    tokens=LexicalIndex.tokenize(chunk.chunk_text),
-                )
-            )
-
         with self._lexical_lock:
             self.lexical_index = LexicalIndex(documents)
+        logger.info("Lexical index built with %d documents", len(documents))
 
     def _load_domain_terms(self) -> set[str]:
         terms = set(DEFAULT_DOMAIN_TERMS)
@@ -854,6 +888,8 @@ class RAGSystem:
         return {term.lower() for term in terms if term}
 
     def _get_query_embedding(self, query: str) -> List[float]:
+        """Get query embedding with LRU cache support."""
+        # Check cache if enabled
         if self.settings.query_cache_size > 0:
             with self._cache_lock:
                 cached = self._query_embedding_cache.get(query)
@@ -861,14 +897,18 @@ class RAGSystem:
                     self._query_embedding_cache.move_to_end(query)
                     return cached
 
+        # Generate embedding
         embedding = next(iter(self.embedding_model.embed([query], batch_size=1)))
         vector = np.asarray(embedding, dtype=float).tolist()
 
+        # Cache if enabled
         if self.settings.query_cache_size > 0:
             with self._cache_lock:
-                self._query_embedding_cache[query] = vector
-                if len(self._query_embedding_cache) > self.settings.query_cache_size:
+                # Check cache size again in case it changed at runtime
+                # Clear old entries if cache size was reduced
+                while len(self._query_embedding_cache) >= self.settings.query_cache_size:
                     self._query_embedding_cache.popitem(last=False)
+                self._query_embedding_cache[query] = vector
         return vector
 
     def _select_context_chunks(self, chunks: List[RetrievedChunk]) -> List[RetrievedChunk]:
@@ -1107,10 +1147,10 @@ class RAGSystem:
             return regenerated
         return answer
 
-    @staticmethod
-    def _needs_continuation(answer: str) -> bool:
+    def _needs_continuation(self, answer: str) -> bool:
         stripped = answer.strip()
-        if len(stripped) < 80:
+        min_length = self.settings.min_answer_length_for_continuation
+        if len(stripped) < min_length:
             return False
         if stripped.endswith(("...", "…")):
             return True

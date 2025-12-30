@@ -7,7 +7,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class HealthResponse(BaseModel):
@@ -20,11 +20,12 @@ class HealthResponse(BaseModel):
 
 
 class IngestRequest(BaseModel):
-    document_path: str = Field(..., min_length=3)
+    document_path: str = Field(..., min_length=3, max_length=2048)
     document_type: str = Field(..., pattern="^(pdf|md|txt)$")
 
-    @validator("document_path")
-    def validate_path(cls, value: str) -> str:  # noqa: D417
+    @field_validator("document_path")
+    @classmethod
+    def validate_path(cls, value: str) -> str:
         # Accept local paths or HTTP(S) URLs
         if value.startswith(("http://", "https://")):
             return value
@@ -51,22 +52,32 @@ class StatusResponse(BaseModel):
 
 
 class GenerateRequest(BaseModel):
-    query: str = Field(..., min_length=3)
+    query: str = Field(..., min_length=3, max_length=5000)
     conversation_id: Optional[str] = None
 
 
 class ProviderUpdateRequest(BaseModel):
-    provider: str = Field(..., min_length=3)
-    ollama_url: Optional[str] = None
-    ollama_model: Optional[str] = None
-    ollama_api_key: Optional[str] = None
+    provider: str = Field(..., min_length=3, max_length=50)
+    ollama_url: Optional[str] = Field(None, max_length=512)
+    ollama_model: Optional[str] = Field(None, max_length=128)
+    ollama_api_key: Optional[str] = Field(None, max_length=512)
     ollama_use_chat: Optional[bool] = None
-    openai_api_key: Optional[str] = None
-    openai_model: Optional[str] = None
-    openai_base_url: Optional[str] = None
-    gemini_api_key: Optional[str] = None
-    gemini_model: Optional[str] = None
-    gemini_base_url: Optional[str] = None
+    openai_api_key: Optional[str] = Field(None, max_length=512)
+    openai_model: Optional[str] = Field(None, max_length=128)
+    openai_base_url: Optional[str] = Field(None, max_length=512)
+    gemini_api_key: Optional[str] = Field(None, max_length=512)
+    gemini_model: Optional[str] = Field(None, max_length=128)
+    gemini_base_url: Optional[str] = Field(None, max_length=512)
+
+    @field_validator("ollama_url", "openai_base_url", "gemini_base_url")
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not v:
+            return v
+        v = v.strip()
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
 
 
 class ProviderUpdateResponse(BaseModel):

@@ -6,6 +6,8 @@ import UserProfile from './UserProfile';
 
 const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
     const { sidebarExpanded, startNewChat, toggleSidebar } = useApp();
+    const showLabels = sidebarExpanded || isMobile;
+    const isCollapsed = !showLabels;
 
     const handleNewChat = () => {
         startNewChat();
@@ -26,7 +28,7 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
         >
             {/* Logo with hover expand/collapse */}
             <div className={`sidebar-header ${!isMobile && !sidebarExpanded ? 'collapsed' : ''}`}>
-                {(sidebarExpanded || isMobile) ? (
+                {showLabels ? (
                     <div className="logo-container">
                     </div>
                 ) : (
@@ -67,19 +69,29 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                 {/* New Chat Button */}
                 <button
                     onClick={handleNewChat}
-                    className="new-chat-button"
-                    title={sidebarExpanded || isMobile ? 'New Chat' : ''}
+                    className={`new-chat-button ${isCollapsed ? 'collapsed' : ''}`}
+                    title={showLabels ? 'New Chat' : ''}
                 >
                     <Plus className="w-5 h-5 text-black" />
-                    {(sidebarExpanded || isMobile) && <span className="text-black font-medium">New Chat</span>}
+                    <span
+                        className={`nav-label ${showLabels ? '' : 'label-hidden'}`}
+                        aria-hidden={!showLabels}
+                    >
+                        New Chat
+                    </span>
                 </button>
                 {/* Chat History */}
                 <button
-                    className="chats-button"
-                    title={sidebarExpanded || isMobile ? 'Chat History' : 'Chats'}
+                    className={`chats-button ${isCollapsed ? 'collapsed' : ''}`}
+                    title={showLabels ? 'Chat History' : 'Chats'}
                 >
                     <MessageCircle className="w-5 h-5 text-neon" />
-                    {(sidebarExpanded || isMobile) && <span className="text-bla font-medium">Chat History</span>}
+                    <span
+                        className={`nav-label ${showLabels ? '' : 'label-hidden'}`}
+                        aria-hidden={!showLabels}
+                    >
+                        Chat History
+                    </span>
                 </button>
             </nav>
 
@@ -205,6 +217,10 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     justify-content: center;
                 }
 
+                .new-chat-button.collapsed {
+                    gap: 0;
+                }
+
                 .new-chat-button:hover {
                     background: #00dd77;
                     transform: scale(1.02);
@@ -221,9 +237,38 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     cursor: pointer;
                     transition: all 200ms;
                     width: 100%;
-justify-content: center;
+                    justify-content: center;
+                }
 
-                    }
+                .chats-button.collapsed {
+                    gap: 0;
+                }
+
+                .nav-label {
+                    display: inline-block;
+                    max-width: 160px;
+                    opacity: 1;
+                    transform: translateX(0);
+                    transition: opacity 260ms ease, transform 260ms ease, max-width 360ms ease;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+
+                .nav-label.label-hidden {
+                    max-width: 0;
+                    opacity: 0;
+                    transform: translateX(-8px);
+                }
+
+                .new-chat-button .nav-label {
+                    color: #000000;
+                    font-weight: 600;
+                }
+
+                .chats-button .nav-label {
+                    color: rgba(255, 255, 255, 0.85);
+                    font-weight: 500;
+                }
 
                 .chats-button:hover {
                     background: rgba(0, 255, 136, 0.15);

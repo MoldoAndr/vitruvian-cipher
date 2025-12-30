@@ -13,6 +13,15 @@ from .config import Settings
 from .ollama_client import OllamaClient
 
 
+def _sanitize_api_key(api_key: Optional[str], show_last: int = 4) -> str:
+    """Sanitize API key for logging by showing only last N characters."""
+    if not api_key:
+        return "(none)"
+    if len(api_key) <= show_last:
+        return "***"
+    return f"***{api_key[-show_last:]}"
+
+
 class OpenAIClient:
     def __init__(
         self,
@@ -27,6 +36,12 @@ class OpenAIClient:
         self.timeout = timeout
         self.logger = logging.getLogger(self.__class__.__name__)
         self.session = requests.Session()
+        self.logger.info(
+            "Initialized OpenAI client with model=%s, base_url=%s, api_key=%s",
+            model,
+            base_url,
+            _sanitize_api_key(api_key),
+        )
 
     def generate(
         self,
@@ -35,6 +50,7 @@ class OpenAIClient:
         options: Optional[dict] = None,
     ) -> str:
         if not self.api_key:
+            self.logger.error("OpenAI API key not configured")
             raise ValueError("OPENAI_API_KEY is required for OpenAI provider.")
 
         messages = []
@@ -55,18 +71,27 @@ class OpenAIClient:
                 payload["max_tokens"] = options["max_tokens"]
 
         url = f"{self.base_url}/v1/chat/completions"
-        response = self.session.post(
-            url,
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json=payload,
-            timeout=self.timeout,
-        )
-        response.raise_for_status()
+        try:
+            response = self.session.post(
+                url,
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json=payload,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            self.logger.error(
+                "OpenAI API request failed: %s (api_key=%s, model=%s)",
+                str(exc),
+                _sanitize_api_key(self.api_key),
+                self.model,
+            )
+            raise
         data = response.json()
         try:
             return data["choices"][0]["message"]["content"].strip()
         except (KeyError, IndexError, TypeError) as exc:
-            self.logger.error("Unexpected OpenAI response: %s", data)
+            self.logger.error("Unexpected OpenAI response structure")
             raise ValueError("Invalid OpenAI response payload") from exc
 
 
@@ -84,6 +109,12 @@ class GeminiClient:
         self.timeout = timeout
         self.logger = logging.getLogger(self.__class__.__name__)
         self.session = requests.Session()
+        self.logger.info(
+            "Initialized Gemini client with model=%s, base_url=%s, api_key=%s",
+            model,
+            base_url,
+            _sanitize_api_key(api_key),
+        )
 
     def generate(
         self,
@@ -92,6 +123,7 @@ class GeminiClient:
         options: Optional[dict] = None,
     ) -> str:
         if not self.api_key:
+            self.logger.error("Gemini API key not configured")
             raise ValueError("GEMINI_API_KEY is required for Gemini provider.")
 
         payload: dict[str, object] = {
@@ -118,18 +150,27 @@ class GeminiClient:
                 payload["generationConfig"] = generation
 
         url = f"{self.base_url}/v1beta/models/{self.model}:generateContent"
-        response = self.session.post(
-            url,
-            params={"key": self.api_key},
-            json=payload,
-            timeout=self.timeout,
-        )
-        response.raise_for_status()
+        try:
+            response = self.session.post(
+                url,
+                params={"key": self.api_key},
+                json=payload,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as exc:
+            self.logger.error(
+                "Gemini API request failed: %s (api_key=%s, model=%s)",
+                str(exc),
+                _sanitize_api_key(self.api_key),
+                self.model,
+            )
+            raise
         data = response.json()
         try:
             return data["candidates"][0]["content"]["parts"][0]["text"].strip()
         except (KeyError, IndexError, TypeError) as exc:
-            self.logger.error("Unexpected Gemini response: %s", data)
+            self.logger.error("Unexpected Gemini response structure")
             raise ValueError("Invalid Gemini response payload") from exc
 
 
