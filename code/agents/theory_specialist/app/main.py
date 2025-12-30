@@ -11,6 +11,9 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import StarletteHTTPException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -62,6 +65,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Add exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    logger.error(f"Validation error: {exc.errors()}")
+    logger.error(f"Request body: {request.body() if hasattr(request, 'body') else 'N/A'}")
+    return {"detail": exc.errors(), "body": request.body() if hasattr(request, 'body') else None}
 
 
 @app.on_event("startup")
@@ -267,13 +278,16 @@ def _get_or_create_conversation(
             .filter(Conversation.conversation_id == conversation_id)
             .first()
         )
-        if not conversation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversation not found.",
-            )
+        if conversation:
+            return conversation
+        # If conversation_id is provided but doesn't exist, create it with that ID
+        conversation = Conversation(conversation_id=conversation_id)
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
         return conversation
 
+    # No conversation_id provided, create a new one
     conversation = Conversation()
     db.add(conversation)
     db.commit()
@@ -301,6 +315,8 @@ def _format_sources(chunks: List[RetrievedChunk]) -> List[SourceChunk]:
 def generate_answer(
     payload: GenerateRequest, db: Session = Depends(get_db)
 ) -> GenerateResponse:
+    logger.info(f"Received /generate request: query='{payload.query}', conversation_id='{payload.conversation_id}'")
+    logger.info(f"Full request payload: {payload}")
     conversation = _get_or_create_conversation(db, payload.conversation_id)
 
     user_message = Message(

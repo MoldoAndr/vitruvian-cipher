@@ -10,16 +10,16 @@ choice_maker:
 
 agents:
   password_checker:
-    base_url: "http://localhost:9000"
+    base_url: "http://password-checker:8000"
     timeout: "10s"
   crypto_god:
-    base_url: "http://localhost:8090"
+    base_url: "http://crypto-god:8090"
     timeout: "10s"
   prime_checker:
-    base_url: "http://localhost:5000"
+    base_url: "http://prime-checker:5000"
     timeout: "10s"
   theory_specialist:
-    base_url: "http://localhost:8100"
+    base_url: "http://theory-specialist:8000"
     timeout: "90s"
 
 routing:
@@ -57,18 +57,30 @@ orchestrator:
 llm:
   profiles:
     planner:
+      ollama_cloud: "deepseek-v3.2:cloud"
+      ollama_local: "llama3.1:8b"
       openai: "gpt-4.1-mini"
       anthropic: "claude-3-5-haiku-20241022"
       gemini: "gemini-2.0-flash"
-      ollama_local: "mistral:7b"
-      ollama_cloud: "mistral:7b"
     responder:
+      ollama_cloud: "kimi-k2-thinking:cloud"
+      ollama_local: "phi3:latest"
       openai: "gpt-4.1"
       anthropic: "claude-3-7-sonnet-20250219"
       gemini: "gemini-2.0-pro"
-      ollama_local: "llama3.1:70b"
-      ollama_cloud: "llama3.1:70b"
   providers:
+    ollama_cloud:
+      base_url: "https://ollama.com"
+      api_key: "${OLLAMA_API_KEY}"
+      timeout: "60s"
+      max_tokens: 4000
+      temperature: 0.2
+    ollama_local:
+      base_url: "http://host.docker.internal:11434"
+      api_key: ""
+      timeout: "30s"
+      max_tokens: 1200
+      temperature: 0.2
     openai:
       base_url: "https://api.openai.com/v1"
       api_key: "${OPENAI_API_KEY}"
@@ -85,17 +97,5 @@ llm:
       base_url: "https://generativelanguage.googleapis.com/v1beta"
       api_key: "${GEMINI_API_KEY}"
       timeout: "20s"
-      max_tokens: 1200
-      temperature: 0.2
-    ollama_local:
-      base_url: "http://localhost:11434"
-      api_key: ""
-      timeout: "30s"
-      max_tokens: 1200
-      temperature: 0.2
-    ollama_cloud:
-      base_url: "https://ollama.com"
-      api_key: "${OLLAMA_API_KEY}"
-      timeout: "30s"
       max_tokens: 1200
       temperature: 0.2

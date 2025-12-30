@@ -1,148 +1,460 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Root launcher for all services used by the project
-# - Password Checker (agents/password_checker/docker-compose.yml)
-# - Theory Specialist (agents/theory_specialist/docker-compose.yml)
-# - Choice Maker (agents/choice_maker/docker-compose.yaml|yml)
-# - Orchestrator (agents/orchestrator/Dockerfile)
-# - Mock Interface (static HTML opened via file:// or your own static server)
-# - React Frontend (interface/react_interface served via Nginx container)
+# ============================================
+# Vitruvian Platform - Enhanced Service Launcher
+# Industry-standard service orchestration
+# ============================================
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AGENTS_DIR="$ROOT_DIR/agents"
-INTERFACE_DIR="$ROOT_DIR/interface"
-REACT_DIR="$INTERFACE_DIR/react_interface"
-ORCHESTRATOR_DIR="$AGENTS_DIR/orchestrator"
+# Configuration
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly MAKEFILE="$SCRIPT_DIR/Makefile"
+readonly COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
-log() {
-  echo "[run_all] $*"
+# Colors
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[0;33m'
+readonly BLUE='\033[0;34m'
+readonly BOLD='\033[1m'
+readonly RESET='\033[0m'
+
+# Banner
+print_banner() {
+    echo -e "${BOLD}"
+    cat <<'BANNER_EOF'
+                         |       :     . |
+                        | '  :      '   |
+                         |  .  |   '  |  |
+   .--._ _...:.._ _.--. ,  ' |
+  (  ,  `        `  ,  )   . |
+   '-/              \-'  |   |
+     |  o   /\   o  |       :|
+     \     _\/_     / :  '   |
+     /'._   ^^   _.;___      |
+   /`    """""""`      `\=   |
+ /`                     /=  .|
+;             '--,-----'=    |
+|                 `\  |    . |
+\                   \___ :   |
+/'.                     `\=  |
+\_/`--......_            /=  |
+            |`-.        /= : |
+            | : `-.__ /` .   |
+            |    .   ` |    '|
+            |  .  : `   . |  |
+BANNER_EOF
+    echo -e "${RESET}"
+    echo ""
+    echo -e "${BOLD}           Cryptography Platform v1.0${RESET}"
 }
 
-start_password_checker() {
-  local file="$AGENTS_DIR/password_checker/docker-compose.yml"
-  if [ -f "$file" ]; then
-    log "Starting password_checker (single consolidated container) via docker compose..."
-    (cd "$AGENTS_DIR/password_checker" && docker compose up -d)
-  else
-    log "password_checker/docker-compose.yml not found, skipping password checker."
-  fi
+# ============================================
+# Logging Functions
+# ============================================
+
+log_info() {
+    echo -e "${BLUE}[INFO]${RESET} $*"
 }
 
-start_theory_specialist() {
-  if [ -f "$AGENTS_DIR/theory_specialist/docker-compose.yml" ]; then
-    log "Starting theory_specialist via docker-compose..."
-    (cd "$AGENTS_DIR/theory_specialist" && docker compose up -d)
-  else
-    log "theory_specialist/docker-compose.yml not found, skipping theory specialist."
-  fi
+log_success() {
+    echo -e "${GREEN}[✓]${RESET} $*"
 }
 
-start_choice_maker() {
-  local file_yml="$AGENTS_DIR/choice_maker/docker-compose.yml"
-  local file_yaml="$AGENTS_DIR/choice_maker/docker-compose.yaml"
-  if [ -f "$file_yml" ] || [ -f "$file_yaml" ]; then
-    local compose_file="$file_yml"
-    [ -f "$file_yaml" ] && compose_file="$file_yaml"
-    log "Starting choice_maker via docker compose (file: ${compose_file##*/})..."
-    (cd "$AGENTS_DIR/choice_maker" && docker compose -f "${compose_file##*/}" up -d)
-  else
-    log "choice_maker docker-compose file not found, skipping choice maker."
-  fi
+log_warning() {
+    echo -e "${YELLOW}[!]${RESET} $*"
 }
 
-start_command_executor() {
-  local file="$AGENTS_DIR/command_executor/docker-compose.yml"
-  if [ -f "$file" ]; then
-    log "Starting command_executor (OpenSSL Rust backend) via docker compose..."
-    (cd "$AGENTS_DIR/command_executor" && docker compose up --build -d)
-  else
-    log "command_executor/docker-compose.yml not found, skipping command executor."
-  fi
+log_error() {
+    echo -e "${RED}[✗]${RESET} $*"
 }
 
-start_orchestrator() {
-  local dockerfile="$ORCHESTRATOR_DIR/Dockerfile"
-  if [ ! -f "$dockerfile" ]; then
-    log "orchestrator/Dockerfile not found, skipping orchestrator."
-    return
-  fi
+log_header() {
+    echo ""
+    echo -e "${BOLD}$*${RESET}"
+    echo "────────────────────────────────────────────────────"
+}
 
-  local container_name="orchestrator"
-  local existing_container=""
-  existing_container="$(docker ps -aq -f name=^${container_name}$ 2>/dev/null || true)"
-  if [ -n "$existing_container" ]; then
-    local running=""
-    running="$(docker ps -q -f name=^${container_name}$ 2>/dev/null || true)"
-    if [ -n "$running" ]; then
-      log "Orchestrator container already running."
-      return
+# ============================================
+# Prerequisites Check
+# ============================================
+
+check_prerequisites() {
+    log_header "Checking Prerequisites"
+
+    local missing=0
+
+    # Check Docker
+    if command -v docker >/dev/null 2>&1; then
+        log_success "Docker installed: $(docker --version | head -n1)"
+    else
+        log_error "Docker is not installed"
+        ((missing++))
     fi
-    log "Starting existing orchestrator container..."
-    docker start "$container_name" >/dev/null
-    return
-  fi
 
-  local port="${ORCHESTRATOR_PORT:-8200}"
-  local network_args=()
-  if [ "$(uname -s)" = "Linux" ]; then
-    network_args+=(--network host)
-  else
-    network_args+=(-p "$port:8200")
-  fi
-  log "Building orchestrator image..."
-  docker build -t vitruvian-orchestrator:local "$ORCHESTRATOR_DIR"
-  log "Starting orchestrator..."
-  docker run -d --name "$container_name" "${network_args[@]}" vitruvian-orchestrator:local >/dev/null
+    # Check Docker Compose
+    if docker compose version >/dev/null 2>&1; then
+        log_success "Docker Compose installed: $(docker compose version | head -n1)"
+    elif docker-compose --version >/dev/null 2>&1; then
+        log_success "Docker Compose installed: $(docker-compose --version | head -n1)"
+    else
+        log_error "Docker Compose is not installed"
+        ((missing++))
+    fi
+
+    # Check Make
+    if command -v make >/dev/null 2>&1; then
+        log_success "Make installed: $(make --version | head -n1)"
+    else
+        log_warning "Make is not installed (optional but recommended)"
+    fi
+
+    # Check if files exist
+    if [[ -f "$COMPOSE_FILE" ]]; then
+        log_success "docker-compose.yml found"
+    else
+        log_error "docker-compose.yml not found"
+        ((missing++))
+    fi
+
+    if [[ -f "$MAKEFILE" ]]; then
+        log_success "Makefile found"
+    else
+        log_warning "Makefile not found"
+    fi
+
+    if [[ $missing -gt 0 ]]; then
+        log_error "Missing $missing prerequisite(s)"
+        exit 1
+    fi
+
+    log_success "All prerequisites satisfied"
 }
 
-start_mock_interface() {
-  local mock_path="$INTERFACE_DIR/mock/index.html"
-  log "Mock Interface is static; open file://$mock_path in your browser."
+# ============================================
+# Environment Setup
+# ============================================
+
+setup_environment() {
+    log_header "Setting Up Environment"
+
+    local env_file=".env"
+
+    if [[ ! -f "$env_file" ]]; then
+        if [[ -f "${env_file}.example" ]]; then
+            log_info "Creating .env from .env.example..."
+            cp "${env_file}.example" "$env_file"
+            log_warning "Please edit .env with your configuration before starting services"
+        else
+            log_warning "Creating minimal .env file..."
+            cat > "$env_file" <<'ENV_EOF'
+# Vitruvian Platform Environment Configuration
+# Generated: $(date)
+
+# Infrastructure
+POSTGRES_USER=vitruvian
+POSTGRES_PASSWORD=vitruvian_dev_password_CHANGE_ME
+POSTGRES_DB=vitruvian
+
+REDIS_PASSWORD=redis_dev_password_CHANGE_ME
+
+# Application
+JWT_SECRET=CHANGE_THIS_TO_RANDOM_64_CHAR_STRING_IN_PRODUCTION
+ORCHESTRATOR_PORT=8200
+REACT_PORT=5173
+
+# Development
+DEV_MODE=true
+ENV_EOF
+        fi
+    fi
+
+    log_success "Environment configured"
 }
 
-start_react_frontend() {
-  if [ ! -d "$REACT_DIR" ]; then
-    log "react_interface directory not found, skipping React frontend."
-    return
-  fi
+# ============================================
+# Service Management Functions
+# ============================================
 
-  local compose_file="$REACT_DIR/docker-compose.yml"
-  if [ ! -f "$compose_file" ]; then
-    log "react_interface/docker-compose.yml not found, skipping React frontend."
-    return
-  fi
+start_all() {
+    log_header "Starting All Services"
 
-  local existing_container=""
-  existing_container="$(docker ps -q -f name=react_frontend 2>/dev/null || true)"
-  if [ -n "$existing_container" ]; then
-    log "React frontend container already running."
-    return
-  fi
+    # Start infrastructure first
+    log_info "Starting infrastructure services (PostgreSQL, Redis)..."
+    if command -v make >/dev/null 2>&1; then
+        make start-dependencies
+    else
+        docker compose -f "$COMPOSE_FILE" up -d postgres redis
+    fi
 
-  local port="${REACT_PORT:-${REACT_FRONTEND_PORT:-5173}}"
-  log "Starting react_frontend via docker compose (host port $port -> container 80)..."
-  (
-    cd "$REACT_DIR"
-    REACT_FRONTEND_PORT="$port" docker compose up --build -d
-  )
+    # Wait for infrastructure
+    log_info "Waiting for infrastructure to be ready..."
+    sleep 5
+
+    # Start all services
+    log_info "Starting application services..."
+    if command -v make >/dev/null 2>&1; then
+        make start
+    else
+        docker compose -f "$COMPOSE_FILE" up -d
+    fi
+
+    log_success "All services started"
+
+    # Run health checks
+    log_info "Running health checks..."
+    if [[ -f "./scripts/health-check.sh" ]]; then
+        ./scripts/health-check.sh 60 2
+    fi
+
+    # Display service URLs
+    print_service_urls
 }
 
-log "Starting all components..."
-start_password_checker
-start_theory_specialist
-start_choice_maker
-start_command_executor
-start_orchestrator
-start_mock_interface
-start_react_frontend
+stop_all() {
+    log_header "Stopping All Services"
 
-log "All start commands issued. Give containers a few seconds to become healthy."
-log "Services:"
-log " - Password Checker: http://localhost:9000"
-log " - Theory Specialist: http://localhost:8100"
-log " - Choice Maker: http://localhost:8081 (host) -> container 8080"
-log " - Command Executor: http://localhost:8085"
-log " - Orchestrator: http://localhost:${ORCHESTRATOR_PORT:-8200}"
-log " - Mock Interface: open file://$INTERFACE_DIR/mock/index.html (or serve it statically)."
-log " - React Frontend: http://localhost:${REACT_PORT:-${REACT_FRONTEND_PORT:-5173}} (Docker container)"
+    if command -v make >/dev/null 2>&1; then
+        make stop
+    else
+        docker compose -f "$COMPOSE_FILE" stop
+    fi
+
+    log_success "All services stopped"
+}
+
+restart_all() {
+    log_header "Restarting All Services"
+
+    stop_all
+    sleep 2
+    start_all
+}
+
+build_all() {
+    log_header "Building All Services"
+
+    if command -v make >/dev/null 2>&1; then
+        make build
+    else
+        docker compose -f "$COMPOSE_FILE" build
+    fi
+
+    log_success "All services built"
+}
+
+status_all() {
+    if [[ -f "./scripts/service-status.sh" ]]; then
+        ./scripts/service-status.sh summary
+    else
+        log_header "Service Status"
+        docker compose -f "$COMPOSE_FILE" ps
+    fi
+}
+
+logs_all() {
+    local service="${2:-}"
+
+    if [[ -n "$service" ]]; then
+        if command -v make >/dev/null 2>&1; then
+            make logs-agent SERVICE="$service"
+        else
+            docker compose -f "$COMPOSE_FILE" logs -f "$service"
+        fi
+    else
+        if command -v make >/dev/null 2>&1; then
+            make logs
+        else
+            docker compose -f "$COMPOSE_FILE" logs -f
+        fi
+    fi
+}
+
+clean_all() {
+    log_header "Cleaning Up"
+
+    read -p "Stop and remove all containers? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if command -v make >/dev/null 2>&1; then
+            make clean
+        else
+            docker compose -f "$COMPOSE_FILE" down -v
+        fi
+        log_success "Cleanup complete"
+    else
+        log_info "Cleanup cancelled"
+    fi
+}
+
+# ============================================
+# Quick Actions
+# ============================================
+
+quick_start_infrastructure() {
+    log_info "Starting infrastructure only..."
+    docker compose -f "$COMPOSE_FILE" up -d postgres redis
+    log_success "Infrastructure started"
+}
+
+quick_start_agents() {
+    log_info "Starting agent services..."
+    docker compose -f "$COMPOSE_FILE" up -d \
+        password-checker \
+        theory-specialist \
+        choice-maker \
+        command-executor \
+        prime-checker
+    log_success "Agents started"
+}
+
+quick_restart_service() {
+    local service="$1"
+
+    if [[ -z "$service" ]]; then
+        log_error "Usage: $0 restart <service-name>"
+        exit 1
+    fi
+
+    log_info "Restarting $service..."
+    docker compose -f "$COMPOSE_FILE" restart "$service"
+    log_success "$service restarted"
+}
+
+# ============================================
+# Utilities
+# ============================================
+
+print_service_urls() {
+    log_header "Service URLs"
+
+    local orchestrator_port="${ORCHESTRATOR_PORT:-8200}"
+    local react_port="${REACT_PORT:-5173}"
+
+    echo -e "${BOLD}Application Services:${RESET}"
+    # echo -e "  • Backend API:         ${GREEN}http://localhost:8000${RESET}"  # TODO: Create backend
+    echo -e "  • Orchestrator:        ${GREEN}http://localhost:${orchestrator_port}${RESET}"
+    echo -e "  • React Frontend:      ${GREEN}http://localhost:${react_port}${RESET}"
+    echo ""
+    echo -e "${BOLD}Agent Services:${RESET}"
+    echo -e "  • Password Checker:    ${GREEN}http://localhost:9000${RESET} /health"
+    echo -e "  • Theory Specialist:   ${GREEN}http://localhost:8100${RESET} /health"
+    echo -e "  • Choice Maker:        ${GREEN}http://localhost:8081${RESET} /health"
+    echo -e "  • Command Executor:    ${GREEN}http://localhost:8085${RESET} /health"
+    echo -e "  • Prime Checker:       ${GREEN}http://localhost:5000${RESET} /health"
+    echo ""
+    echo -e "${BOLD}Infrastructure:${RESET}"
+    echo -e "  • PostgreSQL:          ${CYAN}localhost:5432${RESET}"
+    echo -e "  • Redis:               ${CYAN}localhost:6379${RESET}"
+    # echo ""
+    # echo -e "${BOLD}Observability (if enabled):${RESET}"
+    # echo -e "  • Prometheus:          ${GREEN}http://localhost:9090${RESET}"
+    # echo -e "  • Grafana:             ${GREEN}http://localhost:3000${RESET} (admin/admin)"
+}
+
+print_help() {
+    cat <<'HELP_EOF'
+Usage: ./run_all.sh [COMMAND] [OPTIONS]
+
+Commands:
+  start           Start all services
+  stop            Stop all services
+  restart         Restart all services
+  build           Build all service images
+  status          Show service status
+  logs [service]  View logs (all or specific service)
+  clean           Stop and remove all containers
+  health          Run health checks
+
+Quick Actions:
+  infra           Start only infrastructure (PostgreSQL, Redis)
+  agents          Start only agent services
+  restart <svc>   Restart specific service
+
+Utilities:
+  help            Show this help message
+  urls            Print all service URLs
+
+Examples:
+  ./run_all.sh start              # Start all services
+  ./run_all.sh logs orchestrator  # View orchestrator logs
+  ./run_all.sh restart backend    # Restart backend service
+  ./run_all.sh health             # Check all services
+
+Recommended Workflow:
+  1. ./run_all.sh build          # Build all images
+  2. ./run_all.sh start          # Start services
+  3. ./run_all.sh health         # Verify health
+  4. ./run_all.sh status         # Check status
+  5. ./run_all.sh stop           # Stop when done
+
+Alternative: Use 'make' for more options
+  make help                       # Show all make targets
+HELP_EOF
+}
+
+# ============================================
+# Main Script
+# ============================================
+
+main() {
+    print_banner
+
+    case "${1:-help}" in
+        start)
+            check_prerequisites
+            setup_environment
+            start_all
+            ;;
+        stop)
+            stop_all
+            ;;
+        restart)
+            restart_all
+            ;;
+        build)
+            check_prerequisites
+            build_all
+            ;;
+        status)
+            status_all
+            ;;
+        logs)
+            logs_all "$@"
+            ;;
+        clean)
+            clean_all
+            ;;
+        health)
+            if [[ -f "./scripts/health-check.sh" ]]; then
+                ./scripts/health-check.sh "${2:-120}" "${3:-2}"
+            else
+                log_error "health-check.sh not found"
+                exit 1
+            fi
+            ;;
+        infra|infrastructure)
+            check_prerequisites
+            setup_environment
+            quick_start_infrastructure
+            ;;
+        agents)
+            check_prerequisites
+            quick_start_agents
+            ;;
+        urls)
+            print_service_urls
+            ;;
+        help|--help|-h)
+            print_help
+            ;;
+        *)
+            log_error "Unknown command: $1"
+            echo ""
+            print_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

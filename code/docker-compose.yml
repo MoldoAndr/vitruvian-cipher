@@ -1,0 +1,592 @@
+# Vitruvian Platform - Unified Docker Compose Configuration
+# This file orchestrates all microservices with proper dependencies and health checks
+
+services:
+  # ============================================
+  # Infrastructure Layer
+  # ============================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vitruvian-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vitruvian}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vitruvian_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-vitruvian}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vitruvian}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - vitruvian-data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: vitruvian-redis
+    restart: unless-stopped
+    command: >
+      sh -c '
+        redis-server
+        --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+        --maxmemory 256mb
+        --maxmemory-policy allkeys-lru
+        --appendonly yes
+      '
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - vitruvian-data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # Agent Pool (Isolated Network)
+  # ============================================
+
+  password-checker:
+    build:
+      context: ./agents/password_checker
+      dockerfile: Dockerfile
+    container_name: vitruvian-password-checker
+    restart: unless-stopped
+    environment:
+      # Component configuration
+      ENABLED_COMPONENTS: "pass_gpt,zxcvbn,haveibeenpwned"
+      AGGREGATOR_PORT: 8000
+
+      # PassGPT configuration
+      PASS_GPT_URL: http://localhost:8001/score
+      PASS_GPT_MAX_PASSWORD_LENGTH: 10
+
+      # Zxcvbn configuration
+      ZXCVBN_URL: http://localhost:8002/score
+      ZXCVBN_LOW_SCORE_THRESHOLD: 1
+
+      # HIBP configuration
+      HAVEIBEENPWNED_URL: http://localhost:8003/score
+
+      # Health check
+      HEALTH_CHECK_INTERVAL: 30
+    ports:
+      - "9000:8000"
+    volumes:
+      - ./agents/password_checker/PassGPT/models:/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vitruvian-agents
+      - vitruvian-data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  theory-specialist:
+    build:
+      context: ./agents/theory_specialist
+      dockerfile: Dockerfile
+    container_name: vitruvian-theory-specialist
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: sqlite:////app/data/rag_system.db
+      CHROMA_PERSIST_DIRECTORY: /app/data/chromadb
+      DOCUMENTS_DIRECTORY: /app/documents
+      MODELS_CACHE_DIRECTORY: /app/models
+
+      # LLM Provider
+      LLM_PROVIDER: ollama
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: phi3
+
+      # Generation
+      GENERATION_TEMPERATURE: 0.2
+      GENERATION_MAX_TOKENS: 900
+
+      # Retrieval
+      RETRIEVAL_TOP_K: 10
+      RERANKER_TOP_K: 3
+      ENABLE_LEXICAL_RETRIEVAL: "true"
+    ports:
+      - "8100:8000"
+    volumes:
+      - theory_specialist_data:/app/data
+      - theory_specialist_documents:/app/documents
+      - theory_specialist_models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - vitruvian-agents
+      - vitruvian-data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  choice-maker:
+    build:
+      context: ./agents/choice_maker
+      dockerfile: components/make_decision/Dockerfile
+    container_name: vitruvian-choice-maker
+    restart: unless-stopped
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      ENTITIES_MODEL_DIR: /app/artifacts/entities
+      INTENT_MODEL_DIR: /app/artifacts/intent
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - vitruvian-agents
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  command-executor:
+    build:
+      context: ./agents/command_executor
+      dockerfile: Dockerfile
+    container_name: vitruvian-command-executor
+    restart: unless-stopped
+    environment:
+      RUST_LOG: info
+      OPENSSL_VERSION: 3.0
+    ports:
+      - "8085:8085"
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - vitruvian-agents
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  prime-checker:
+    build:
+      context: ./agents/prime_checker
+      dockerfile: Dockerfile
+    container_name: vitruvian-prime-checker
+    restart: unless-stopped
+    environment:
+      # Server configuration
+      SERVER_ADDRESS: :5000
+      SERVER_READ_TIMEOUT: 10s
+      SERVER_WRITE_TIMEOUT: 20s
+
+      # YAFU configuration
+      YAFU_PATH: /usr/local/bin/yafu
+      YAFU_TIMEOUT_ISPRIME: 5
+      YAFU_TIMEOUT_FACTOR: 8
+      YAFU_CONCURRENCY: 2
+
+      # Cache configuration
+      CACHE_SIZE: 10000
+      DB_PATH: /app/data/prime_cache.db
+
+      # FactorDB configuration
+      FACTORDB_ENABLED: "true"
+      FACTORDB_TIMEOUT: 10
+      FACTORDB_RETRIES: 2
+    ports:
+      - "5000:5000"
+    volumes:
+      - prime_checker_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - vitruvian-agents
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ============================================
+  # Application Layer
+  # ============================================
+
+  # backend:  # TODO: Create this service (Go Backend with Auth)
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: vitruvian-backend
+  #   restart: unless-stopped
+  #   environment:
+  #     # Server
+  #     SERVER_ADDRESS: :8000
+  #     SERVER_READ_TIMEOUT: 10s
+  #     SERVER_WRITE_TIMEOUT: 30s
+  #
+  #     # Database
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_USER: ${POSTGRES_USER:-vitruvian}
+  #     DB_PASSWORD: ${POSTGRES_PASSWORD:-vitruvian_dev_password}
+  #     DB_NAME: ${POSTGRES_DB:-vitruvian}
+  #
+  #     # Redis
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev_password}
+  #
+  #     # JWT
+  #     JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+  #     JWT_ACCESS_TOKEN_DURATION: 15m
+  #     JWT_REFRESH_TOKEN_DURATION: 168h
+  #
+  #     # Orchestrator
+  #     ORCHESTRATOR_URL: http://orchestrator:8200
+  #
+  #     # CORS
+  #     CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+  #     CORS_ALLOWED_METHODS: GET,POST,PUT,DELETE,OPTIONS
+  #     CORS_ALLOWED_HEADERS: Authorization,Content-Type,X-API-Token
+  #   ports:
+  #     - "8000:8000"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 30s
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     orchestrator:
+  #       condition: service_healthy
+  #   networks:
+  #     - vitruvian-application
+  #     - vitruvian-data
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '1.0'
+  #         memory: 1G
+  #       reservations:
+  #         cpus: '0.25'
+  #         memory: 256M
+
+  orchestrator:
+    build:
+      context: ./agents/orchestrator
+      dockerfile: Dockerfile
+    container_name: vitruvian-orchestrator
+    restart: unless-stopped
+    environment:
+      # Server
+      SERVER_ADDRESS: :8200
+      SERVER_READ_TIMEOUT: 5s
+      SERVER_WRITE_TIMEOUT: 30s
+
+      # Choice Maker
+      CHOICE_MAKER_BASE_URL: http://choice-maker:8080
+      CHOICE_MAKER_TIMEOUT: 10s
+
+      # Agents
+      AGENT_PASSWORD_CHECKER_URL: http://password-checker:8000
+      AGENT_THEORY_SPECIALIST_URL: http://theory-specialist:8000
+      AGENT_PRIME_CHECKER_URL: http://prime-checker:5000
+      AGENT_COMMAND_EXECUTOR_URL: http://command-executor:8085
+
+      # Orchestrator settings
+      ORCHESTRATOR_INTENT_THRESHOLD: 0.85
+      ORCHESTRATOR_ENTITY_THRESHOLD: 0.6
+      ORCHESTRATOR_MAX_PARALLEL: 4
+
+      # LLM Providers (optional, configure in .env)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+    ports:
+      - "${ORCHESTRATOR_PORT:-8200}:8200"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # No health check - minimal Go container without shell tools
+    depends_on:
+      choice-maker:
+        condition: service_healthy
+      password-checker:
+        condition: service_healthy
+      theory-specialist:
+        condition: service_healthy
+      prime-checker:
+        condition: service_healthy
+      command-executor:
+        condition: service_healthy
+    networks:
+      - vitruvian-application
+      - vitruvian-agents
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ============================================
+  # Frontend Layer
+  # ============================================
+
+  react-frontend:
+    build:
+      context: ./interface/react_interface
+      dockerfile: Dockerfile
+    container_name: vitruvian-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      VITE_ORCHESTRATOR_URL: ${VITE_ORCHESTRATOR_URL:-http://localhost:8200}
+    ports:
+      - "${REACT_PORT:-5173}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # depends_on:
+    #   backend:
+    #     condition: service_healthy
+    networks:
+      - vitruvian-public
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # ============================================
+  # Observability Layer (TODO: Enable when needed for production monitoring)
+  # ============================================
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: vitruvian-prometheus
+  #   restart: unless-stopped
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--web.enable-lifecycle'
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - vitruvian-observability
+  #     - vitruvian-application
+  #     - vitruvian-agents
+  #   profiles:
+  #     - observability
+  #
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: vitruvian-grafana
+  #   restart: unless-stopped
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+  #     GF_INSTALL_PLUGINS: grafana-piechart-panel
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+  #   networks:
+  #     - vitruvian-observability
+  #   depends_on:
+  #     - prometheus
+  #   profiles:
+  #     - observability
+
+# ============================================
+# Networks
+# ============================================
+
+networks:
+  vitruvian-public:
+    driver: bridge
+    internal: false
+
+  vitruvian-application:
+    driver: bridge
+    internal: false
+
+  vitruvian-agents:
+    driver: bridge
+    internal: false
+
+  vitruvian-data:
+    driver: bridge
+    internal: false
+
+  # vitruvian-observability:  # TODO: Enable when observability services are active
+  #   driver: bridge
+  #   internal: true
+
+# ============================================
+# Volumes
+# ============================================
+
+volumes:
+  postgres_data:
+    driver: local
+
+  redis_data:
+    driver: local
+
+  theory_specialist_data:
+    driver: local
+
+  theory_specialist_documents:
+    driver: local
+
+  theory_specialist_models:
+    driver: local
+
+  prime_checker_data:
+    driver: local
+
+  # Observability volumes (TODO: Uncomment when observability services are enabled)
+  # prometheus_data:
+  #   driver: local
+  #
+  # grafana_data:
+  #   driver: local
