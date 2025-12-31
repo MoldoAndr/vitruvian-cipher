@@ -7,9 +7,10 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -17,6 +18,13 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        frozen=False,  # Allow mutation for runtime provider updates
+    )
 
     database_url: str = Field(
         default=f"sqlite:///{ROOT_DIR / 'data' / 'rag_system.db'}"
@@ -44,6 +52,12 @@ class Settings(BaseSettings):
     reranker_threshold: float = Field(default=0.5)
     max_context_chars: int = Field(default=6000)
     max_chunk_chars: int = Field(default=1500)
+
+    # Minimum chunk length for inclusion (configurable)
+    min_chunk_length: int = Field(default=80)
+
+    # Minimum answer length for continuation checks (configurable)
+    min_answer_length_for_continuation: int = Field(default=80)
 
     # Answer policy
     answer_style: str = Field(default="abstractive")
@@ -78,6 +92,9 @@ class Settings(BaseSettings):
     lexical_weight: float = Field(default=0.35)
     vector_weight: float = Field(default=0.65)
 
+    # Lexical index batch size for memory-efficient rebuilding
+    lexical_index_batch_size: int = Field(default=1000)
+
     query_correction_enabled: bool = Field(default=True)
     query_correction_cutoff: float = Field(default=0.84)
     query_cache_size: int = Field(default=128)
@@ -91,9 +108,39 @@ class Settings(BaseSettings):
     gemini_base_url: str = Field(default="https://generativelanguage.googleapis.com")
     gemini_model: str = Field(default="gemini-1.5-flash")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # Pagination settings
+    default_conversation_page_size: int = Field(default=50)
+    max_conversation_page_size: int = Field(default=200)
+
+    # Maximum query length for /generate endpoint
+    max_query_length: int = Field(default=5000)
+
+    @field_validator("ollama_url", "openai_base_url", "gemini_base_url")
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> str:
+        if v is None:
+            return ""
+        v = v.strip()
+        if not v:
+            return ""
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
+
+    @field_validator("max_query_length")
+    @classmethod
+    def validate_max_query_length(cls, v: int) -> int:
+        if v < 100:
+            raise ValueError("max_query_length must be at least 100 characters")
+        if v > 100000:
+            raise ValueError("max_query_length must not exceed 100000 characters")
+        return v
+
+    def create_updated_copy(self, **kwargs) -> "Settings":
+        """Create a new Settings instance with updated values."""
+        current_dict = self.model_dump()
+        current_dict.update(kwargs)
+        return Settings(**current_dict)
 
 
 @lru_cache()

@@ -252,6 +252,27 @@ const MainContent = () => {
                 );
 
                 responseContent = data.reply || '(No response)';
+            } else if (selectedTool === 'prime') {
+                const payload = { number: submittedInput };
+
+                const data = await callJson(
+                    `${CONFIG.primeChecker.baseUrl}${CONFIG.primeChecker.endpoints.isprime}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                const isPrime = data.is_prime ? 'Prime' : 'Composite';
+                const source = data.source ? ` (${data.source})` : '';
+                const factors = data.factors && data.factors.length > 0
+                    ? `\nFactors: ${data.factors.join(' × ')}`
+                    : '';
+                const cached = data.cached ? ' [cached]' : '';
+                const latency = data.latency_ms ? ` (${data.latency_ms}ms)` : '';
+
+                responseContent = `${isPrime}${source}${latency}${cached}${factors}`;
             } else {
                 responseContent = `Response from ${selectedTool} for: "${submittedInput}"`;
             }
@@ -327,7 +348,7 @@ const MainContent = () => {
 
             {/* Input Bar */}
             <div className={`input-container ${hasMessages ? 'at-bottom' : 'centered'}`}>
-                <InputBar onSubmit={handleSubmit} loading={loading} />
+                <InputBar onSubmit={handleSubmit} loading={loading} idleGlow={!hasMessages} />
             </div>
 
             <style>{`
@@ -397,10 +418,10 @@ const MainContent = () => {
                     overflow-y: auto;
                     min-height: 0;
                     padding-bottom: 160px;
-                    padding-right: 14px;
+                    padding-right: 28px;
                     scrollbar-gutter: stable;
-                    scrollbar-width: auto;
-                    scrollbar-color: #000 #000;
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(170, 170, 170, 0.7) transparent;
                 }
 
                 .messages-container.is-empty {
@@ -464,7 +485,18 @@ const MainContent = () => {
                 }
 
                 .assistant-message .message-content {
+                    background: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(0, 255, 136, 0.18);
+                    box-shadow: 0 0 14px rgba(0, 255, 136, 0.06);
                     margin-right: auto;
+                }
+
+                .assistant-message .message-text {
+                    color: #ffffff;
+                    font-family: 'Space Mono', 'IBM Plex Mono', 'Menlo', monospace;
+                    letter-spacing: 0.2px;
+                    font-weight: 500;
+                    text-shadow: 0 0 12px rgba(0, 255, 136, 0.22);
                 }
 
                 .message-tool {
@@ -473,6 +505,12 @@ const MainContent = () => {
                     margin-top: 6px;
                     text-transform: none;
                     letter-spacing: 0.2px;
+                }
+
+                .assistant-message .message-tool {
+                    color: rgba(0, 255, 136, 0.55);
+                    letter-spacing: 0.6px;
+                    text-transform: uppercase;
                 }
 
                 .input-container {
@@ -513,17 +551,17 @@ const MainContent = () => {
                 }
 
                 .messages-container::-webkit-scrollbar-track {
-                    background: #000;
+                    background: rgba(255, 255, 255, 0.04);
                 }
 
                 .messages-container::-webkit-scrollbar-thumb {
-                    background: #000;
+                    background: rgba(170, 170, 170, 0.7);
                     border-radius: 8px;
-                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
                 }
 
                 .messages-container::-webkit-scrollbar-thumb:hover {
-                    background: #000;
+                    background: rgba(190, 190, 190, 0.8);
                 }
 
                 /* Mobile adjustments */
@@ -544,7 +582,7 @@ const MainContent = () => {
 
                     .messages-container {
                         padding-bottom: 140px;
-                        padding-right: 10px;
+                        padding-right: 18px;
                     }
 
                     .message-content {

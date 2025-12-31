@@ -29,7 +29,7 @@ const ContentHeader = () => {
                         <Menu className="w-5 h-5" />
                     </button>
                 )}
-                <h1 className="content-title">Vitruvian Cipher</h1>
+                <h1 className="content-title">Vitruvian-Cipher</h1>
             </div>
             <StatusIndicator />
 

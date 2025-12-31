@@ -13,9 +13,10 @@ const TOOLS = [
   { id: "password", label: "Password" },
   { id: "crypto", label: "Crypto" },
   { id: "choice", label: "Choice" },
+  { id: "prime", label: "Prime" },
 ];
 
-const InputBar = ({ onSubmit, loading: externalLoading }) => {
+const InputBar = ({ onSubmit, loading: externalLoading, idleGlow = false }) => {
   const {
     inputValue,
     setInputValue,
@@ -122,7 +123,7 @@ const InputBar = ({ onSubmit, loading: externalLoading }) => {
 
   return (
     <div className="input-bar-wrapper">
-      <div className={`input-bar ${inputValue ? "focused" : ""}`}>
+      <div className={`input-bar ${inputValue ? "focused" : ""} ${idleGlow ? "idle-glow" : ""}`}>
         {/* Text Input - Clean and centered */}
         <div className="input-wrapper">
           <textarea
@@ -405,6 +406,15 @@ Ctrl+Enter to submit"
                   </div>
                 )}
 
+                {selectedTool === "prime" && (
+                  <div className="tool-settings-section">
+                    <div className="tool-settings-section-title">Notes</div>
+                    <div className="tool-settings-value">
+                      No additional settings for this tool.
+                    </div>
+                  </div>
+                )}
+
               </motion.div>
             )}
           </AnimatePresence>
@@ -483,6 +493,8 @@ Ctrl+Enter to submit"
                     padding: 16px 18px 20px;
                     transition: all 200ms ease;
                     box-shadow: 0 0 18px rgba(0, 255, 136, 0.18);
+                    overflow: visible;
+                    isolation: isolate;
                 }
 
                 .input-bar:hover {
@@ -494,6 +506,38 @@ Ctrl+Enter to submit"
                     border-color: rgba(0, 255, 136, 0.4);
                     box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.08),
                         0 0 24px rgba(0, 255, 136, 0.25);
+                }
+
+                .input-bar > * {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .input-bar.idle-glow::before {
+                    content: '';
+                    position: absolute;
+                    inset: -2px;
+                    border-radius: 26px;
+                    border: 1px solid rgba(0, 255, 136, 0.18);
+                    box-shadow: 0 0 18px rgba(0, 255, 136, 0.2);
+                    opacity: 0.7;
+                    pointer-events: none;
+                    animation: idleGlow 4.6s ease-in-out infinite;
+                }
+
+                @keyframes idleGlow {
+                    0%, 100% {
+                        opacity: 0.5;
+                        box-shadow: 0 0 14px rgba(0, 255, 136, 0.15);
+                    }
+                    45% {
+                        opacity: 0.85;
+                        box-shadow: 0 0 28px rgba(0, 255, 136, 0.35);
+                    }
+                    70% {
+                        opacity: 0.6;
+                        box-shadow: 0 0 18px rgba(0, 255, 136, 0.2);
+                    }
                 }
 
                 .input-wrapper {

@@ -46,4 +46,5 @@ export const getDefaultToolSettings = () => ({
         debug: false,
     },
     crypto: {},
+    prime: {},
 });

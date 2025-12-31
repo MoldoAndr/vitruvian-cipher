@@ -5,6 +5,7 @@ import { useApp } from '../contexts/AppContext';
 
 const UserProfile = ({ isMobile = false, closeSidebar }) => {
     const { sidebarExpanded, user } = useApp();
+    const showDetails = sidebarExpanded || isMobile;
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -45,7 +46,7 @@ const UserProfile = ({ isMobile = false, closeSidebar }) => {
         <div className="user-profile-container" ref={menuRef}>
             <div
                 className={`user-profile ${(sidebarExpanded || isMobile) ? 'expanded' : 'collapsed'}`}
-                onClick={() => (sidebarExpanded || isMobile) && setMenuOpen(!menuOpen)}
+                onClick={() => showDetails && setMenuOpen(!menuOpen)}
             >
                 {/* Avatar */}
                 <div className="user-avatar">
@@ -58,17 +59,18 @@ const UserProfile = ({ isMobile = false, closeSidebar }) => {
                     )}
                 </div>
 
-                {/* Username (expanded only) */}
-                {(sidebarExpanded || isMobile) && (
-                    <span className="username">{user.username}</span>
-                )}
+                {/* Username */}
+                <span
+                    className={`username ${showDetails ? '' : 'is-hidden'}`}
+                    aria-hidden={!showDetails}
+                >
+                    {user.username}
+                </span>
 
-                {/* Three dots (expanded only) */}
-                {(sidebarExpanded || isMobile) && (
-                    <div className="menu-dots">
-                        <MoreVertical className="w-4 h-4 text-gray-400" />
-                    </div>
-                )}
+                {/* Three dots */}
+                <div className={`menu-dots ${showDetails ? '' : 'is-hidden'}`} aria-hidden={!showDetails}>
+                    <MoreVertical className="w-4 h-4 text-gray-400" />
+                </div>
             </div>
 
             {/* Dropdown Menu */}
@@ -121,6 +123,7 @@ const UserProfile = ({ isMobile = false, closeSidebar }) => {
 
                 .user-profile.collapsed {
                     justify-content: center;
+                    gap: 0;
                 }
 
                 .user-avatar {
@@ -155,10 +158,28 @@ const UserProfile = ({ isMobile = false, closeSidebar }) => {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    max-width: 180px;
+                    transition: opacity 260ms ease, transform 260ms ease, max-width 360ms ease;
+                }
+
+                .username.is-hidden {
+                    max-width: 0;
+                    opacity: 0;
+                    transform: translateX(-8px);
                 }
 
                 .menu-dots {
                     flex-shrink: 0;
+                    transition: opacity 200ms ease, transform 200ms ease, width 200ms ease;
+                    width: 18px;
+                    display: flex;
+                    justify-content: center;
+                }
+
+                .menu-dots.is-hidden {
+                    opacity: 0;
+                    transform: translateX(-6px);
+                    width: 0;
                 }
 
                 .user-menu {

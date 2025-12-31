@@ -49,7 +49,7 @@ const StatusIndicator = () => {
                 transition={{ duration: 0.2 }}
             >
                 <div className="heartbeat-icon">
-                    <Activity className="w-4 h-4 text-neon animate-pulse" />
+                    <Activity className="w-5 h-5 text-neon animate-pulse" />
                 </div>
             </motion.div>
 
@@ -75,6 +75,10 @@ const StatusIndicator = () => {
                             <StatusDot
                                 name="Choice"
                                 url={`${CONFIG.choiceMaker.baseUrl}${CONFIG.choiceMaker.endpoints.health}`}
+                            />
+                            <StatusDot
+                                name="Prime"
+                                url={`${CONFIG.primeChecker.baseUrl}${CONFIG.primeChecker.endpoints.health}`}
                             />
                             <StatusDot
                                 name="Orchestrator"
@@ -105,7 +109,7 @@ const StatusIndicator = () => {
                     justify-content: center;
                     background: rgba(0, 0, 0, 0.6);
                     backdrop-filter: blur(10px);
-                    padding: 10px;
+                    padding: 13px;
                     border-radius: 50%;
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     transition: all 200ms;

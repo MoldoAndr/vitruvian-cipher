@@ -46,8 +46,8 @@ export const AppProvider = ({ children }) => {
         if (savedSidebarState !== null) {
             setSidebarExpanded(JSON.parse(savedSidebarState));
         } else {
-            // Default: expanded on desktop (> 1024px)
-            setSidebarExpanded(window.innerWidth > 1024);
+            // Default: start collapsed on desktop
+            setSidebarExpanded(false);
         }
     }, []);
 

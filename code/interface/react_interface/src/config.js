@@ -28,5 +28,14 @@ export const CONFIG = {
             health: '/health',
             orchestrate: '/v1/orchestrate'
         }
+    },
+    primeChecker: {
+        baseUrl: 'http://localhost:5000',
+        endpoints: {
+            health: '/health',
+            isprime: '/isprime',
+            stats: '/stats',
+            history: '/history'
+        }
     }
 };
