@@ -83,6 +83,11 @@
   <img src="logo/p4.png" alt="Theory Specialist" style="max-width: 100%; height: auto; margin-top: 10px;" />
   <br>
   <em>RAG-powered cryptographic knowledge assistant delivering context-aware answers from ingested research papers and documentation</em>
+  <img src="logo/p5.png" alt="TUI" style="max-width: 100%; height: auto; margin-top: 10px;" />
+  <br>
+  <em>Terminal-based CLI interface for quick access to core functionalities</em>
+  <img src="logo/p6.png" alt="Password Checker" style="max-width: 100%; height: auto; margin-top: 10px;" />
+  <em>Password strength analysis with multi-model ensemble and breach detection and intent extranction using Machine Learning Fine-Tuned Models</em>
 </div>
 
 ---
