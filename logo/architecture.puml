@@ -1,0 +1,25 @@
+@startuml
+title Diagrama in stagiu intermediar
+skinparam linetype ortho
+top to bottom direction
+
+
+rectangle "Frontend Layer" as FL {
+  rectangle "React Web UI" as Web
+  rectangle "Python TUI" as CLI
+}
+
+rectangle "Orchestrator" as Orch
+
+rectangle "Password Checker" as PC
+rectangle "Theory Specialist" as TS
+rectangle "Command Executor" as CE
+rectangle "Prime Checker" as PR
+
+CLI -down-> Orch
+Web -down-> Orch
+Orch --> PC
+Orch --> TS
+Orch --> CE
+Orch --> PR
+@enduml
