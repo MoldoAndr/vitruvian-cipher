@@ -4,10 +4,11 @@ Uses top password lists for rapid low-hanging fruit recovery.
 """
 
 import logging
-import subprocess
-from typing import Dict, Optional
+from typing import Dict
 
 from app.config import get_settings
+from app.cracking.hashcat_runner import run_hashcat_attack
+from app.models.enums import HashType
 
 logger = logging.getLogger(__name__)
 
@@ -36,63 +37,43 @@ def quick_dictionary_attack(
 
     logger.info(f"Phase 1: Quick Dictionary Attack (timeout={timeout}s)")
 
-    cmd = [
-        settings.hashcat_path,
-        "-m", str(hash_type_id),
-        "-a", "0",  # Straight attack mode
-        str(target_hash),
-        str(wordlist),
-        "--potfile-disable",
-        "--quiet",
-        "--force",
-        "--runtime", str(timeout)
-    ]
-
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout
+        result = run_hashcat_attack(
+            target_hash=target_hash,
+            hash_type_id=hash_type_id,
+            attack_mode=0,
+            attack_args=[str(wordlist)],
+            timeout=timeout,
         )
 
-        output = result.stdout
-        stderr = result.stderr
-
-        # Check if hashcat actually succeeded (exit code 0)
-        # Exit code 0 = at least one hash cracked
-        # Exit code 1 = no hashes cracked
-        # Exit code 255 = error/no device available
-        if result.returncode == 0 and output and ":" in output:
-            # Hashcat output format: hash:password
-            password = output.split(":")[1].strip()
-            logger.info(f"Phase 1: Password cracked: {password}")
+        if result.cracked:
+            logger.info(f"Phase 1: Password cracked: {result.password}")
             return {
                 "cracked": True,
-                "password": password,
+                "password": result.password,
+                "attempts": 100000,
                 "phase": 1,
-                "method": "quick_dictionary"
+                "method": "quick_dictionary",
             }
 
-        # Check if hashcat failed due to no GPU/OpenCL
-        if result.returncode == 255 and ("No OpenCL" in stderr or "No CUDA" in stderr or "No HIP" in stderr):
+        if result.error_type == "no_device":
             logger.warning("Phase 1: Hashcat requires GPU/OpenCL, using CPU-based fallback")
-            return _cpu_dictionary_attack(target_hash, wordlist, timeout)
+            return _cpu_dictionary_attack(target_hash, hash_type_id, wordlist, timeout)
 
-        logger.info(f"Phase 1: No matches found (exit code {result.returncode})")
+        if result.timeout:
+            logger.warning(f"Phase 1: Timeout after {timeout}s")
+            return {
+                "cracked": False,
+                "attempts": 100000,
+                "phase": 1,
+                "timeout": True,
+            }
+
+        logger.info(f"Phase 1: No matches found (exit code {result.exit_code})")
         return {
             "cracked": False,
             "attempts": 100000,  # Approximate
-            "phase": 1
-        }
-
-    except subprocess.TimeoutExpired:
-        logger.warning(f"Phase 1: Timeout after {timeout}s")
-        return {
-            "cracked": False,
-            "attempts": 100000,
             "phase": 1,
-            "timeout": True
         }
 
     except Exception as e:
@@ -100,11 +81,11 @@ def quick_dictionary_attack(
         return {
             "cracked": False,
             "error": str(e),
-            "phase": 1
+            "phase": 1,
         }
 
 
-def _cpu_dictionary_attack(target_hash: str, wordlist, timeout: int) -> Dict:
+def _cpu_dictionary_attack(target_hash: str, hash_type_id: int, wordlist, timeout: int) -> Dict:
     """CPU-based dictionary attack using Python (hashcat fallback).
 
     Args:
@@ -115,13 +96,24 @@ def _cpu_dictionary_attack(target_hash: str, wordlist, timeout: int) -> Dict:
     Returns:
         Result dict
     """
-    import hashlib
     import time
 
     logger.info(f"Phase 1: Using CPU-based fallback (timeout={timeout}s)")
 
     start_time = time.time()
     attempts = 0
+
+    hash_func = _get_hash_func(hash_type_id)
+    if hash_func is None:
+        logger.warning(f"Phase 1: CPU fallback unsupported for hash type {hash_type_id}")
+        return {
+            "cracked": False,
+            "error": f"Unsupported hash type for CPU fallback: {hash_type_id}",
+            "attempts": 0,
+            "phase": 1,
+        }
+
+    normalized_hash = target_hash.lower()
 
     try:
         with open(wordlist, 'r', encoding='latin-1') as f:
@@ -142,44 +134,16 @@ def _cpu_dictionary_attack(target_hash: str, wordlist, timeout: int) -> Dict:
 
                 attempts += 1
 
-                # Try MD5 (32 chars)
-                if len(target_hash) == 32:
-                    hash_obj = hashlib.md5(password.encode('utf-8', errors='ignore'))
-                    if hash_obj.hexdigest() == target_hash.lower():
-                        logger.info(f"Phase 1: Password cracked (CPU-MD5): {password}")
-                        return {
-                            "cracked": True,
-                            "password": password,
-                            "attempts": attempts,
-                            "phase": 1,
-                            "method": "cpu_dictionary"
-                        }
-
-                # Try SHA1 (40 chars)
-                if len(target_hash) == 40:
-                    hash_obj = hashlib.sha1(password.encode('utf-8', errors='ignore'))
-                    if hash_obj.hexdigest() == target_hash.lower():
-                        logger.info(f"Phase 1: Password cracked (CPU-SHA1): {password}")
-                        return {
-                            "cracked": True,
-                            "password": password,
-                            "attempts": attempts,
-                            "phase": 1,
-                            "method": "cpu_dictionary"
-                        }
-
-                # Try SHA256 (64 chars)
-                if len(target_hash) == 64:
-                    hash_obj = hashlib.sha256(password.encode('utf-8', errors='ignore'))
-                    if hash_obj.hexdigest() == target_hash.lower():
-                        logger.info(f"Phase 1: Password cracked (CPU-SHA256): {password}")
-                        return {
-                            "cracked": True,
-                            "password": password,
-                            "attempts": attempts,
-                            "phase": 1,
-                            "method": "cpu_dictionary"
-                        }
+                hash_obj = hash_func(password.encode('utf-8', errors='ignore'))
+                if hash_obj.hexdigest() == normalized_hash:
+                    logger.info(f"Phase 1: Password cracked (CPU fallback): {password}")
+                    return {
+                        "cracked": True,
+                        "password": password,
+                        "attempts": attempts,
+                        "phase": 1,
+                        "method": "cpu_dictionary",
+                    }
 
         logger.info(f"Phase 1: CPU fallback checked {attempts} passwords, no match")
         return {
@@ -196,3 +160,19 @@ def _cpu_dictionary_attack(target_hash: str, wordlist, timeout: int) -> Dict:
             "attempts": attempts,
             "phase": 1
         }
+
+
+def _get_hash_func(hash_type_id: int):
+    if hash_type_id == HashType.MD5.value:
+        import hashlib
+        return hashlib.md5
+    if hash_type_id == HashType.SHA1.value:
+        import hashlib
+        return hashlib.sha1
+    if hash_type_id == HashType.SHA256.value:
+        import hashlib
+        return hashlib.sha256
+    if hash_type_id == HashType.SHA512.value:
+        import hashlib
+        return hashlib.sha512
+    return None

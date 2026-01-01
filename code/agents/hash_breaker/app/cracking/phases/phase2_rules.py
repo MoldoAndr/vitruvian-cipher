@@ -4,10 +4,10 @@ Applies intelligent mutations to dictionary words using Hashcat rules.
 """
 
 import logging
-import subprocess
 from typing import Dict
 
 from app.config import get_settings
+from app.cracking.hashcat_runner import run_hashcat_attack
 
 logger = logging.getLogger(__name__)
 
@@ -33,53 +33,39 @@ def rule_based_attack(
 
     logger.info(f"Phase 2: Rule-Based Attack (timeout={timeout}s)")
 
-    cmd = [
-        settings.hashcat_path,
-        "-m", str(hash_type_id),
-        "-a", "0",  # Straight attack with rules
-        "-r", str(rules_file),
-        str(target_hash),
-        str(wordlist),
-        "--potfile-disable",
-        "--quiet",
-        "--force",
-        "--runtime", str(timeout)
-    ]
-
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout
+        result = run_hashcat_attack(
+            target_hash=target_hash,
+            hash_type_id=hash_type_id,
+            attack_mode=0,
+            attack_args=["-r", str(rules_file), str(wordlist)],
+            timeout=timeout,
         )
 
-        output = result.stdout
-
-        if output and ":" in output:
-            password = output.split(":")[1].strip()
-            logger.info(f"Phase 2: Password cracked: {password}")
+        if result.cracked:
+            logger.info(f"Phase 2: Password cracked: {result.password}")
             return {
                 "cracked": True,
-                "password": password,
+                "password": result.password,
+                "attempts": 5000000,
                 "phase": 2,
-                "method": "rule_based"
+                "method": "rule_based",
+            }
+
+        if result.timeout:
+            logger.warning(f"Phase 2: Timeout after {timeout}s")
+            return {
+                "cracked": False,
+                "attempts": 5000000,
+                "phase": 2,
+                "timeout": True,
             }
 
         logger.info("Phase 2: No matches found")
         return {
             "cracked": False,
             "attempts": 5000000,  # Approximate with rules
-            "phase": 2
-        }
-
-    except subprocess.TimeoutExpired:
-        logger.warning(f"Phase 2: Timeout after {timeout}s")
-        return {
-            "cracked": False,
-            "attempts": 5000000,
             "phase": 2,
-            "timeout": True
         }
 
     except Exception as e:
@@ -87,5 +73,5 @@ def rule_based_attack(
         return {
             "cracked": False,
             "error": str(e),
-            "phase": 2
+            "phase": 2,
         }

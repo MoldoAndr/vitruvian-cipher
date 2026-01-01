@@ -29,7 +29,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: dramatiq app.workers.cracking_worker -p 2 -t 2 -Q cracking
+    command: dramatiq app.workers.cracking_worker -p 2 -t 2 -Q cracking -Q cracking_high -Q cracking_low
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
       - REDIS_URL=redis://redis:6379/0

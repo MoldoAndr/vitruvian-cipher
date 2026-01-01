@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     base_dir: Path = Field(default_factory=lambda: Path(__file__).parent.parent)
     models_dir: Path = Field(default_factory=lambda: Path("./models"))
     wordlists_dir: Path = Field(default_factory=lambda: Path("./wordlists"))
-    rules_dir: Path = Field(default_factory=lambda: Path("./data/rules"))
+    rules_dir: Path = Field(default_factory=lambda: Path("./rules"))
     logs_dir: Path = Field(default_factory=lambda: Path("./logs"))
 
     # Hashcat Configuration
@@ -131,7 +131,7 @@ class Settings(BaseSettings):
             raise ValueError("Time ratio must be between 0 and 1")
         return v
 
-    @field_validator("pagpassgpt_model_path", "models_dir", "wordlists_dir")
+    @field_validator("pagpassgpt_model_path", "models_dir", "wordlists_dir", "rules_dir", "logs_dir")
     @classmethod
     def validate_paths(cls, v):
         """Validate and create directories if needed."""

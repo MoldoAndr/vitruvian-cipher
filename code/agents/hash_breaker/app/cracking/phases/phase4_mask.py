@@ -4,10 +4,10 @@ Brute-force simple password patterns with remaining time budget.
 """
 
 import logging
-import subprocess
+import time
 from typing import Dict
 
-from app.config import get_settings
+from app.cracking.hashcat_runner import run_hashcat_attack
 
 logger = logging.getLogger(__name__)
 
@@ -37,55 +37,56 @@ def mask_attack(
     Returns:
         Result dict with cracked status
     """
-    settings = get_settings()
-
     logger.info(f"Phase 4: Limited Mask Attack (timeout={timeout}s)")
 
+    if timeout <= 0:
+        logger.warning("Phase 4: No time budget available")
+        return {
+            "cracked": False,
+            "attempts": 0,
+            "phase": 4,
+            "timeout": True,
+        }
+
+    start_time = time.time()
+
     for i, mask in enumerate(COMMON_MASKS):
-        # Calculate time for this mask
-        time_per_mask = timeout // len(COMMON_MASKS)
+        remaining = timeout - (time.time() - start_time)
+        if remaining <= 0:
+            logger.debug("Phase 4: Time budget exhausted")
+            break
+
+        masks_left = len(COMMON_MASKS) - i
+        time_per_mask = max(1, int(remaining / masks_left))
 
         logger.debug(f"Phase 4: Trying mask {i+1}/{len(COMMON_MASKS)}: {mask}")
 
-        cmd = [
-            settings.hashcat_path,
-            "-m", str(hash_type_id),
-            "-a", "3",  # Mask attack mode
-            str(target_hash),
-            mask,
-            "--potfile-disable",
-            "--quiet",
-            "--force",
-            "--runtime", str(time_per_mask),
-            "--increment",  # Increment mask length
-            "--increment-min", "1",
-            "--increment-max", "8"
-        ]
-
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=time_per_mask
+            result = run_hashcat_attack(
+                target_hash=target_hash,
+                hash_type_id=hash_type_id,
+                attack_mode=3,
+                attack_args=[
+                    mask,
+                    "--increment",
+                    "--increment-min",
+                    "1",
+                    "--increment-max",
+                    "8",
+                ],
+                timeout=time_per_mask,
             )
 
-            output = result.stdout
-
-            if output and ":" in output:
-                password = output.split(":")[1].strip()
-                logger.info(f"Phase 4: Password cracked with mask '{mask}': {password}")
+            if result.cracked:
+                logger.info(f"Phase 4: Password cracked with mask '{mask}': {result.password}")
                 return {
                     "cracked": True,
-                    "password": password,
+                    "password": result.password,
+                    "attempts": 10000000,
                     "phase": 4,
                     "method": "mask_attack",
-                    "mask": mask
+                    "mask": mask,
                 }
-
-        except subprocess.TimeoutExpired:
-            logger.debug(f"Phase 4: Mask '{mask}' timed out")
-            continue
 
         except Exception as e:
             logger.error(f"Phase 4 error with mask '{mask}': {e}")

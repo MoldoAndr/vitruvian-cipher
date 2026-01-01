@@ -4,11 +4,10 @@ State-of-the-art AI-driven password generation using PagPassGPT model.
 """
 
 import logging
-import subprocess
-from typing import Dict
+from typing import Dict, Iterable, List
 
-from app.config import get_settings
 from app.ml import get_generator
+from app.cracking.hashcat_runner import run_hashcat_attack
 
 logger = logging.getLogger(__name__)
 
@@ -30,77 +29,47 @@ def ai_generation_attack(
     Returns:
         Result dict with cracked status
     """
-    settings = get_settings()
-
     logger.info(f"Phase 3: PagPassGPT AI Generation (timeout={timeout}s, count={num_passwords})")
 
-    # Create generator script as subprocess
-    generator_script = f"""
-import sys
-sys.path.insert(0, '/app')
-from app.ml.pagpassgpt import get_generator
-
-gen = get_generator()
-for pwd in gen.generate(num_passwords={num_passwords}):
-    print(pwd)
-"""
-
-    # Pipe to hashcat via stdin
-    hashcat_cmd = [
-        settings.hashcat_path,
-        "-m", str(hash_type_id),
-        "-",  # Read from stdin
-        "--stdin",
-        "--potfile-disable",
-        "--quiet",
-        "--force",
-        "--runtime", str(timeout)
-    ]
-
     try:
-        # Run generator and pipe to hashcat
-        generator_proc = subprocess.Popen(
-            ["python3", "-c", generator_script],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+        generator = get_generator()
+        candidate_iter = _iter_passwords(generator, num_passwords, batch_size=10000)
+
+        result = run_hashcat_attack(
+            target_hash=target_hash,
+            hash_type_id=hash_type_id,
+            attack_mode=0,
+            attack_args=[],
+            timeout=timeout,
+            stdin_iter=candidate_iter,
         )
 
-        result = subprocess.run(
-            hashcat_cmd,
-            input=generator_proc.stdout,
-            capture_output=True,
-            text=True,
-            timeout=timeout
-        )
+        attempts = result.attempts if result.attempts is not None else num_passwords
 
-        output = result.stdout
-
-        if output and ":" in output:
-            password = output.split(":")[1].strip()
-            logger.info(f"Phase 3: Password cracked with AI: {password}")
+        if result.cracked:
+            logger.info(f"Phase 3: Password cracked with AI: {result.password}")
             return {
                 "cracked": True,
-                "password": password,
+                "password": result.password,
                 "phase": 3,
                 "method": "pagpassgpt",
-                "attempts": num_passwords
+                "attempts": attempts,
+            }
+
+        if result.timeout:
+            logger.warning(f"Phase 3: Timeout after {timeout}s")
+            return {
+                "cracked": False,
+                "attempts": attempts,
+                "phase": 3,
+                "timeout": True,
             }
 
         logger.info("Phase 3: No matches found")
         return {
             "cracked": False,
-            "attempts": num_passwords,
-            "phase": 3
-        }
-
-    except subprocess.TimeoutExpired:
-        logger.warning(f"Phase 3: Timeout after {timeout}s")
-        return {
-            "cracked": False,
-            "attempts": num_passwords,
+            "attempts": attempts,
             "phase": 3,
-            "timeout": True
         }
 
     except Exception as e:
@@ -108,5 +77,23 @@ for pwd in gen.generate(num_passwords={num_passwords}):
         return {
             "cracked": False,
             "error": str(e),
-            "phase": 3
+            "phase": 3,
         }
+
+
+def _iter_passwords(
+    generator,
+    total: int,
+    batch_size: int = 10000,
+) -> Iterable[str]:
+    remaining = max(0, int(total))
+
+    while remaining > 0:
+        count = min(batch_size, remaining)
+        batch: List[str] = generator.generate(num_passwords=count)
+        if not batch:
+            break
+        for pwd in batch:
+            if pwd:
+                yield pwd
+        remaining -= len(batch)

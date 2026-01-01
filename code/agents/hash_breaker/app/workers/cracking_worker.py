@@ -26,6 +26,18 @@ broker = RabbitmqBroker(
 dramatiq.set_broker(broker)
 
 
+def _execute_cracking_job(job_id: str, target_hash: str, hash_type_id: int, timeout: int) -> dict:
+    logger.info(f"Worker {os.getpid()}: Processing job {job_id}")
+
+    try:
+        result = run_cracking_pipeline(job_id, target_hash, hash_type_id, timeout)
+        logger.info(f"Worker {os.getpid()}: Job {job_id} completed with status {result.get('status')}")
+        return result
+    except Exception as e:
+        logger.error(f"Worker {os.getpid()}: Job {job_id} failed with error: {e}")
+        raise
+
+
 @dramatiq.actor(
     queue_name=settings.rabbitmq_queue,
     max_retries=3,
@@ -44,16 +56,7 @@ def process_cracking_job(job_id: str, target_hash: str, hash_type_id: int, timeo
     Returns:
         Final job state dict
     """
-    logger.info(f"Worker {os.getpid()}: Processing job {job_id}")
-
-    try:
-        result = run_cracking_pipeline(job_id, target_hash, hash_type_id, timeout)
-        logger.info(f"Worker {os.getpid()}: Job {job_id} completed with status {result.get('status')}")
-        return result
-
-    except Exception as e:
-        logger.error(f"Worker {os.getpid()}: Job {job_id} failed with error: {e}")
-        raise
+    return _execute_cracking_job(job_id, target_hash, hash_type_id, timeout)
 
 
 # High priority actor
@@ -75,7 +78,7 @@ def process_cracking_job_high(job_id: str, target_hash: str, hash_type_id: int, 
     Returns:
         Final job state dict
     """
-    return process_cracking_job(job_id, target_hash, hash_type_id, timeout)
+    return _execute_cracking_job(job_id, target_hash, hash_type_id, timeout)
 
 
 # Low priority actor
@@ -97,7 +100,7 @@ def process_cracking_job_low(job_id: str, target_hash: str, hash_type_id: int, t
     Returns:
         Final job state dict
     """
-    return process_cracking_job(job_id, target_hash, hash_type_id, timeout)
+    return _execute_cracking_job(job_id, target_hash, hash_type_id, timeout)
 
 
 if __name__ == "__main__":

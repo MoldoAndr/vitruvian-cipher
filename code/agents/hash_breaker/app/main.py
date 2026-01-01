@@ -6,10 +6,8 @@ FastAPI application exposing REST endpoints for hash auditing.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict
-
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
@@ -20,12 +18,17 @@ from app.models.schemas import (
     JobStatusResponse,
     JobCancelResponse,
     HealthResponse,
-    ErrorResponse
+    ErrorResponse,
+    JobState,
 )
 from app.utils.logging import setup_logging
 from app.utils.metrics import generate_metrics, get_content_type
 from app.utils.redis_client import get_redis
-from app.workers.cracking_worker import process_cracking_job
+from app.workers.cracking_worker import (
+    process_cracking_job,
+    process_cracking_job_high,
+    process_cracking_job_low,
+)
 
 # Configure logging
 setup_logging()
@@ -78,7 +81,8 @@ async def health_check():
             "idle": settings.worker_concurrency
         },
         queue={
-            "depth": redis.get_queue_depth(settings.rabbitmq_queue)
+            "provider": "rabbitmq",
+            "depth": None
         }
     )
 
@@ -123,11 +127,14 @@ async def submit_audit_job(request: HashAuditRequest):
     job_id = str(uuid.uuid4())
 
     # Create initial job state
-    from app.models.schemas import JobState
     job_state = JobState(
         job_id=job_id,
         status=JobStatus.PENDING,
-        submitted_at=datetime.utcnow()
+        submitted_at=datetime.utcnow(),
+        hash_type_id=request.hash_type_id,
+        timeout_seconds=request.timeout_seconds,
+        priority=request.priority,
+        progress=0,
     )
 
     # Store in Redis (use JSON mode for datetime serialization)
@@ -184,19 +191,31 @@ async def get_job_status(job_id: str):
             }
         )
 
+    def _parse_datetime(value):
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return None
+        return None
+
     # Convert datetime strings back to datetime objects
-    if job_state.get("submitted_at"):
-        job_state["submitted_at"] = datetime.fromisoformat(job_state["submitted_at"])
-    if job_state.get("started_at"):
-        job_state["started_at"] = datetime.fromisoformat(job_state["started_at"])
+    submitted_at = _parse_datetime(job_state.get("submitted_at"))
+    if submitted_at:
+        job_state["submitted_at"] = submitted_at
+    started_at = _parse_datetime(job_state.get("started_at"))
+    if started_at:
+        job_state["started_at"] = started_at
 
     # Calculate time remaining if running
     if job_state.get("status") == JobStatus.RUNNING:
         started_at = job_state.get("started_at")
+        timeout = job_state.get("timeout_seconds") or settings.default_timeout
         if started_at:
-            # started_at is now a datetime object from the conversion above
             elapsed = (datetime.utcnow() - started_at).total_seconds()
-            timeout = 60  # This should come from job state
+            job_state["time_elapsed"] = elapsed
             job_state["time_remaining"] = max(0, int(timeout - elapsed))
 
     return JobStatusResponse(**job_state)
@@ -235,7 +254,7 @@ async def cancel_job(job_id: str):
             status_code=status.HTTP_409_CONFLICT,
             detail={
                 "error": {
-                    "code": "JOB_ALREADY_COMPLETED",
+                    "code": ErrorCode.JOB_ALREADY_COMPLETED,
                     "message": f"Job already {current_status}"
                 }
             }
@@ -285,14 +304,14 @@ async def global_exception_handler(request, exc):
     """
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
 
-    return HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail={
+        content={
             "error": {
-                "code": ErrorCode.INTERNAL_ERROR,
+                "code": ErrorCode.INTERNAL_ERROR.value,
                 "message": "An internal error occurred"
             }
-        }
+        },
     )
 
 
