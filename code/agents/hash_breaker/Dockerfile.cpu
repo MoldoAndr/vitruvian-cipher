@@ -1,0 +1,51 @@
+# CPU-only Worker Dockerfile
+# For systems without GPU support
+
+FROM python:3.10-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    hashcat \
+    john \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY hash_cracker /app/hash_cracker
+
+# Create data directories
+RUN mkdir -p /data/wordlists /data/rules /data/models
+
+# Create non-root user
+RUN useradd -m -u 1000 cracker && \
+    chown -R cracker:cracker /app /data
+
+USER cracker
+
+# Environment variables
+ENV REDIS_URL=redis://redis:6379/0
+ENV WORKER_ID=worker-cpu-1
+ENV LOG_LEVEL=INFO
+ENV WORDLIST_DIR=/data/wordlists
+ENV RULES_DIR=/data/rules
+ENV MODELS_DIR=/data/models
+ENV HASHCAT_BIN=/usr/bin/hashcat
+ENV JOHN_BIN=/usr/bin/john
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import redis; r=redis.from_url('${REDIS_URL}'); r.ping()"
+
+# Run worker
+CMD ["python", "-m", "hash_cracker.worker"]

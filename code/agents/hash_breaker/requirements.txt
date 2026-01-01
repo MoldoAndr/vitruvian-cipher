@@ -1,0 +1,36 @@
+# Hash Breaker Microservice - Python Dependencies
+
+# === Core Framework ===
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# === Task Queue ===
+dramatiq[rabbitmq,watch]>=1.15.0
+
+# === State Store ===
+redis>=5.0.0
+
+# === Machine Learning (PagPassGPT requirements - CPU versions) ===
+# Official versions from https://github.com/Suxyuuu/PagPassGPT
+# Note: PyTorch CPU version installed separately in Dockerfile
+numpy==1.24.2
+huggingface-hub==0.13.4
+fsspec==2022.11.0
+transformers==4.29.0
+datasets==2.12.0
+accelerate==0.17.1
+tokenizers==0.13.3
+
+# === Monitoring ===
+prometheus-client>=0.19.0
+
+# === Utilities ===
+python-dotenv>=1.0.0
+
+# === Development Dependencies (optional) ===
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+httpx>=0.26.0

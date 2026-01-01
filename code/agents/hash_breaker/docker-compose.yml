@@ -1,0 +1,93 @@
+# Hash Breaker Microservice - Docker Compose
+
+
+services:
+  # FastAPI Application Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379/0
+      - GPU_ENABLE=false
+      - LOG_LEVEL=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - hash_breaker_network
+
+  # Dramatiq Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: dramatiq app.workers.cracking_worker -p 2 -t 2 -Q cracking
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379/0
+      - GPU_ENABLE=false
+      - LOG_LEVEL=INFO
+      - WORKER_CONCURRENCY=4
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    deploy:
+      replicas: 2
+    restart: unless-stopped
+    networks:
+      - hash_breaker_network
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hash_breaker_network
+
+  # Redis State Store
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hash_breaker_network
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  hash_breaker_network:
+    driver: bridge
