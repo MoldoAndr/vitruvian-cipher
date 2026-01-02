@@ -1,0 +1,94 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam backgroundColor #FFFFFF
+skinparam nodesep 40
+skinparam ranksep 30
+skinparam component {
+    BackgroundColor #e5eaeeff
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #000000
+    FontSize 10
+}
+skinparam database {
+    BackgroundColor #e0e7ebff
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #000000
+    FontSize 10
+}
+skinparam rectangle {
+    BackgroundColor #e2e5e7ff
+    BorderColor #000000
+    BorderThickness 2
+    FontColor #000000
+    FontSize 11
+    FontStyle bold
+}
+skinparam arrow {
+    Color #000000
+    Thickness 2
+}
+skinparam linetype ortho
+
+top to bottom direction
+
+rectangle {
+    component "CLI Client" as CLI
+    component "Web Interface" as Web
+    CLI -[hidden]right- Web
+}
+
+rectangle {
+    component "Firewall" as WAF_CLI
+    component "WAF (Web)" as WAF_Web
+    WAF_CLI -[hidden]right- WAF_Web
+}
+
+rectangle {
+    component "REST API" as REST_Backend
+    component "Web Backend" as Backend_If
+    REST_Backend -[hidden]right- Backend_If
+}
+
+rectangle {
+    component "Orchestration Service" as APIGW
+}
+
+
+rectangle {
+    component "Text Parser" as TextParser
+    component "Interaction LLM" as LLM
+    component "ML Validator Tool" as MLVal
+    component "Agent Selector" as Selector
+    
+    ' Layout pătrat 2x2
+    TextParser -right-> LLM
+    LLM -down-> MLVal
+    MLVal -left-> Selector
+}
+
+rectangle {
+    component "AI Agents Pool" as AIAgents
+}
+
+
+' Fluxuri verticale centrate între pachete
+CLI <-down-> WAF_CLI
+Web <-down-> WAF_Web
+
+WAF_CLI <-down-> REST_Backend
+WAF_Web <-down-> Backend_If
+REST_Backend <-down-> APIGW
+Backend_If <-down-> APIGW
+
+APIGW <-down-> TextParser
+
+Selector -down-> AIAgents
+AIAgents -left->APIGW
+' Database conectat la Backend (cel mai apropiat punct)
+
+@enduml
