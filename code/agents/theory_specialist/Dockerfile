@@ -18,7 +18,6 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
-COPY Software_Details.md README.md ./ 
 
 RUN mkdir -p /app/data /app/data/chromadb /app/documents /app/models
 

@@ -20,6 +20,7 @@ https://arxiv.org/html/2506.12508v1
 PASSWORD CHECKER
 
 https://www.kaggle.com/datasets/jeffersonvalandro/password-dataset
+https://www.computer.org/csdl/proceedings-article/dsn/2024/410500a429/1ZPxTMt2ao8
 
 PASSWORD STRENGTH
 

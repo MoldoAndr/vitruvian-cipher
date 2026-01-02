@@ -24,10 +24,14 @@ from sqlalchemy.orm import Session
 from .aggregator import DocumentAggregator
 from .config import get_settings
 from .database import Base, engine, get_db
+from .document_discovery import DocumentDiscoveryService
 from .llm_client import build_llm_client
 from .models import Conversation, Message, ReferenceDocument
 from .rag_system import RAGSystem, RetrievedChunk
 from .schemas import (
+    AutoIngestResponse,
+    ConfigUpdateRequest,
+    ConfigUpdateResponse,
     ConversationHistoryResponse,
     ConversationMessage,
     GenerateRequest,
@@ -54,6 +58,11 @@ _global_rag_system: Optional[RAGSystem] = None
 _global_aggregator: Optional[DocumentAggregator] = None
 provider_lock = threading.Lock()
 settings_lock = threading.RLock()  # Use RLock for re-entrant locking
+_config_lock = threading.RLock()
+
+# Runtime configuration (default values)
+_ingestion_workers = 1  # Number of parallel document ingestion workers
+_parallel_requests = 1  # Number of parallel generate requests to process
 
 
 def get_rag_system() -> RAGSystem:
@@ -218,9 +227,11 @@ def update_provider(payload: ProviderUpdateRequest) -> ProviderUpdateResponse:
         new_settings = _global_settings.create_updated_copy(**updates)
         _global_settings = new_settings
 
-        # Rebuild RAG system with new settings
-        rag_system = RAGSystem(settings=new_settings)
-        _global_rag_system = rag_system
+        # IMPORTANT: Only update the LLM client, NOT the entire RAG system!
+        # The embeddings and reranker are the heart of the RAG and remain unchanged.
+        rag_system = get_rag_system()
+        rag_system.llm = build_llm_client(new_settings)
+        rag_system.settings = new_settings
 
     if provider == "openai":
         generation_model = new_settings.openai_model
@@ -231,6 +242,13 @@ def update_provider(payload: ProviderUpdateRequest) -> ProviderUpdateResponse:
     else:
         generation_model = new_settings.ollama_model
         base_url = new_settings.ollama_url
+
+    logger.info(
+        "Provider updated to %s (model: %s, base_url: %s) - RAG system embeddings and reranker unchanged",
+        provider,
+        generation_model,
+        base_url,
+    )
 
     return ProviderUpdateResponse(
         status="updated",
@@ -321,6 +339,90 @@ def status_overview(db: Session = Depends(get_db)) -> StatusResponse:
     )
 
 
+@app.post("/auto-ingest", response_model=AutoIngestResponse)
+def auto_ingest_documents(db: Session = Depends(get_db)) -> AutoIngestResponse:
+    """
+    Automatically discover and queue documents from the documents folder
+    that are not already in the database.
+    """
+    discovery_service = DocumentDiscoveryService(settings=_global_settings)
+    discovered = discovery_service.discover_new_documents()
+    discovered_count = len(discovered)
+
+    if discovered_count == 0:
+        return AutoIngestResponse(
+            status="completed",
+            discovered_count=0,
+            queued_count=0,
+            message="No new documents found in the documents folder.",
+        )
+
+    queued_count = discovery_service.queue_discovered_documents(discovered, db)
+
+    return AutoIngestResponse(
+        status="queued",
+        discovered_count=discovered_count,
+        queued_count=queued_count,
+        message=f"Discovered {discovered_count} new documents and queued {queued_count} for ingestion.",
+    )
+
+
+@app.post("/config", response_model=ConfigUpdateResponse)
+def update_config(payload: ConfigUpdateRequest) -> ConfigUpdateResponse:
+    """
+    Update runtime configuration for ingestion workers and parallel requests.
+
+    - ingestion_workers: Number of documents to process in parallel (1-10, default: 1)
+    - parallel_requests: Number of generate requests to process in parallel (1-10, default: 1)
+    """
+    global _ingestion_workers, _parallel_requests, _global_settings
+
+    updates = []
+    with _config_lock:
+        if payload.ingestion_workers is not None:
+            if not 1 <= payload.ingestion_workers <= 10:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="ingestion_workers must be between 1 and 10",
+                )
+            _ingestion_workers = payload.ingestion_workers
+            # Also update the batch size setting for the aggregator
+            _global_settings = _global_settings.create_updated_copy(
+                ingestion_batch_size=payload.ingestion_workers
+            )
+            updates.append(f"ingestion_workers={payload.ingestion_workers}")
+
+        if payload.parallel_requests is not None:
+            if not 1 <= payload.parallel_requests <= 10:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="parallel_requests must be between 1 and 10",
+                )
+            _parallel_requests = payload.parallel_requests
+            updates.append(f"parallel_requests={payload.parallel_requests}")
+
+    message = f"Configuration updated: {', '.join(updates)}" if updates else "No changes requested"
+    logger.info("Configuration updated: %s", message)
+
+    return ConfigUpdateResponse(
+        status="updated",
+        ingestion_workers=_ingestion_workers,
+        parallel_requests=_parallel_requests,
+        message=message,
+    )
+
+
+@app.get("/config")
+def get_config() -> dict:
+    """
+    Get current runtime configuration.
+    """
+    return {
+        "ingestion_workers": _ingestion_workers,
+        "parallel_requests": _parallel_requests,
+    }
+
+
 def _get_or_create_conversation(
     db: Session, conversation_id: Optional[str]
 ) -> Conversation:
@@ -375,62 +477,99 @@ def generate_answer(
         )
 
     logger.info(
-        "Received /generate request: query='%s', conversation_id='%s'",
+        "Received /generate request: query='%s', conversation_id='%s', provider='%s'",
         payload.query[:200],  # Log truncated query
         payload.conversation_id,
+        payload.provider,
     )
     rag_system = get_rag_system()
 
-    conversation = _get_or_create_conversation(db, payload.conversation_id)
+    # Handle per-request provider override
+    original_llm = None
+    if payload.provider:
+        # Build temporary settings with the requested provider
+        provider = payload.provider
+        if provider in ("ollama_cloud", "ollama-cloud"):
+            provider = "ollama-cloud"
 
-    user_message = Message(
-        conversation_id=conversation.conversation_id,
-        role="user",
-        content=payload.query,
-    )
-    db.add(user_message)
-    db.commit()
-    db.refresh(user_message)
+        updates = {"llm_provider": provider}
+        if payload.ollama_url:
+            updates["ollama_url"] = payload.ollama_url
+        if payload.ollama_model:
+            updates["ollama_model"] = payload.ollama_model
+        if payload.openai_model:
+            updates["openai_model"] = payload.openai_model
+        if payload.gemini_model:
+            updates["gemini_model"] = payload.gemini_model
 
-    query_context = rag_system.prepare_query(payload.query)
-    retrieved, _strategy = rag_system.retrieve(
-        query_context.query_for_retrieval,
-        top_k=_global_settings.retrieval_top_k,
-    )
-    reranked = rag_system.rerank(query_context.query_for_retrieval, retrieved)
+        # Create temporary settings and LLM client for this request
+        temp_settings = _global_settings.create_updated_copy(**updates)
+        original_llm = rag_system.llm
+        rag_system.llm = build_llm_client(temp_settings)
 
-    # Improved reranker fallback: only use unranked if reranking produced results
-    # but all were below threshold, AND we have at least some relevant chunks
-    if not reranked and retrieved:
-        # Use vector scores as fallback filter
-        filtered_retrieved = [
-            chunk for chunk in retrieved
-            if chunk.similarity >= _global_settings.min_source_score
-        ]
-        reranked = filtered_retrieved[: _global_settings.reranker_top_k]
+        logger.info(
+            "Using temporary provider override: %s (model: %s)",
+            provider,
+            temp_settings.ollama_model if provider.startswith("ollama")
+            else temp_settings.openai_model if provider == "openai"
+            else temp_settings.gemini_model,
+        )
 
-    answer = rag_system.generate_answer(payload.query, reranked)
+    try:
+        conversation = _get_or_create_conversation(db, payload.conversation_id)
 
-    assistant_message = Message(
-        conversation_id=conversation.conversation_id,
-        role="assistant",
-        content=answer,
-        retrieved_chunk_ids=[chunk.chunk_id for chunk in reranked],
-        relevance_scores=[
-            float(chunk.metadata.get("reranker_score", chunk.similarity))
-            for chunk in reranked
-        ],
-    )
-    db.add(assistant_message)
-    db.commit()
-    db.refresh(assistant_message)
+        user_message = Message(
+            conversation_id=conversation.conversation_id,
+            role="user",
+            content=payload.query,
+        )
+        db.add(user_message)
+        db.commit()
+        db.refresh(user_message)
 
-    return GenerateResponse(
-        answer=answer,
-        sources=_format_sources(reranked),
-        conversation_id=conversation.conversation_id,
-        message_id=assistant_message.id,
-    )
+        query_context = rag_system.prepare_query(payload.query)
+        retrieved, _strategy = rag_system.retrieve(
+            query_context.query_for_retrieval,
+            top_k=_global_settings.retrieval_top_k,
+        )
+        reranked = rag_system.rerank(query_context.query_for_retrieval, retrieved)
+
+        # Improved reranker fallback: only use unranked if reranking produced results
+        # but all were below threshold, AND we have at least some relevant chunks
+        if not reranked and retrieved:
+            # Use vector scores as fallback filter
+            filtered_retrieved = [
+                chunk for chunk in retrieved
+                if chunk.similarity >= _global_settings.min_source_score
+            ]
+            reranked = filtered_retrieved[: _global_settings.reranker_top_k]
+
+        answer = rag_system.generate_answer(payload.query, reranked)
+
+        assistant_message = Message(
+            conversation_id=conversation.conversation_id,
+            role="assistant",
+            content=answer,
+            retrieved_chunk_ids=[chunk.chunk_id for chunk in reranked],
+            relevance_scores=[
+                float(chunk.metadata.get("reranker_score", chunk.similarity))
+                for chunk in reranked
+            ],
+        )
+        db.add(assistant_message)
+        db.commit()
+        db.refresh(assistant_message)
+
+        return GenerateResponse(
+            answer=answer,
+            sources=_format_sources(reranked),
+            conversation_id=conversation.conversation_id,
+            message_id=assistant_message.id,
+        )
+    finally:
+        # Restore original LLM if we used a temporary override
+        if original_llm is not None:
+            rag_system.llm = original_llm
 
 
 @app.get(

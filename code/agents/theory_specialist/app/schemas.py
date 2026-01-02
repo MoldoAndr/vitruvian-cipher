@@ -54,6 +54,24 @@ class StatusResponse(BaseModel):
 class GenerateRequest(BaseModel):
     query: str = Field(..., min_length=3, max_length=5000)
     conversation_id: Optional[str] = None
+    provider: Optional[str] = Field(None, max_length=50)
+    ollama_url: Optional[str] = Field(None, max_length=128)
+    ollama_model: Optional[str] = Field(None, max_length=128)
+    openai_model: Optional[str] = Field(None, max_length=128)
+    gemini_model: Optional[str] = Field(None, max_length=128)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or not v:
+            return v
+        v = v.strip().lower().replace(" ", "-")
+        valid_providers = {"ollama", "ollama-cloud", "gemini", "openai"}
+        if v not in valid_providers:
+            raise ValueError(
+                f"Invalid provider. Use one of: {', '.join(sorted(valid_providers))}"
+            )
+        return v
 
 
 class ProviderUpdateRequest(BaseModel):
@@ -112,3 +130,23 @@ class ConversationHistoryResponse(BaseModel):
     conversation_id: str
     created_at: dt.datetime
     messages: List[ConversationMessage]
+
+
+class AutoIngestResponse(BaseModel):
+    status: str
+    discovered_count: int
+    queued_count: int
+    message: str
+    next_status_check: str = "/status"
+
+
+class ConfigUpdateRequest(BaseModel):
+    ingestion_workers: Optional[int] = Field(None, ge=1, le=10)
+    parallel_requests: Optional[int] = Field(None, ge=1, le=10)
+
+
+class ConfigUpdateResponse(BaseModel):
+    status: str
+    ingestion_workers: int
+    parallel_requests: int
+    message: str

@@ -21,9 +21,9 @@ services:
     # Security options
     security_opt:
       - no-new-privileges:true
-    read_only: true
+    # tmpfs for temporary files
     tmpfs:
-      - /tmp/executor:mode=1777,size=100m
+      - /tmp/executor:mode=1777,size=100m,uid=1000,gid=1000
     # Health check
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
