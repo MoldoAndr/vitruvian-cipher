@@ -1397,6 +1397,138 @@ Această secțiune detaliază cerințele funcționale ale platformei software de
 		\hline
 	\end{longtable}
 
+	% ========== CAZURI DE UTILIZARE ==========
+	\newpage
+	\section{Cazuri de Utilizare}
+
+	\subsection{Anonymous}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		UC-ANON-001 & Utilizatorul Anonymous \reqshall să poată accesa prezentarea publică a platformei și lista de unelte/agenți. \\
+		\hline
+		UC-ANON-002 & Utilizatorul Anonymous \reqshall să poată crea un cont nou. \\
+		\hline
+		UC-ANON-003 & Utilizatorul Anonymous \reqshall să poată iniția autentificarea și recuperarea parolei. \\
+		\hline
+		UC-ANON-004 & Utilizatorul Anonymous \reqshall să poată rula o demonstrație limitată pentru Password Checker. \\
+		\hline
+		UC-ANON-005 & Utilizatorul Anonymous \reqshall să poată rula o demonstrație limitată pentru Prime Checker (numere mici). \\
+		\hline
+		UC-ANON-006 & Utilizatorul Anonymous \reqshall să poată rula o demonstrație limitată de detectare criptosisteme cu scor de încredere. \\
+		\hline
+		UC-ANON-007 & Utilizatorul Anonymous \reqshall să poată consulta statusul serviciilor și documentația publică API/CLI. \\
+		\hline
+	\end{longtable}
+
+	\subsection{User}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		UC-USER-001 & Utilizatorul User \reqshall să poată gestiona sesiunea (login, refresh token, logout). \\
+		\hline
+		UC-USER-002 & Utilizatorul User \reqshall să poată trimite cereri către Orchestrator pentru rutare multi-agent și răspuns agregat. \\
+		\hline
+		UC-USER-003 & Utilizatorul User \reqshall să poată audita parole prin agregatorul ML (PassGPT, zxcvbn, HIBP). \\
+		\hline
+		UC-USER-004 & Utilizatorul User \reqshall să poată iniția job-uri Hash Breaker și să urmărească statusul lor asincron. \\
+		\hline
+		UC-USER-005 & Utilizatorul User \reqshall să poată verifica primalitatea și factorizarea numerelor și să acceseze istoricul cererilor. \\
+		\hline
+		UC-USER-006 & Utilizatorul User \reqshall să poată executa operații criptografice (encode/hash/AES/RSA/PQC) prin Command Executor. \\
+		\hline
+		UC-USER-007 & Utilizatorul User \reqshall să poată utiliza modul educațional (Theory Specialist RAG + CTF Tool) pentru întrebări și exerciții. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Admin}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		UC-ADMIN-001 & Utilizatorul Admin \reqshall să poată administra utilizatorii (creare, blocare, resetare). \\
+		\hline
+		UC-ADMIN-002 & Utilizatorul Admin \reqshall să poată configura roluri și permisiuni RBAC. \\
+		\hline
+		UC-ADMIN-003 & Utilizatorul Admin \reqshall să poată genera și revoca chei API pentru integrări externe. \\
+		\hline
+		UC-ADMIN-004 & Utilizatorul Admin \reqshall să poată configura politici de acces și rate limiting. \\
+		\hline
+		UC-ADMIN-005 & Utilizatorul Admin \reqshall să poată administra corpusul RAG (ingestie, reindexare, ștergere). \\
+		\hline
+		UC-ADMIN-006 & Utilizatorul Admin \reqshall să poată monitoriza serviciile, metricile și alertele operaționale. \\
+		\hline
+		UC-ADMIN-007 & Utilizatorul Admin \reqshall să poată consulta și exporta audit logs pentru investigații. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Sistem Extern (API Client)}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		UC-EXT-001 & Sistemul extern \reqshall să poată autentifica cereri folosind API key sau token JWT. \\
+		\hline
+		UC-EXT-002 & Sistemul extern \reqshall să poată apela endpoint-ul /v1/orchestrate și să primească răspuns agregat. \\
+		\hline
+		UC-EXT-003 & Sistemul extern \reqshall să poată apela direct agenții (password/prime/cryptosystem/command executor). \\
+		\hline
+		UC-EXT-004 & Sistemul extern \reqshall să poată iniția job-uri Hash Breaker și să interogheze statusul lor. \\
+		\hline
+		UC-EXT-005 & Sistemul extern \reqshall să poată interoga Theory Specialist (RAG) și să primească sursele folosite. \\
+		\hline
+		UC-EXT-006 & Sistemul extern \reqshall să poată consulta endpoint-uri de health/status pentru monitorizare. \\
+		\hline
+		UC-EXT-007 & Sistemul extern \reqshall să primească coduri de eroare standard și headere de rate limiting pentru retry/backoff. \\
+		\hline
+	\end{longtable}
+
 	% ========== CERINȚE INFRASTRUCTURĂ ==========
 	\newpage
 	\section{Cerințe de Infrastructură și DevOps}
@@ -1647,11 +1779,32 @@ Această anexă conține diagramele UML care ilustrează arhitectura și funcți
 		\caption{Arhitectura generală a platformei}
 	\end{figure}
 
-	\subsubsection{Cazuri de utilizare}
+	\subsubsection{Cazuri de utilizare - Anonymous}
 	\begin{figure}[H]
 		\centering
-		\includesvg[width=\textwidth]{diagrama_use_case}
-		\caption{Cazuri de utilizare (Anonymous, User, Admin)}
+		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_anonymous}
+		\caption{Cazuri de utilizare pentru Anonymous}
+	\end{figure}
+
+	\subsubsection{Cazuri de utilizare - User}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_user}
+		\caption{Cazuri de utilizare pentru User}
+	\end{figure}
+
+	\subsubsection{Cazuri de utilizare - Admin}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_admin}
+		\caption{Cazuri de utilizare pentru Admin}
+	\end{figure}
+
+	\subsubsection{Cazuri de utilizare - Sistem extern}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_external_system}
+		\caption{Cazuri de utilizare pentru Sistem Extern (API Client)}
 	\end{figure}
 
 	\subsubsection{Flux secvențial cerere-răspuns}
