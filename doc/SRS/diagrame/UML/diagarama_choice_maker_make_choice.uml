@@ -16,47 +16,39 @@ skinparam component {
 skinparam database {
     BackgroundColor #e0e7ebff
     BorderColor #000000
-    BorderThickness 1
     FontColor #000000
     FontSize 10
 }
 skinparam rectangle {
     BackgroundColor #e2e5e7ff
     BorderColor #000000
-    BorderThickness 2
     FontColor #000000
-    FontSize 11
-    FontStyle bold
+    FontSize 10
 }
 skinparam arrow {
     Color #000000
-    Thickness 2
 }
 skinparam linetype ortho
 
 allowmixing
-top to bottom direction
 
-component "Input" as Input
-
-rectangle "Generare întrebări" as genQ{
-    component "DatasetGenerator" as Generator
-    component "Prompts" as Prompts
-    component "Validator" as Validator
+rectangle "Inferență" as inf {
+    component "API" as API
+    component "Pipeline" as Pipeline
 }
 
-rectangle "LLM" {
-    component "Provider" as Provider
+rectangle "Modele SecureBERT" as Models {
 }
 
-rectangle "Corpus" {
-    component "TOON" as Corpus
+rectangle "Antrenare" {
+    component "Train scripts" as Trainers
+    component "Corpus" as Corpus
 }
 
-Input -down-> genQ
-Prompts -down-> Generator
-Generator <-> Provider
-Generator -down-> Validator
-Validator -down-> Corpus
+API --> Pipeline
+
+Pipeline --> Models
+Corpus --> Trainers
+Trainers --> Models
 
 @enduml

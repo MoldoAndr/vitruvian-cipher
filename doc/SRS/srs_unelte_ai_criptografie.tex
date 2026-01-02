@@ -1,0 +1,1735 @@
+\documentclass[12pt,a4paper]{article}
+
+% Pachete necesare
+\usepackage[utf8]{inputenc}
+\usepackage[romanian]{babel}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{tikz}
+
+% Configurare pagină
+\geometry{
+	left=2.5cm,
+	right=2cm,
+	top=2.5cm,
+	bottom=2.5cm
+}
+
+% Configurare hyperlink
+\hypersetup{
+	hidelinks,
+	pdftitle={SRS - Unelte AI in criptografie},
+	pdfauthor={Sd.Sg.Maj. Moldovan Andrei}
+}
+
+% Header și footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small SRS - Unelte AI in criptografie}
+\fancyhead[R]{\small v1.0 - Ianuarie 2026}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+
+% Definire culori
+\definecolor{headcolor}{RGB}{0,0,0}            % Negru pentru titluri
+\definecolor{tableheader}{RGB}{220,235,247}    % Albastru deschis pentru tabele
+
+% Formatare titluri secțiuni
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{headcolor}}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{headcolor}}{\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+
+% Comenzi personalizate pentru cerințe
+\newcommand{\reqshall}{\textbf{TREBUIE }}
+\newcommand{\reqshould}{\textbf{AR TREBUI }}
+\newcommand{\reqmay}{\textbf{POATE }}
+\newcommand{\projectname}{Unelte software bazate pe mecanisme de inteligență artificială aplicată în criptografie}
+\newcommand{\projecttitle}{Specificația Cerințelor Software pentru platforma software de unelte AI în criptografie}
+\graphicspath{{./}{doc/SRS/}}
+\svgpath{{diagrame/SVGs/}{doc/SRS/diagrame/SVGs/}}
+\setsvg{inkscapelatex=false}
+
+\begin{document}
+
+	% ========== PAGINA DE TITLU ==========
+	\begin{titlepage}
+		\begin{center}
+
+			\textbf{România} \\
+			\textbf{Ministerul Apărării Naționale} \\
+			\textbf{Academia Tehnică Militară „Ferdinand I"} \\
+
+			\vspace*{0.3cm}
+
+			\textbf{Facultatea de Sisteme Informatice și Securitate Cibernetică} \\
+			Calculatoare și sisteme informatice pentru apărare și securitate națională \\
+
+			\vspace*{1cm}
+
+			% Logo ATM
+\includegraphics[width=0.35\textwidth]{logo_atm.png}
+			\vspace*{1.5cm}
+
+			\large{\parbox{0.9\textwidth}{\centering\textbf{\projectname}}}\\
+			\vspace*{0.2cm}
+			\normalsize{\projecttitle} \\
+
+			\vspace*{0.5cm}
+
+			\normalsize
+			Disciplina: Ingineria Programării \\
+
+			\vspace*{0.8cm}
+
+			\small
+			\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+				\textbf{Profesor Coordonator} & \textbf{Student} \\
+				Prof. Dr. Ing. Mihai Togan & Sd.Sg.Maj. Moldovan Andrei \\
+			\end{tabular*}
+			\normalsize
+
+			\vspace*{1.5cm}
+
+			București \\
+			4 Ianuarie 2026
+
+		\end{center}
+	\end{titlepage}
+
+	% ========== CONTROL DOCUMENT ==========
+	\newpage
+	\section*{Control Document}
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{4cm}|p{10cm}|}
+			\hline
+			\textbf{Titlu} & \projecttitle \\
+			\hline
+			\textbf{Data} & 4 Ianuarie 2026 \\
+			\hline
+			\textbf{Status} & Draft \\
+			\hline
+			\textbf{Versiune} & 1.0 \\
+			\hline
+			\textbf{Pregătit pentru} & Academia Tehnică Militară „Ferdinand I" \\
+			\hline
+			\textbf{Referință} & SRS\_AI\_CRYPTO\_V1.0\_Jan\_2026 \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\subsection*{Disclaimer}
+	Acest document este pregătit în scopuri academice pentru proiectul de curs la disciplina Ingineria Programării. Documentul conține specificațiile detaliate ale cerințelor software pentru \projectname.
+
+	% ========== CUPRINS ==========
+	\newpage
+	\tableofcontents
+
+	% ========== GLOSAR ==========
+	\newpage
+	\section*{Glosar}
+	\addcontentsline{toc}{section}{Glosar}
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{3cm}|p{11cm}|}
+			\hline
+			\rowcolor{tableheader}
+			\textbf{Termen} & \textbf{Definiție} \\
+			\hline
+			API & Application Programming Interface \\
+			\hline
+			RAG & Retrieval-Augmented Generation \\
+			\hline
+			RBAC & Role-Based Access Control \\
+			\hline
+			SRS & Software Requirements Specification \\
+			\hline
+			JWT & JSON Web Token \\
+			\hline
+			MFA & Multi-Factor Authentication \\
+			\hline
+			TLS & Transport Layer Security \\
+			\hline
+			mTLS & Mutual TLS \\
+			\hline
+			LLM & Large Language Model \\
+			\hline
+			ML & Machine Learning \\
+			\hline
+			PQC & Post-Quantum Cryptography \\
+			\hline
+			HIBP & Have I Been Pwned \\
+			\hline
+			YAFU & Yet Another Factorization Utility \\
+			\hline
+			CSP & Content Security Policy \\
+			\hline
+			CSRF & Cross-Site Request Forgery \\
+			\hline
+			XSS & Cross-Site Scripting \\
+			\hline
+			TTL & Time to Live \\
+			\hline
+			K8s & Kubernetes \\
+			\hline
+			Docker & Containerization Platform \\
+			\hline
+			GDPR & General Data Protection Regulation \\
+			\hline
+			SIEM & Security Information and Event Management \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	% ========== INTRODUCERE ==========
+	\newpage
+	\section{Introducere}
+
+	\subsection{Scopul Documentului}
+
+	Acest document SRS oferă o descriere completă a platformei software de unelte AI în criptografie, un sistem de inteligență criptografică de următoarea generație, bazat pe o arhitectură multi-agent autonomă. Platforma orchestrează agenți AI specializați pentru analiza securității parolelor, factorizare numere prime, asistență teoretică în criptografie, operațiuni criptografice și detecție de criptosisteme cu scor de încredere.
+
+	Platforma facilitează:
+	\begin{itemize}[noitemsep]
+		\item Evaluarea securității parolelor folosind ansambluri ML
+		\item Verificarea primalității și factorizarea numerelor mari
+		\item Asistență teoretică în criptografie prin RAG
+		\item Execuția de operațiuni criptografice (simetrice, asimetrice, PQC)
+		\item Detectarea automată a criptosistemelor din ciphertext
+	\end{itemize}
+
+	Acest SRS va servi drept bază pentru fazele ulterioare de proiectare, dezvoltare și testare ale sistemului.
+
+	\subsection{Convenții Document}
+
+	Acest document urmează convențiile RFC 2119 cu următoarele traduceri în limba română:
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{3cm}|p{11cm}|}
+			\hline
+			\rowcolor{tableheader}
+			\textbf{Termen} & \textbf{Descriere} \\
+			\hline
+			\reqshall & Indică o cerință obligatorie care trebuie implementată. \\
+			\hline
+			\reqshould & Indică o cerință recomandată. \\
+			\hline
+			\reqmay & Indică o cerință opțională. \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	Cerințele sunt categorisite astfel:
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{4cm}|p{10cm}|}
+			\hline
+			\rowcolor{tableheader}
+			\textbf{Număr Cerință} & \textbf{Descriere} \\
+			\hline
+			FR-XXX-NNN & Cerințe Funcționale \\
+			\hline
+			NFR-XXX-NNN & Cerințe Non-Funcționale \\
+			\hline
+			SR-XXX-NNN & Cerințe de Securitate \\
+			\hline
+			ML-XXX-NNN & Cerințe AI/ML \\
+			\hline
+			INF-XXX-NNN & Cerințe de Infrastructură \\
+			\hline
+			CMP-XXX-NNN & Cerințe de Conformitate \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\subsection{Audiență Intenționată}
+
+	Acest document este destinat următoarelor persoane:
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{4cm}|p{10cm}|}
+			\hline
+			\rowcolor{tableheader}
+			\textbf{Persoană} & \textbf{Rol} \\
+			\hline
+			Academia Tehnică Militară & Conducerea instituției care va evalua proiectul \\
+			\hline
+			Profesor Coordonator & Evaluare și îndrumare tehnică \\
+			\hline
+			Comisia de Licență & Evaluarea finală a proiectului \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\subsection{Cadrul Proiectului}
+
+	\subsubsection{În Cadrul Proiectului}
+
+	Platforma software de unelte AI în criptografie include următoarele componente principale:
+
+	\begin{enumerate}[noitemsep]
+		\item Modul de Identity și Access Management (IAM)
+		\item Orchestrator Multi-Agent
+		\item Agenți Specializați (6 agenți)
+		\item Sistem Notificări și Conversații
+		\item Interfață Web React și CLI
+	\end{enumerate}
+
+	\subsubsection{În Afara Domeniului Proiectului}
+
+	Următoarele aspecte sunt excluse explicit din acest proiect:
+
+	\begin{enumerate}[noitemsep]
+		\item Sistem de plăți sau monetizare
+		\item Aplicație mobilă nativă (iOS/Android)
+		\item Integrare cu sisteme externe de învățământ
+		\item Sistem de management al utilizatorilor la scară enterprise
+		\item Suport pentru mai multe limbi (doar engleză)
+	\end{enumerate}
+
+	% ========== DESCRIERE GENERALĂ ==========
+	\newpage
+	\section{Descriere Generală}
+
+	\subsection{Perspectiva Produsului}
+
+Platforma software de unelte AI în criptografie este dezvoltată ca proiect de licență la Academia Tehnică Militară „Ferdinand I". Sistemul operează ca o aplicație web centralizată, accesibilă prin browsere standard și CLI, fără a necesita instalarea de software client.
+
+	\subsection{Funcționalitățile Produsului}
+
+Platforma software de unelte AI în criptografie oferă următoarele funcționalități majore:
+
+	\begin{enumerate}
+		\item \textbf{Autentificare și Managementul Accesului}
+		\begin{itemize}[noitemsep]
+			\item Autentificare securizată cu email și parolă
+			\item Sistem RBAC cu 3 roluri (Anonymous, User, Admin)
+			\item Suport MFA pentru admini
+			\item Token-uri JWT cu rotație automată
+		\end{itemize}
+
+		\item \textbf{Orchestrare Multi-Agent}
+		\begin{itemize}[noitemsep]
+			\item Detectare automată a intenției utilizatorului
+			\item Routing inteligent către agenții potriviți
+			\item Execuție paralelă pentru operații independente
+			\item Agregare răspunsuri multiple
+		\end{itemize}
+
+		\item \textbf{Verificare Parole (Password Checker)}
+		\begin{itemize}[noitemsep]
+			\item Evaluare ML cu PassGPT, zxcvbn, PassStrengthAI
+			\item Verificare HIBP (k-anonymity)
+			\item Scor unificat 0-100
+			\item Recomandări acționabile
+		\end{itemize}
+
+		\item \textbf{Verificare Primalitate (Prime Checker)}
+		\begin{itemize}[noitemsep]
+			\item Test Miller-Rabin deterministic
+			\item Factorizare cu YAFU și FactorDB
+			\item Cache LRU în memorie și persistent
+		\end{itemize}
+
+		\item \textbf{Specialist Teorie (Theory Specialist)}
+		\begin{itemize}[noitemsep]
+			\item RAG pentru criptografie cu ChromaDB
+			\item Ingestie PDF, Markdown, Text
+			\item Reranking cu cross-encoder
+			\item Istoric conversații cu context
+		\end{itemize}
+
+		\item \textbf{Executor Comenzi (Command Executor)}
+		\begin{itemize}[noitemsep]
+			\item Operații crypto: AES, RSA, HMAC, PQC
+			\item Hashing: SHA-256/384/512, SHA3, BLAKE2
+			\item Encoding: Base64, Hex
+			\item Implementare în Rust pentru siguranță
+		\end{itemize}
+
+		\item \textbf{Selector Alegeri (Choice Maker)}
+		\begin{itemize}[noitemsep]
+			\item NLP pentru clasificare intenții
+			\item Extracție entități cu SecureBERT 2.0
+			\item 10+ clase de intenție
+		\end{itemize}
+
+		\item \textbf{Detectare Criptosisteme}
+		\begin{itemize}[noitemsep]
+			\item Integrare CyberChef Magic
+			\item Euristici dcode-like
+			\item Scor de încredere 0-1
+		\end{itemize}
+
+
+	\end{enumerate}
+
+	\subsection{Caracteristici Utilizatori}
+
+	Platforma deservește următoarele categorii de utilizatori:
+
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|p{3cm}|p{12cm}|}
+			\hline
+			\rowcolor{tableheader}
+			\textbf{Rol} & \textbf{Caracteristici și Nevoi} \\
+			\hline
+			\textbf{Anonymous} &
+			\begin{itemize}[noitemsep,leftmargin=*]
+				\item Utilizatori neautentificați
+				\item Acces limitat la operații demo
+				\item Nevoi: Testare funcționalități de bază
+			\end{itemize} \\
+			\hline
+			\textbf{User} &
+			\begin{itemize}[noitemsep,leftmargin=*]
+				\item Utilizatori înregistrați
+				\item Competențe IT: medii-avansate
+				\item Nevoi: Acces complet la toate agenții, istoric conversații
+			\end{itemize} \\
+			\hline
+			\textbf{Admin} &
+			\begin{itemize}[noitemsep,leftmargin=*]
+				\item Administratori sistem
+				\item Competențe IT: avansate
+				\item Nevoi: Management utilizatori, configurări globale, audit, monitorizare
+			\end{itemize} \\
+			\hline
+		\end{tabular}
+	\end{table}
+
+	\subsection{Mediul de Operare}
+
+	Platforma va opera în următorul mediu:
+
+	\begin{enumerate}
+		\item \textbf{Mediu Tehnic}
+		\begin{itemize}[noitemsep]
+			\item Aplicație web accesibilă prin browsere moderne
+			\item CLI pentru power users
+			\item Design responsive
+			\item Hosting: on-premise sau cloud (AWS/GCP/Azure)
+		\end{itemize}
+
+		\item \textbf{Mediu Hardware}
+		\begin{itemize}[noitemsep]
+			\item Server(e) cu capacitate de procesare adecvată pentru 100+ utilizatori
+			\item Stocare: minimum 100GB pentru baze de date și modele ML
+			\item Backup automat
+		\end{itemize}
+
+		\item \textbf{Mediu Software}
+		\begin{itemize}[noitemsep]
+			\item Containerizare: Docker + Docker Compose
+			\item Orchestrare: Kubernetes (producție)
+			\item Limbaje: Go, Rust, Python, TypeScript
+			\item Baze de date: PostgreSQL 16, Redis 7, ChromaDB, BoltDB
+			\item Frontend: React
+			\item Observabilitate: Prometheus + Grafana
+		\end{itemize}
+	\end{enumerate}
+
+	% ========== CERINȚE FUNCȚIONALE ==========
+	\newpage
+	\section{Cerințe Funcționale}
+
+Această secțiune detaliază cerințele funcționale ale platformei software de unelte AI în criptografie, organizate pe module majore.
+
+	\subsection{Identity și Access Management (IAM)}
+
+	\subsubsection{Autentificare și Autorizare}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-IAM-001 & Sistemul \reqshall să permită înregistrarea utilizatorilor cu email, parolă și confirmare email. \\
+		\hline
+		FR-IAM-002 & Sistemul \reqshall să implementeze autentificare prin email/parolă cu rate limiting (max 5 încercări/minut). \\
+		\hline
+		FR-IAM-003 & Sistemul \reqshall să suporte MFA (TOTP RFC 6238) pentru rolul Admin. \\
+		\hline
+		FR-IAM-004 & Sistemul \reqshould să suporte WebAuthn/FIDO2 pentru passwordless authentication. \\
+		\hline
+		FR-IAM-005 & Sistemul \reqshall să emită token-uri JWT (access: 15min, refresh: 7 zile) cu rotație automată. \\
+		\hline
+		FR-IAM-006 & Sistemul \reqshall să permită generarea și revocarea de API keys cu scope-uri configurabile. \\
+		\hline
+		FR-IAM-007 & Sistemul \reqshall să implementeze RBAC cu 3 roluri predefinite: Anonymous, User, Admin. \\
+		\hline
+		FR-IAM-008 & Sistemul \reqshall să permită resetarea parolei prin email cu token unic (TTL: 1 oră). \\
+		\hline
+		FR-IAM-009 & Sistemul \reqshould să suporte OAuth2/OIDC pentru autentificare externă (GitHub, Google). \\
+		\hline
+		FR-IAM-010 & Sistemul \reqshall să invalideze toate sesiunile active la schimbarea parolei. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Orchestrare Multi-Agent}
+
+	\subsubsection{Orchestrator}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-ORC-001 & Orchestratorul \reqshall să detecteze intenția utilizatorului folosind agentul Choice Maker. \\
+		\hline
+		FR-ORC-002 & Orchestratorul \reqshall să ruteze cererile către agentul/agenții potriviți pe baza intenției detectate. \\
+		\hline
+		FR-ORC-003 & Orchestratorul \reqshall să suporte execuție paralelă pentru operații independente. \\
+		\hline
+		FR-ORC-004 & Orchestratorul \reqshall să agregeze răspunsurile de la mai mulți agenți într-un răspuns unificat. \\
+		\hline
+		FR-ORC-005 & Orchestratorul \reqshall să implementeze timeout configurabil per agent (default: 30s). \\
+		\hline
+		FR-ORC-006 & Orchestratorul \reqshall să implementeze circuit breaker pentru agenți cu probleme. \\
+		\hline
+		FR-ORC-007 & Orchestratorul \reqshall să expună health endpoints pentru fiecare serviciu gestionat. \\
+		\hline
+		FR-ORC-008 & Orchestratorul \reqshould să ofere fallback logic când agenții sunt indisponibili. \\
+		\hline
+		FR-ORC-009 & Orchestratorul \reqshall să suporte selectarea dinamică a provider-ului LLM per cerere. \\
+		\hline
+		FR-ORC-010 & Orchestratorul \reqshould să permită configurarea priorităților de rutare per agent. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Verificare Parole}
+
+	\subsubsection{Password Intelligence}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-PWD-001 & Agentul \reqshall să calculeze scorul de securitate unificat (0-100) din ansamblu ML. \\
+		\hline
+		FR-PWD-002 & Agentul \reqshall să integreze PassGPT pentru analiza probabilistică a parolelor. \\
+		\hline
+		FR-PWD-003 & Agentul \reqshall să integreze zxcvbn pentru evaluarea heuristică. \\
+		\hline
+		FR-PWD-004 & Agentul \reqshall să verifice parola contra bazei HIBP (k-anonymity). \\
+		\hline
+		FR-PWD-005 & Agentul \reqshould să integreze PassStrengthAI (CNN) pentru evaluare suplimentară. \\
+		\hline
+		FR-PWD-006 & Agentul \reqshall să returneze recomandări acționabile pentru îmbunătățirea parolei. \\
+		\hline
+		FR-PWD-007 & Agentul \reqshall să dezactiveze automat PassGPT pentru parole > 10 caractere. \\
+		\hline
+		FR-PWD-008 & Agentul \reqshould să aplice penalizări pentru parole scurte (< 8 caractere). \\
+		\hline
+		FR-PWD-009 & Agentul \reqshall să limiteze lungimea parolei acceptate la 128 caractere. \\
+		\hline
+		FR-PWD-010 & Agentul NU \reqshall să stocheze sau să logheze parola în clar. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Verificare Primalitate}
+
+	\subsubsection{Prime Factorization}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-PRM-001 & Agentul \reqshall să verifice primalitatea numerelor folosind Miller-Rabin deterministic pentru numere < 2$^{\wedge}$64. \\
+		\hline
+		FR-PRM-002 & Agentul \reqshall să integreze YAFU pentru factorizare avansată. \\
+		\hline
+		FR-PRM-003 & Agentul \reqshall să utilizeze FactorDB ca fallback pentru numere mari. \\
+		\hline
+		FR-PRM-004 & Agentul \reqshall să implementeze cache LRU in-memory + persistent BoltDB. \\
+		\hline
+		FR-PRM-005 & Agentul \reqshall să returneze factorii primi și metoda folosită. \\
+		\hline
+		FR-PRM-006 & Agentul \reqshall să limiteze numărul maxim de cifre acceptate (default: 1000). \\
+		\hline
+		FR-PRM-007 & Agentul \reqshall să implementeze timeout-uri per backend (YAFU: 5s primality, 8s factor). \\
+		\hline
+		FR-PRM-008 & Agentul \reqshould să raporteze timpul de calcul în răspuns. \\
+		\hline
+		FR-PRM-009 & Agentul \reqshall să expună endpoint /history pentru ultimele rezultate. \\
+		\hline
+		FR-PRM-010 & Agentul \reqshall să gestioneze concurența YAFU cu semaphore (default: 2). \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Specialist Teorie}
+
+	\subsubsection{RAG pentru Criptografie}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-RAG-001 & Agentul \reqshall să suporte ingestia documentelor PDF, Markdown și Text. \\
+		\hline
+		FR-RAG-002 & Agentul \reqshall să stocheze embeddings în ChromaDB cu persistență. \\
+		\hline
+		FR-RAG-003 & Agentul \reqshall să utilizeze FastEmbed (BAAI/bge-small-en-v1.5) pentru vectorizare. \\
+		\hline
+		FR-RAG-004 & Agentul \reqshall să implementeze reranking cu cross-encoder (BAAI/bge-reranker-base). \\
+		\hline
+		FR-RAG-005 & Agentul \reqshall să mențină istoricul conversațiilor cu context tracking. \\
+		\hline
+		FR-RAG-006 & Agentul \reqshall să returneze surse (citări) pentru fiecare răspuns generat. \\
+		\hline
+		FR-RAG-007 & Agentul \reqshould să suporte hybrid retrieval (vector + BM25). \\
+		\hline
+		FR-RAG-008 & Agentul \reqshall să suporte multiple LLM providers (Ollama, OpenAI, Gemini). \\
+		\hline
+		FR-RAG-009 & Agentul \reqshall să permită auto-ingestia documentelor noi din folder monitorizat. \\
+		\hline
+		FR-RAG-010 & Agentul \reqshould să permită selectarea direct\_rag pentru bypass LLM. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Executor Comenzi}
+
+	\subsubsection{Operații Criptografice}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-CMD-001 & Agentul \reqshall să suporte operații de encoding: Base64, Hex. \\
+		\hline
+		FR-CMD-002 & Agentul \reqshall să suporte hashing: SHA-256/384/512, SHA3, BLAKE2, MD5, HMAC. \\
+		\hline
+		FR-CMD-003 & Agentul \reqshall să suporte criptare simetrică AES-CBC + HMAC (Encrypt-then-MAC). \\
+		\hline
+		FR-CMD-004 & Agentul \reqshall să suporte criptare asimetrică RSA cu OAEP padding. \\
+		\hline
+		FR-CMD-005 & Agentul \reqshall să suporte semnături post-quantum (ML-DSA/Dilithium, Falcon). \\
+		\hline
+		FR-CMD-006 & Agentul \reqshall să valideze toate inputurile contra injection attacks. \\
+		\hline
+		FR-CMD-007 & Agentul \reqshall să redacteze secretele din logs/erori. \\
+		\hline
+		FR-CMD-008 & Agentul \reqshall să returneze comanda OpenSSL executată (scop educațional). \\
+		\hline
+		FR-CMD-009 & Agentul \reqshall să implementeze timeout per operație (default: 30s). \\
+		\hline
+		FR-CMD-010 & Agentul \reqshall să raporteze disponibilitatea PQC provider la /pqc/health. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Selector Alegeri}
+
+	\subsubsection{NLP Intent Classification}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-NLP-001 & Agentul \reqshall să clasifice intenția utilizatorului cu confidence score. \\
+		\hline
+		FR-NLP-002 & Agentul \reqshall să extragă entități relevante (numere, algoritmi, parole, chei). \\
+		\hline
+		FR-NLP-003 & Agentul \reqshall să utilizeze SecureBERT 2.0 pentru clasificare. \\
+		\hline
+		FR-NLP-004 & Agentul \reqshall să suporte minim 10 clase de intenție (encrypt, decrypt, hash, etc.). \\
+		\hline
+		FR-NLP-005 & Agentul \reqshall să returneze threshold de confidence configurabil. \\
+		\hline
+		FR-NLP-006 & Agentul \reqshould să detecteze cereri ambigue și să solicite clarificare. \\
+		\hline
+		FR-NLP-007 & Agentul \reqshall să proceseze cereri în limba engleză. \\
+		\hline
+		FR-NLP-008 & Agentul \reqmay să suporte input multilingv cu traducere automată. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Agent Detectare Criptosisteme}
+
+	\subsubsection{Cryptosystem Detection}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-CRY-001 & Agentul \reqshall să detecteze tipul de criptosistem din ciphertext. \\
+		\hline
+		FR-CRY-002 & Agentul \reqshall să integreze CyberChef Magic detector. \\
+		\hline
+		FR-CRY-003 & Agentul \reqshould să integreze euristici inspirate din dcode.fr. \\
+		\hline
+		FR-CRY-004 & Agentul \reqshall să agregeze rezultatele de la mai mulți detectori. \\
+		\hline
+		FR-CRY-005 & Agentul \reqshall să returneze scor de incredere (0-1) pentru fiecare detecție. \\
+		\hline
+		FR-CRY-006 & Agentul \reqshall să returneze top N candidați ordonați după scor (N configurabil). \\
+		\hline
+	\end{longtable}
+
+	\subsection{Management Date și Conversații}
+
+	\subsubsection{Data Persistence}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-DAT-001 & Sistemul \reqshall să stocheze istoricul conversațiilor per utilizator. \\
+		\hline
+		FR-DAT-002 & Sistemul \reqshall să permită reluarea conversațiilor anterioare. \\
+		\hline
+		FR-DAT-003 & Sistemul \reqshall să permită exportul rezultatelor în JSON. \\
+		\hline
+		FR-DAT-004 & Sistemul \reqshould să permită exportul rapoartelor în PDF. \\
+		\hline
+		FR-DAT-005 & Sistemul \reqshall să implementeze TTL configurabil pentru cache (default: 1h). \\
+		\hline
+		FR-DAT-006 & Sistemul \reqshall să permită ștergerea datelor utilizatorului la cerere (GDPR). \\
+		\hline
+		FR-DAT-007 & Sistemul \reqshall să anonimizeze datele în log-uri. \\
+		\hline
+		FR-DAT-008 & Sistemul \reqshould să implementeze backup automat al bazelor de date. \\
+		\hline
+		FR-DAT-009 & Sistemul \reqshall să definească retention policy pentru date (default: 90 zile). \\
+		\hline
+		FR-DAT-010 & Sistemul \reqshould să permită exportul metadatelor conversațiilor. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Administrare și Audit}
+
+	\subsubsection{System Administration}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-ADM-001 & Sistemul \reqshall să logheze toate acțiunile administrative în audit log. \\
+		\hline
+		FR-ADM-002 & Sistemul \reqshall să înregistreze timestamp, user ID, acțiune, resursa afectată, IP. \\
+		\hline
+		FR-ADM-003 & Sistemul \reqshall să ofere UI de administrare pentru utilizatori și roluri. \\
+		\hline
+		FR-ADM-004 & Sistemul \reqshall să ofere dashboard pentru management API keys. \\
+		\hline
+		FR-ADM-005 & Sistemul \reqshall să implementeze rate limiting configurabil per endpoint. \\
+		\hline
+		FR-ADM-006 & Sistemul \reqshall să implementeze quota per utilizator/API key. \\
+		\hline
+		FR-ADM-007 & Sistemul \reqshould să alerteze la pattern-uri anormale (brute force, anomalii). \\
+		\hline
+		FR-ADM-008 & Sistemul \reqshall să permită configurări centralizate per mediu (dev/staging/prod). \\
+		\hline
+		FR-ADM-009 & Sistemul \reqshall să păstreze audit log-ul minim 5 ani. \\
+		\hline
+		FR-ADM-010 & Sistemul \reqshould să ofere export audit log în format SIEM-compatible. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Interfață Utilizator}
+
+	\subsubsection{UI și UX}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		FR-UI-001 & Interfața web \reqshall să ofere input conversațional pentru cereri. \\
+		\hline
+		FR-UI-002 & Interfața \reqshall să afișeze rezultatele într-un format structurat și lizibil. \\
+		\hline
+		FR-UI-003 & Interfața \reqshall să afișeze sursele (citări) pentru răspunsurile RAG. \\
+		\hline
+		FR-UI-004 & Interfața \reqshall să permită navigarea între conversații anterioare. \\
+		\hline
+		FR-UI-005 & Interfața \reqshall să fie responsive pentru desktop, tabletă și mobil. \\
+		\hline
+		FR-UI-006 & Interfața \reqshould să ofere mod întunecat (dark mode). \\
+		\hline
+		FR-UI-007 & Interfața \reqshall să afișeze status de loading pentru operații async. \\
+		\hline
+		FR-UI-008 & Interfața \reqshall să afișeze erori într-un mod user-friendly. \\
+		\hline
+		FR-UI-009 & CLI-ul \reqshall să ofere acces la toate funcționalitățile core. \\
+		\hline
+		FR-UI-010 & CLI-ul \reqshould să suporte output în format JSON pentru scripting. \\
+		\hline
+	\end{longtable}
+
+	% ========== CERINȚE NON-FUNCȚIONALE ==========
+	\newpage
+	\section{Cerințe Non-Funcționale}
+
+	\subsection{Performanță}
+
+	\subsubsection{Timp de Răspuns}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		NFR-PRF-001 & Endpoint-urile lightweight (health, status) \reqshall să răspundă în p95 < 100ms. \\
+		\hline
+		NFR-PRF-002 & Clasificarea intenției (Choice Maker) \reqshall să se finalizeze în p95 < 500ms. \\
+		\hline
+		NFR-PRF-003 & Evaluarea parolei \reqshall să se finalizeze în p95 < 2s. \\
+		\hline
+		NFR-PRF-004 & Verificarea primalității pentru numere < 64 biți \reqshall să fie < 100ms. \\
+		\hline
+		NFR-PRF-005 & Operațiile criptografice standard \reqshall să se finalizeze în < 1s. \\
+		\hline
+		NFR-PRF-006 & Generarea RAG \reqshall să returneze răspuns în p95 < 10s (dependent de LLM). \\
+		\hline
+		NFR-PRF-007 & Sistemul \reqshall să suporte minim 100 de cereri concurente. \\
+		\hline
+		NFR-PRF-008 & Sistemul \reqshould să suporte minim 500 de utilizatori concurenți activi. \\
+		\hline
+		NFR-PRF-009 & Cache-ul \reqshall să reducă latența pentru cereri repetitive cu minim 80\%. \\
+		\hline
+		NFR-PRF-010 & Operațiile heavy (factorizare, RAG extins) \reqshall să fie async cu polling. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Scalabilitate}
+
+	\subsubsection{Horizontal Scaling}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		NFR-SCL-001 & Arhitectura \reqshall să permită scalare orizontală pentru toți agenții. \\
+		\hline
+		NFR-SCL-002 & Sistemul \reqshall să funcționeze corect cu minim 2 replici per agent critic. \\
+		\hline
+		NFR-SCL-003 & Baza de date \reqshall să suporte connection pooling eficient. \\
+		\hline
+		NFR-SCL-004 & Sistemul \reqshould să implementeze auto-scaling pe bază de load în K8s. \\
+		\hline
+		NFR-SCL-005 & Sistemul \reqshall să gestioneze backpressure la cereri excesive. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Fiabilitate}
+
+	\subsubsection{Availability și Recovery}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		NFR-REL-001 & Disponibilitatea target pentru orchestrator și backend: \(\geq\) 99.5\%. \\
+		\hline
+		NFR-REL-002 & Disponibilitatea target pentru agenți individuali: \(\geq\) 99\%. \\
+		\hline
+		NFR-REL-003 & Sistemul \reqshall să implementeze retry cu exponential backoff pentru dependențe externe. \\
+		\hline
+		NFR-REL-004 & Sistemul \reqshall să implementeze circuit breaker cu threshold configurabil. \\
+		\hline
+		NFR-REL-005 & Sistemul \reqshall să funcționeze în mod degradat când agenți non-critici sunt indisponibili. \\
+		\hline
+		NFR-REL-006 & MTBF target pentru servicii critice: \(\geq\) 720 ore. \\
+		\hline
+		NFR-REL-007 & MTTR target: \(\leq\) 30 minute. \\
+		\hline
+		NFR-REL-008 & Backup-urile bazelor de date \reqshall să fie automate și testate periodic. \\
+		\hline
+		NFR-REL-009 & RTO (Recovery Time Objective): \(\leq\) 4 ore. \\
+		\hline
+		NFR-REL-010 & RPO (Recovery Point Objective): \(\leq\) 1 oră. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Observabilitate}
+
+	\subsubsection{Monitoring și Logging}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		NFR-OBS-001 & Toate serviciile \reqshall să expună metrici Prometheus pe /metrics. \\
+		\hline
+		NFR-OBS-002 & Sistemul \reqshall să colecteze metrici RED (Rate, Errors, Duration). \\
+		\hline
+		NFR-OBS-003 & Sistemul \reqshall să colecteze metrici USE (Utilization, Saturation, Errors). \\
+		\hline
+		NFR-OBS-004 & Toate serviciile \reqshall să emită loguri structurate (JSON). \\
+		\hline
+		NFR-OBS-005 & Log-urile \reqshall să includă: timestamp, level, service, trace\_id, message. \\
+		\hline
+		NFR-OBS-006 & Sistemul \reqshould să implementeze distributed tracing (OpenTelemetry). \\
+		\hline
+		NFR-OBS-007 & Sistemul \reqshall să ofere dashboards Grafana pentru monitorizare. \\
+		\hline
+		NFR-OBS-008 & Sistemul \reqshall să configureze alerting pentru metrici critice. \\
+		\hline
+		NFR-OBS-009 & Alertele critice \reqshall să fie notificate în < 5 minute de la incident. \\
+		\hline
+		NFR-OBS-010 & Sistemul \reqshould să implementeze anomaly detection pentru pattern-uri neobișnuite. \\
+		\hline
+	\end{longtable}
+
+	% ========== CERINȚE DE SECURITATE ==========
+	\newpage
+	\section{Cerințe de Securitate}
+
+	\subsection{Transport Security}
+
+	\subsubsection{TLS și mTLS}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-TLS-001 & Toate comunicațiile externe \reqshall să utilizeze TLS 1.2+. \\
+		\hline
+		SR-TLS-002 & Comunicațiile inter-servicii în producție \reqshall să utilizeze mTLS. \\
+		\hline
+		SR-TLS-003 & Certificatele \reqshall să aibă minimum 2048-bit RSA sau ECDSA P-256. \\
+		\hline
+		SR-TLS-004 & Sistemul \reqshall să implementeze certificate rotation automată. \\
+		\hline
+		SR-TLS-005 & Sistemul \reqshall să forțeze HSTS cu max-age \(\geq\) 1 an. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Data Security}
+
+	\subsubsection{Protecția Datelor}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-DAT-001 & Datele sensibile at-rest \reqshall să fie criptate (AES-256-GCM). \\
+		\hline
+		SR-DAT-002 & Parolele \reqshall să fie hashuite cu bcrypt/Argon2 (cost \(\geq\) 12). \\
+		\hline
+		SR-DAT-003 & API keys \reqshall să fie stocate hashuite, afișate o singură dată. \\
+		\hline
+		SR-DAT-004 & Secretele NU \reqshall să fie stocate în cod sau imagini container. \\
+		\hline
+		SR-DAT-005 & Sistemul \reqshall să utilizeze secrets management (Vault/K8s Secrets). \\
+		\hline
+		SR-DAT-006 & Log-urile NU \reqshall să conțină date sensibile în clar. \\
+		\hline
+		SR-DAT-007 & Baza de date \reqshall să fie accesibilă doar din rețeaua internă. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Input Validation și Injection Prevention}
+
+	\subsubsection{Validare și Sanitizare}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-INJ-001 & Sistemul \reqshall să prevină SQL Injection prin parametrizare. \\
+		\hline
+		SR-INJ-002 & Sistemul \reqshall să prevină Command Injection prin validare strictă. \\
+		\hline
+		SR-INJ-003 & Sistemul \reqshall să prevină XSS prin sanitizare input și output encoding. \\
+		\hline
+		SR-INJ-004 & Sistemul \reqshall să prevină CSRF prin token-uri per sesiune. \\
+		\hline
+		SR-INJ-005 & Sistemul \reqshall să prevină Path Traversal cu validare și sandboxing. \\
+		\hline
+		SR-INJ-006 & Sistemul \reqshall să implementeze allowlist pentru algoritmi și operațiuni. \\
+		\hline
+		SR-INJ-007 & Sistemul \reqshall să valideze toate inputurile server-side. \\
+		\hline
+		SR-INJ-008 & Sistemul \reqshall să implementeze request size limits (default: 1MB). \\
+		\hline
+	\end{longtable}
+
+	\subsection{Access Control}
+
+	\subsubsection{Autorizare și Rate Limiting}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-ACC-001 & Sistemul \reqshall să implementeze principiul privilegiilor minime. \\
+		\hline
+		SR-ACC-002 & Sistemul \reqshall să verifice autorizarea pentru fiecare cerere. \\
+		\hline
+		SR-ACC-003 & Sistemul \reqshall să implementeze rate limiting per IP și per user. \\
+		\hline
+		SR-ACC-004 & Sistemul \reqshall să blocheze conturile după 5 încercări eșuate (30 min). \\
+		\hline
+		SR-ACC-005 & Sistemul \reqshould să implementeze IP reputation și blacklisting. \\
+		\hline
+		SR-ACC-006 & Sistemul \reqshould să detecteze și să blocheze brute force attacks. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Security Headers}
+
+	\subsubsection{HTTP Security}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-HDR-001 & Sistemul \reqshall să seteze Content-Security-Policy restrictiv. \\
+		\hline
+		SR-HDR-002 & Sistemul \reqshall să seteze X-Frame-Options: DENY. \\
+		\hline
+		SR-HDR-003 & Sistemul \reqshall să seteze X-Content-Type-Options: nosniff. \\
+		\hline
+		SR-HDR-004 & Sistemul \reqshall să seteze Referrer-Policy: strict-origin-when-cross-origin. \\
+		\hline
+		SR-HDR-005 & Sistemul \reqshall să configureze CORS restrictiv (nu wildcard în producție). \\
+		\hline
+	\end{longtable}
+
+	\subsection{Audit și Incident Response}
+
+	\subsubsection{Logging și Forensics}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		SR-AUD-001 & Sistemul \reqshall să logheze toate accesele la resurse sensibile. \\
+		\hline
+		SR-AUD-002 & Sistemul \reqshall să logheze toate operațiunile administrative. \\
+		\hline
+		SR-AUD-003 & Sistemul \reqshall să păstreze audit logs imutabile pentru investigații. \\
+		\hline
+		SR-AUD-004 & Sistemul \reqshould să alerteze la comportament suspect (anomalii). \\
+		\hline
+		SR-AUD-005 & Sistemul \reqshall să permită investigație și forensics post-incident. \\
+		\hline
+		SR-AUD-006 & Sistemul \reqshould să ofere export pentru SIEM integration. \\
+		\hline
+	\end{longtable}
+
+	% ========== CERINȚE AI/ML ==========
+	\newpage
+	\section{Cerințe AI/ML}
+
+	\subsection{Model Specification}
+
+	\subsubsection{Modele ML Utilizate}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		ML-MOD-001 & PassGPT \reqshall să utilizeze model pre-antrenat (javirandor/passgpt-10characters). \\
+		\hline
+		ML-MOD-002 & SecureBERT \reqshall să utilizeze versiunea 2.0 pentru clasificare. \\
+		\hline
+		ML-MOD-003 & Embedding model pentru RAG \reqshall să fie BAAI/bge-small-en-v1.5. \\
+		\hline
+		ML-MOD-004 & Reranker \reqshall să fie BAAI/bge-reranker-base (ONNX). \\
+		\hline
+		ML-MOD-005 & Toate modelele \reqshall să aibă checksum verificat la încărcare. \\
+		\hline
+		ML-MOD-006 & Modelele \reqshall să fie versionate și etichetate în registry. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Data Management}
+
+	\subsubsection{Gestiunea Datelor ML}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		ML-DAT-001 & Documentele ingestate \reqshall să fie clasificate și etichetate. \\
+		\hline
+		ML-DAT-002 & Sistemul \reqshall să păstreze metadata pentru fiecare document. \\
+		\hline
+		ML-DAT-003 & Sistemul \reqshould să permită actualizarea incrementală a vectorilor. \\
+		\hline
+		ML-DAT-004 & Sistemul \reqshall să permită ștergerea selectivă din vector store. \\
+		\hline
+		ML-DAT-005 & Dataset-urile de antrenament \reqshall să fie documentate și versionate. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Guardrails și Safety}
+
+	\subsubsection{Protecție și Siguranță ML}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		ML-GRD-001 & Sistemul \reqshall să valideze inputul înainte de procesare ML. \\
+		\hline
+		ML-GRD-002 & Sistemul \reqshall să limiteze lungimea inputului acceptat (context window). \\
+		\hline
+		ML-GRD-003 & Sistemul \reqshall să filtreze output-urile pentru conținut harmful. \\
+		\hline
+		ML-GRD-004 & Sistemul \reqshall să implementeze limită de acțiuni per sesiune. \\
+		\hline
+		ML-GRD-005 & Sistemul \reqshould să detecteze și să blocheze prompt injection attempts. \\
+		\hline
+		ML-GRD-006 & Sistemul NU \reqshall să expună informații sensibile prin model outputs. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Model Lifecycle (MLOps)}
+
+	\subsubsection{Management și Deployment Modele}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		ML-OPS-001 & Sistemul \reqshall să suporte blue-green deployment pentru modele. \\
+		\hline
+		ML-OPS-002 & Sistemul \reqshall să monitorizeze drift-ul modelelor. \\
+		\hline
+		ML-OPS-003 & Sistemul \reqshould să implementeze A/B testing pentru modele noi. \\
+		\hline
+		ML-OPS-004 & Sistemul \reqshall să permită rollback rapid la versiunea anterioară. \\
+		\hline
+		ML-OPS-005 & Sistemul \reqshall să păstreze metrici de performanță per versiune model. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Ethics și Transparency}
+
+	\subsubsection{Transparență AI}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		ML-ETH-001 & Sistemul \reqshall să informeze utilizatorii că răspunsurile sunt generate de AI. \\
+		\hline
+		ML-ETH-002 & Sistemul \reqshall să ofere confidence scores pentru predicții. \\
+		\hline
+		ML-ETH-003 & Sistemul \reqshould să documenteze limitările cunoscute ale modelelor. \\
+		\hline
+		ML-ETH-004 & Sistemul NU \reqshall să pretindă certitudine pentru rezultate probabilistice. \\
+		\hline
+	\end{longtable}
+
+	% ========== CERINȚE INFRASTRUCTURĂ ==========
+	\newpage
+	\section{Cerințe de Infrastructură și DevOps}
+
+	\subsection{Containerizare și Orchestrare}
+
+	\subsubsection{Kubernetes}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		INF-K8S-001 & Sistemul \reqshall să ruleze în Kubernetes cu namespace segregation. \\
+		\hline
+		INF-K8S-002 & Sistemul \reqshall să definească resource limits pentru toate container-ele. \\
+		\hline
+		INF-K8S-003 & Sistemul \reqshall să implementeze network policies pentru izolare. \\
+		\hline
+		INF-K8S-004 & Sistemul \reqshall să utilizeze non-root containers. \\
+		\hline
+		INF-K8S-005 & Sistemul \reqshall să implementeze pod security standards. \\
+		\hline
+		INF-K8S-006 & Sistemul \reqshould să utilizeze service mesh (Istio/Linkerd). \\
+		\hline
+		INF-K8S-007 & Sistemul \reqshall să implementeze health checks (liveness/readiness). \\
+		\hline
+		INF-K8S-008 & Sistemul \reqshould să suporte horizontal pod autoscaling. \\
+		\hline
+	\end{longtable}
+
+	\subsection{CI/CD Pipeline}
+
+	\subsubsection{Automatizare Build și Deploy}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		INF-CIC-001 & Pipeline \reqshall să execute build automat la fiecare commit. \\
+		\hline
+		INF-CIC-002 & Pipeline \reqshall să execute unit tests cu coverage \(\geq\) 70\%. \\
+		\hline
+		INF-CIC-003 & Pipeline \reqshall să execute static analysis (linters). \\
+		\hline
+		INF-CIC-004 & Pipeline \reqshall să execute security scanning (Trivy, Snyk). \\
+		\hline
+		INF-CIC-005 & Pipeline \reqshall să execute integration tests. \\
+		\hline
+		INF-CIC-006 & Pipeline \reqshould să execute SAST și DAST. \\
+		\hline
+		INF-CIC-007 & Pipeline \reqshall să genereze și să publice imagini cu tag semantic. \\
+		\hline
+		INF-CIC-008 & Pipeline \reqshall să implementeze deployment automat în staging. \\
+		\hline
+		INF-CIC-009 & Pipeline \reqshould să suporte canary deployments în producție. \\
+		\hline
+		INF-CIC-010 & Pipeline \reqshall să permită rollback rapid (< 5 minute). \\
+		\hline
+	\end{longtable}
+
+	\subsection{Deployment și Portability}
+
+	\subsubsection{Portabilitate și Instalare}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		INF-DEP-001 & Sistemul \reqshall să suporte deployment on-premise. \\
+		\hline
+		INF-DEP-002 & Sistemul \reqshould să suporte deployment în cloud (AWS/GCP/Azure). \\
+		\hline
+		INF-DEP-003 & Sistemul \reqshall să funcționeze pe Linux (Ubuntu 22.04+, Debian 12+). \\
+		\hline
+		INF-DEP-004 & Sistemul \reqshould să suporte air-gapped deployment. \\
+		\hline
+		INF-DEP-005 & Configurația \reqshall să fie externalizată prin env vars/ConfigMaps. \\
+		\hline
+		INF-DEP-006 & Sistemul \reqshall să ofere documentație completă pentru deployment. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Operational Readiness}
+
+	\subsubsection{Producție}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		INF-OPS-001 & Sistemul \reqshall să aibă runbook-uri pentru incident response și operațiuni critice. \\
+		\hline
+		INF-OPS-002 & Procedurile de backup și restore \reqshall să fie documentate și testate periodic. \\
+		\hline
+		INF-OPS-003 & Sistemul \reqshall să aibă plan de disaster recovery cu RTO/RPO validate. \\
+		\hline
+		INF-OPS-004 & Audit log-urile \reqshall să fie protejate împotriva modificării și accesate doar cu roluri dedicate. \\
+		\hline
+		INF-OPS-005 & Release-urile \reqshall să treacă prin quality gates (teste, scanări, verificări de securitate). \\
+		\hline
+		INF-OPS-006 & Sistemul \reqshall să efectueze audit de securitate periodic (cel puțin anual sau per release major). \\
+		\hline
+		INF-OPS-007 & Alertele critice \reqshall să fie rutate către un canal de on-call. \\
+		\hline
+	\end{longtable}
+
+	% ========== CERINȚE DE CONFORMITATE ==========
+	\newpage
+	\section{Cerințe de Conformitate}
+
+	\subsection{Security Standards}
+
+	\subsubsection{Conformitate Securitate}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		CMP-SEC-001 & Sistemul \reqshall să respecte OWASP Top 10 (2021). \\
+		\hline
+		CMP-SEC-002 & Sistemul \reqshould să respecte CIS Benchmarks pentru containerizare. \\
+		\hline
+		CMP-SEC-003 & Sistemul \reqshould să respecte NIST Cybersecurity Framework. \\
+		\hline
+		CMP-SEC-004 & Operațiunile criptografice \reqshould să respecte NIST SP 800-57. \\
+		\hline
+		CMP-SEC-005 & Post-quantum crypto \reqshould să respecte NIST PQC standards. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Data Protection}
+
+	\subsubsection{GDPR Compliance}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		CMP-GDP-001 & Sistemul \reqshall să permită exercitarea dreptului la ștergere (Art. 17 GDPR). \\
+		\hline
+		CMP-GDP-002 & Sistemul \reqshall să permită exportul datelor personale (Art. 20 GDPR). \\
+		\hline
+		CMP-GDP-003 & Sistemul \reqshall să documenteze fluxurile de date personale. \\
+		\hline
+		CMP-GDP-004 & Sistemul \reqshall să minimizeze colectarea datelor (Art. 5 GDPR). \\
+		\hline
+		CMP-GDP-005 & Sistemul \reqshould să implementeze pseudonimizare unde posibil. \\
+		\hline
+	\end{longtable}
+
+	\subsection{Licensing și Open Source}
+
+	\subsubsection{Complianță Licențe}
+
+	\begin{longtable}{|p{2cm}|p{12cm}|}
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endfirsthead
+		\hline
+		\rowcolor{tableheader}
+		\textbf{ID} & \textbf{Cerință} \\
+		\hline
+		\endhead
+		\hline
+		\endfoot
+
+		CMP-LIC-001 & Proiectul \reqshall să fie licențiat sub MIT License. \\
+		\hline
+		CMP-LIC-002 & Sistemul \reqshall să documenteze toate dependențele și licențele lor. \\
+		\hline
+		CMP-LIC-003 & Sistemul NU \reqshall să includă dependențe cu licențe incompatibile. \\
+		\hline
+	\end{longtable}
+
+	% ========== ANEXE ==========
+	\newpage
+	\section{Anexă}
+Această anexă conține diagramele UML care ilustrează arhitectura și funcționalitățile platformei software de unelte AI în criptografie.
+
+	\subsection{Diagrame UML}
+
+	\subsubsection{Arhitectură generală}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_arhitectura}
+		\caption{Arhitectura generală a platformei}
+	\end{figure}
+
+	\subsubsection{Cazuri de utilizare}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_use_case}
+		\caption{Cazuri de utilizare (Anonymous, User, Admin)}
+	\end{figure}
+
+	\subsubsection{Flux secvențial cerere-răspuns}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_sequence_request_flow}
+		\caption{Flux secvențial pentru o cerere standard}
+	\end{figure}
+
+	\subsubsection{Flux asincron pentru operații heavy}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.9\textwidth]{diagrama_activity_async_jobs}
+		\caption{Flux asincron pentru operații heavy}
+	\end{figure}
+
+	\subsubsection{Ciclul de viață al job-urilor}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.9\textwidth]{diagrama_state_job_lifecycle}
+		\caption{Lifecycle job-uri (queued, running, completed/failed)}
+	\end{figure}
+
+	\subsubsection{Agent Verificare Parole}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_password_checker}
+		\caption{Diagramă componentă pentru Password Checker}
+	\end{figure}
+
+	\subsubsection{Agent Verificare Primalitate}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_prime_checker}
+		\caption{Diagramă componentă pentru Prime Checker}
+	\end{figure}
+
+	\subsubsection{Agent Specialist Teorie (RAG)}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_theory_specialist}
+		\caption{Diagramă componentă pentru Theory Specialist}
+	\end{figure}
+
+	\subsubsection{Agent Executor Comenzi}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_command_executor}
+		\caption{Diagramă componentă pentru Command Executor}
+	\end{figure}
+
+	\subsubsection{Agent Choice Maker (clasificare)}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=0.85\textwidth]{diagrama_choice_maker_make_choice}
+		\caption{Diagramă componentă pentru Choice Maker (inferență)}
+	\end{figure}
+
+	\subsubsection{Agent Choice Maker (generare întrebări)}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_choice_maker_generate_questions}
+		\caption{Diagramă componentă pentru Choice Maker (training)}
+	\end{figure}
+
+	\subsubsection{Agent Detectare Criptosisteme}
+	\begin{figure}[H]
+		\centering
+		\includesvg[width=\textwidth]{diagrama_cryptosystem_detection}
+		\caption{Diagramă componentă pentru Cryptosystem Detection}
+	\end{figure}
+
+	\subsection{Arhitectura pe Niveluri}
+
+Arhitectura platformei software de unelte AI în criptografie este organizată pe 5 niveluri verticale:
+
+	\begin{enumerate}
+		\item \textbf{Nivel Frontend} - React Web, CLI Client, API Consumers
+		\item \textbf{Nivel API Gateway} - Go Backend (Auth, Rate Limiting, Routing)
+		\item \textbf{Nivel Orchestrare} - Orchestrator (Intent Routing, LLM)
+		\item \textbf{Nivel Agenți} - 6 agenți specializați (Password, Prime, Theory, Command, Choice, Cryptosystem)
+		\item \textbf{Nivel Date} - PostgreSQL, Redis, ChromaDB, BoltDB
+	\end{enumerate}
+	% ========== SFÂRȘIT DOCUMENT ==========
+\end{document}

@@ -23,42 +23,29 @@ skinparam database {
 skinparam rectangle {
     BackgroundColor #e2e5e7ff
     BorderColor #000000
-    BorderThickness 2
     FontColor #000000
     FontSize 11
-    FontStyle bold
-}
-skinparam arrow {
-    Color #000000
-    Thickness 2
 }
 skinparam linetype ortho
 
 allowmixing
-top to bottom direction
+left to right direction
 
-component "Input" as Input
-
-rectangle "Orchestrare" as Orc {
-    component "Aggregator" as Aggregator
-    component "Normalizer" as Normalizer
+rectangle "Generare întrebări" as genQ{
+    component "DatasetGenerator" as Generator
+    component "Prompts" as Prompts
+    component "Validator" as Validator
 }
 
-rectangle "Componente interne" as Internal {
-    component "PassStrengthAI" as PassAI
-    component "zxcvbn" as ZXCVBN
-    component "HaveIBeenPwned" as HIBP
+rectangle "LLM" {
 }
 
-component "HIBP API" as HIBP_API
+rectangle "TOON Corpus" {
+}
 
-Input -down-> Orc
-Aggregator <-> Normalizer
-
-Aggregator -down-> Internal
-
-HIBP -down-> HIBP_API
-
-Internal -up-> Normalizer
+Prompts --> Generator
+LLM <-> Generator 
+Generator --> Validator
+Validator --> "TOON Corpus"
 
 @enduml

@@ -1,0 +1,33 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam backgroundColor #FFFFFF
+skinparam nodesep 30
+skinparam ranksep 25
+skinparam linetype ortho
+
+left to right direction
+
+component "Input" as Input
+component "API" as API
+component "Output" as Output
+
+rectangle "Detectori" as Detectors {
+    component "CyberChef Magic" as Magic
+    component "Pattern Matchers" as Patterns
+    component "ML Detection" as ML
+}
+
+rectangle "Aggregator" as Agg {
+    component "Score Fusion" as Fusion
+    component "Ranking" as Ranking
+}
+
+Input --> API
+API --> Detectors
+Detectors --> Agg
+Agg --> Output
+
+@enduml

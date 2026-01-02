@@ -1,0 +1,33 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam backgroundColor #FFFFFF
+skinparam nodesep 40
+skinparam ranksep 30
+skinparam linetype ortho
+
+left to right direction
+
+component "Input" as Input
+component "API" as API
+component "Output" as Output
+
+rectangle "Orchestrare" as Orc {
+    component "Router" as Router
+    component "Cache (BoltDB)" as Cache
+}
+
+rectangle "Backend-uri" as Backends {
+    component "Miller-Rabin" as MR
+    component "YAFU" as YAFU
+    component "FactorDB" as Factor
+}
+
+Input --> API
+API --> Orc
+Orc --> Backends
+Backends --> Output
+
+@enduml

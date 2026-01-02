@@ -1,0 +1,74 @@
+@startuml
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam backgroundColor #FFFFFF
+skinparam linetype ortho
+
+top to bottom direction
+
+rectangle "ZONE EXTERNA [untrusted]" #ffdddd as Z1 {
+    component "Browser" as Browser
+    component "CLI" as CLI
+    component "API Consumers" as APIConsumers
+}
+
+rectangle "ZONE DMZ" #ffe5cc as Z2 {
+    component "WAF / Reverse Proxy" as WAF
+    component "Frontend (Web UI)" as Web
+}
+
+rectangle "ZONE APLICATIE" #fff2cc as Z3 {
+    component "Backend API" as Backend
+    component "Orchestrator" as Orch
+}
+
+rectangle "ZONE AGENTI [isolated]" #e6ffcc as Z4 {
+    component "Password Checker" as PWD
+    component "Prime Checker" as PRM
+    component "Theory Specialist" as RAG
+    component "Command Executor" as CMD
+    component "Choice Maker" as NLP
+    component "Cryptosystem Detection" as CRY
+}
+
+rectangle "ZONE DATE [restricted]" #d9e8ff as Z5 {
+    database "PostgreSQL" as PG
+    database "Redis" as Redis
+    database "ChromaDB" as Chroma
+}
+
+rectangle "DEPENDENTE EXTERNE" #eeeeee as Z6 {
+    component "HIBP API" as HIBP
+    component "FactorDB API" as FactorDB
+    component "LLM Providers" as LLM
+}
+
+Browser --> WAF
+CLI --> WAF
+APIConsumers --> WAF
+WAF --> Backend
+Web --> Backend
+Backend --> Orch
+
+Orch --> PWD
+Orch --> PRM
+Orch --> RAG
+Orch --> CMD
+Orch --> NLP
+Orch --> CRY
+
+Backend --> PG
+Backend --> Redis
+RAG --> Chroma
+
+PWD --> HIBP
+PRM --> FactorDB
+RAG --> LLM
+
+note right of WAF : GI1 Internet\nTLS, WAF
+note right of Backend : GI2 DMZ/Aplicatie\nAuth
+note right of Orch : GI3 Aplicatie/Agenti\nmTLS
+note right of RAG : GI4 Agenti/Date\ncredentials
+
+@enduml

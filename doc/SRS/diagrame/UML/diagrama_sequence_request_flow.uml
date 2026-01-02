@@ -1,0 +1,29 @@
+@startuml
+actor User
+participant "Web UI" as Web
+participant "Backend API" as Backend
+participant "Orchestrator" as Orch
+participant "Choice Maker" as Choice
+participant "Agent" as Agent
+
+User -> Web: submit request
+activate Web
+Web -> Backend: POST /request
+activate Backend
+Backend -> Orch: route request
+activate Orch
+Orch -> Choice: classify intent
+activate Choice
+Choice --> Orch: intent + confidence
+deactivate Choice
+Orch -> Agent: execute task
+activate Agent
+Agent --> Orch: result
+deactivate Agent
+Orch --> Backend: aggregated response
+deactivate Orch
+Backend --> Web: response
+deactivate Backend
+Web --> User: render output
+deactivate Web
+@enduml
