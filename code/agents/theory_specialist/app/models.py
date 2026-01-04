@@ -12,7 +12,9 @@ from sqlalchemy import (
     CheckConstraint,
     Column,
     DateTime,
+    Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -147,6 +149,27 @@ class Message(Base):
         return f"<Message id={self.id} role={self.role}>"
 
 
+class WebSearchResult(Base):
+    __tablename__ = "web_search_results"
+    __table_args__ = (
+        Index("idx_web_search_query_created", "query", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    query: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    url: Mapped[str] = mapped_column(String(1000), nullable=False)
+    snippet: Mapped[Optional[str]] = mapped_column(Text)
+    score: Mapped[float] = mapped_column(Float, default=1.0)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=dt.datetime.utcnow, nullable=False, index=True
+    )
+
+    def __repr__(self) -> str:
+        return f"<WebSearchResult id={self.id} provider={self.provider}>"
+
+
 @event.listens_for(Message, "before_insert")
 def _update_conversation_timestamp(mapper, connection, target):  # type: ignore[no-untyped-def]
     """
@@ -157,4 +180,3 @@ def _update_conversation_timestamp(mapper, connection, target):  # type: ignore[
         .where(Conversation.conversation_id == target.conversation_id)
         .values(updated_at=dt.datetime.utcnow())
     )
-

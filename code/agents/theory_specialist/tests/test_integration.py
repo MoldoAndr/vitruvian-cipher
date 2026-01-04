@@ -189,7 +189,7 @@ class TestFullGenerationWorkflow:
 
         # Verify RAG methods were called
         mock_rag_system.prepare_query.assert_called_once()
-        mock_rag_system.retrieve.assert_called_once()
+        mock_rag_system.retrieve_with_fallback.assert_called_once()
         mock_rag_system.rerank.assert_called_once()
         mock_rag_system.generate_answer.assert_called_once()
 

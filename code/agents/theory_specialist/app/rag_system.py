@@ -34,6 +34,7 @@ from .lexical_index import LexicalDocument, LexicalIndex, LexicalResult
 from .llm_client import build_llm_client
 from .models import DocumentChunk, ReferenceDocument
 from .reranker import OnnxCrossEncoder
+from .web_search import SearchResult, WebSearchManager
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +239,7 @@ class RAGSystem:
         self.lexical_index = LexicalIndex([])
         self._cache_lock = threading.Lock()
         self._query_embedding_cache: OrderedDict[str, List[float]] = OrderedDict()
+        self._web_search_manager: Optional[WebSearchManager] = None
         self._build_lexical_index()
 
         logger.info(
@@ -468,6 +470,41 @@ class RAGSystem:
         merged_chunks = [chunk for chunk, _ in combined[:top_k]]
         return merged_chunks, "hybrid"
 
+    def retrieve_with_fallback(
+        self,
+        query: str,
+        top_k: Optional[int] = None,
+        session: Optional[Session] = None,
+    ) -> Tuple[List[RetrievedChunk], str]:
+        top_k = top_k or self.settings.retrieval_top_k
+        retrieved, method = self.retrieve(query, top_k)
+
+        if not self._should_use_web_search(query, retrieved):
+            return retrieved, method
+
+        logger.info("Web search fallback triggered for query: '%s'", query)
+        try:
+            manager = self._get_web_search_manager()
+            web_results = manager.search(
+                query=query,
+                max_results=self.settings.web_search_top_k,
+                session=session,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.warning("Web search failed: %s", exc)
+            return retrieved, method
+
+        if not web_results:
+            return retrieved, method
+
+        web_chunks = self._convert_web_results_to_chunks(web_results)
+        merged = self._merge_local_and_web_results(
+            local_chunks=retrieved,
+            web_chunks=web_chunks,
+            top_k=top_k,
+        )
+        return merged, f"{method}+web"
+
     def rerank(self, query: str, chunks: Iterable[RetrievedChunk]) -> List[RetrievedChunk]:
         chunk_list = list(chunks)
         if not chunk_list:
@@ -485,6 +522,106 @@ class RAGSystem:
         if reranked:
             return [chunk for chunk, _ in reranked[: self.settings.reranker_top_k]]
         return chunk_list[: self.settings.reranker_top_k]
+
+    def _get_web_search_manager(self) -> WebSearchManager:
+        if self._web_search_manager is None or self._web_search_manager.settings is not self.settings:
+            self._web_search_manager = WebSearchManager(self.settings)
+        return self._web_search_manager
+
+    def _should_use_web_search(
+        self,
+        query: str,
+        retrieved: List[RetrievedChunk],
+    ) -> bool:
+        if not self.settings.enable_web_search:
+            return False
+
+        if self._is_out_of_domain(query):
+            return True
+
+        if not retrieved:
+            return True
+
+        top_score = self._fallback_score(retrieved[0])
+        if top_score < self.settings.web_search_fallback_threshold:
+            return True
+
+        if self._is_definition_query(query):
+            if not self._has_definition_evidence(query, retrieved):
+                return True
+
+        return False
+
+    def _is_out_of_domain(self, query: str) -> bool:
+        tokens = LexicalIndex.tokenize(query)
+        if not tokens:
+            return False
+        for token in tokens:
+            if token in self._domain_terms:
+                return False
+        lowered = query.lower()
+        if "crypto" in lowered:
+            return False
+        return True
+
+    def _fallback_score(self, chunk: RetrievedChunk) -> float:
+        return float(
+            chunk.metadata.get(
+                "combined_score",
+                chunk.metadata.get("vector_score", chunk.similarity),
+            )
+        )
+
+    def _convert_web_results_to_chunks(
+        self,
+        web_results: List[SearchResult],
+    ) -> List[RetrievedChunk]:
+        chunks: List[RetrievedChunk] = []
+        min_score = self.settings.web_search_min_relevance_score
+
+        for result in web_results:
+            if min_score > 0 and result.score < min_score:
+                continue
+            text = f"{result.title}\n\n{result.snippet}".strip()
+            if not text:
+                continue
+            chunk_id = f"web_{hash(result.url)}"
+            metadata = {
+                "source": result.url,
+                "source_type": "web",
+                "web_title": result.title,
+                "web_provider": result.source,
+                "web_score": result.score,
+                "is_web_result": True,
+            }
+            chunks.append(
+                RetrievedChunk(
+                    chunk_id=chunk_id,
+                    text=text,
+                    metadata=metadata,
+                    similarity=result.score,
+                )
+            )
+        return chunks
+
+    def _merge_local_and_web_results(
+        self,
+        local_chunks: List[RetrievedChunk],
+        web_chunks: List[RetrievedChunk],
+        top_k: int,
+    ) -> List[RetrievedChunk]:
+        if not local_chunks:
+            return web_chunks[:top_k]
+        if not web_chunks:
+            return local_chunks[:top_k]
+
+        local_count = max(1, int(top_k * 0.6))
+        web_count = max(1, top_k - local_count)
+
+        top_local = local_chunks[:local_count]
+        top_web = sorted(web_chunks, key=lambda c: c.similarity, reverse=True)[:web_count]
+        merged = top_local + top_web
+        return merged[:top_k]
 
     def generate_answer(self, query: str, chunks: List[RetrievedChunk]) -> str:
         if self.settings.answer_style == "extractive":

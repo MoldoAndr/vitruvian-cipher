@@ -100,6 +100,17 @@ class Settings(BaseSettings):
     query_cache_size: int = Field(default=128)
     domain_terms_path: str = Field(default="")
 
+    # Web search fallback (Tavily)
+    enable_web_search: bool = Field(default=True)
+    web_search_provider: str = Field(default="tavily")
+    web_search_fallback_threshold: float = Field(default=0.3)
+    web_search_top_k: int = Field(default=5)
+    web_search_min_relevance_score: float = Field(default=0.5)
+    web_search_timeout: int = Field(default=10)
+    web_search_cache_ttl: int = Field(default=3600)
+    web_search_max_retries: int = Field(default=2)
+    tavily_api_key: str = Field(default="")
+
     llm_provider: str = Field(default="ollama")
     openai_api_key: str = Field(default="")
     openai_base_url: str = Field(default="https://api.openai.com")

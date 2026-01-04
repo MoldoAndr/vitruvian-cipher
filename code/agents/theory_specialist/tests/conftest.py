@@ -284,7 +284,7 @@ def mock_rag_system(monkeypatch):
     )
 
     from app.rag_system import RetrievedChunk
-    mock_rag.retrieve = Mock(return_value=(
+    retrieve_payload = (
         [
             RetrievedChunk(
                 chunk_id="1_1",
@@ -300,7 +300,9 @@ def mock_rag_system(monkeypatch):
             ),
         ],
         "vector"
-    ))
+    )
+    mock_rag.retrieve = Mock(return_value=retrieve_payload)
+    mock_rag.retrieve_with_fallback = Mock(return_value=retrieve_payload)
 
     mock_rag.rerank = Mock(return_value=[
         RetrievedChunk(

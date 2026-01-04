@@ -528,9 +528,10 @@ def generate_answer(
         db.refresh(user_message)
 
         query_context = rag_system.prepare_query(payload.query)
-        retrieved, _strategy = rag_system.retrieve(
+        retrieved, _strategy = rag_system.retrieve_with_fallback(
             query_context.query_for_retrieval,
             top_k=_global_settings.retrieval_top_k,
+            session=db,
         )
         reranked = rag_system.rerank(query_context.query_for_retrieval, retrieved)
 
