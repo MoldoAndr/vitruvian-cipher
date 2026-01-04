@@ -1,6 +1,6 @@
 <div align="center">
 
-  # VITRUVIAN CIPHER
+  # vitruvian cipher
 </div>
 
 <div align="center" style="width: 500px; max-width: 100%; margin: 0 auto;">
