@@ -1,17 +1,6 @@
 <div align="center">
 
   # VITRUVIAN CIPHER
-
-  ### *Next-Generation Cryptographic Intelligence Platform*
-
-  [![Platform](https://img.shields.io/badge/Platform-AI--Powered-blue?style=for-the-badge)](https://github.com/MoldoAndr/vitruvian-cipher)
-  [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-  [![Version](https://img.shields.io/badge/Version-1.0.3-purple?style=for-the-badge)](https://github.com/MoldoAndr/vitruvian-cipher)
-
-  **An autonomous multi-agent system powered by specialized AI, cryptanalysis engines, and quantum-resistant cryptography**
-
-  [Features](#-core-capabilities) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [API Docs](#-api-endpoints) • [Contributing](#-contributing)
-
 </div>
 
 <div align="center" style="width: 500px; max-width: 100%; margin: 0 auto;">
@@ -19,6 +8,15 @@
 </div>
 
 ---
+
+
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Try_It-00ab00?style=for-the-badge&logo=github&logoColor=white)](https://moldoandr.github.io/)
+
+**[🔗 moldoandr.github.io](https://moldoandr.github.io/)**
+
+</div>
 
 ## Overview
 
