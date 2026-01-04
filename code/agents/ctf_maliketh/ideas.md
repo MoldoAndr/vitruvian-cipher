@@ -1,6 +1,6 @@
-https://www.intigriti.com/researchers/blog/hacking-tools/hacker-tools-ciphey
-https://gchq.github.io/CyberChef/
-https://github.com/gchq/CyberChef-server
+CIPHEY:	https://www.intigriti.com/researchers/blog/hacking-tools/hacker-tools-ciphey
+CYBCHEF:https://gchq.github.io/CyberChef/
+SERVER:	https://github.com/gchq/CyberChef-server
 RSA:	https://github.com/RsaCtfTool/RsaCtfTool
 DETECT:	https://github.com/nccgroup/featherduster
 ALICE:	https://arxiv.org/abs/2509.07282

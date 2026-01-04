@@ -17,10 +17,21 @@ https://arxiv.org/abs/2210.03629
 https://arxiv.org/html/2508.10146v1
 https://arxiv.org/html/2506.12508v1
 
+Muzsai et al., "Improving LLM Agents with RL on Crypto CTF Challenges", [arXiv:2506.02048](https://arxiv.org/html/2506.02048v1)
+"Survey: 6 Years of Neural Differential Cryptanalysis", [IACR:2024/1300](https://eprint.iacr.org/2024/1300.pdf)
+"Statistical Timing Side-Channel Analyses", [USENIX Security 2024](https://www.usenix.org/conference/usenixsecurity24/presentation/dunsche)
+"Single-Trace Side-Channel Attacks on CRYSTALS-Dilithium", [NIST PQC 2024](https://csrc.nist.gov/csrc/media/Events/2024/fifth-pqc-standardization-conference/documents/papers/single-trace-side-channel-attacks.pdf)
+"pyecsca: Black-box ECC Reverse Engineering", [IACR TCHES 2024/a26](https://artifacts.iacr.org/tches/2024/a26/)
+"Zero-Knowledge Proof Frameworks: A Survey", [arXiv:2502.07063](https://arxiv.org/html/2502.07063v1)
+"Benchmarking Attacks on Learning with Errors", [arXiv:2408.00882](https://arxiv.org/abs/2408.00882)
+"Solving LWE with Independent Hints", [IACR:2025/1128](https://eprint.iacr.org/2025/1128)
+"SoK: Deep Learning-based Side-channel Analysis", [IACR:2025/1309](https://eprint.iacr.org/2025/1309.pdf)
+
 PASSWORD CHECKER
 
 https://www.kaggle.com/datasets/jeffersonvalandro/password-dataset
 https://www.computer.org/csdl/proceedings-article/dsn/2024/410500a429/1ZPxTMt2ao8
+https://arxiv.org/abs/2404.04886
 
 PASSWORD STRENGTH
 
