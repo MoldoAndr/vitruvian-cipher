@@ -1,6 +1,6 @@
 <div align="center">
 
-  # ⚡ VITRUVIAN CIPHER
+  # VITRUVIAN CIPHER
 
   ### *Next-Generation Cryptographic Intelligence Platform*
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **Vitruvian Cipher** is a cutting-edge cryptographic intelligence platform that orchestrates specialized AI agents to deliver enterprise-grade security analysis, password auditing, prime factorization, and cryptographic theory assistance. Built on a polyglot microservices architecture (Rust, Go, Python), it combines machine learning ensemble models, RAG-based knowledge systems, and post-quantum cryptographic operations into a unified, intelligence-driven platform.
 
@@ -28,38 +28,38 @@
 
 ---
 
-## 🚀 Core Capabilities
+##  Core Capabilities
 
-### 🔐 **Password Intelligence Suite**
+###  **Password Intelligence Suite**
 - **Multi-Model Ensemble**: Aggregates predictions from PassGPT (neural language model), PassStrengthAI (CNN), zxcvbn (heuristic), and HIBP pwned database
 - **Real-Time Breach Detection**: Cross-references against 12B+ compromised credentials via HaveIBeenPwned API
 - **Adaptive Strength Scoring**: Normalizes diverse scoring algorithms into unified 0-100 security metric
 - **Actionable Recommendations**: Context-aware security improvements based on ML-driven pattern analysis
 
-### 🔢 **Prime Factorization Engine**
+###  **Prime Factorization Engine**
 - **YAFU Integration**: Leverages Yet Another Factorization Utility for advanced number theory operations
 - **FactorDB Fallback**: Augments local computation with distributed factorization database
 - **Semantic Number Recognition**: Extracts and validates prime candidates from natural language input
 - **Performance Optimization**: Concurrent execution with semaphore-based resource management
 
-### 🧠 **Theory Specialist RAG System**
+###  **Theory Specialist RAG System**
 - **Local Knowledge Base**: Embeddings-powered retrieval using ONNX models (no external API dependency)
 - **Document Ingestion Pipeline**: Automated PDF/text parsing with chunking, vectorization, and storage
 - **Semantic Search**: ChromaDB-backed similarity search with cross-encoder reranking
 - **Conversation Memory**: Context-aware Q&A with full conversation history tracking
 
-### ⚙️ **Command Executor (Rust)**
+###  **Command Executor (Rust)**
 - **Cryptographic Operations**: AES, RSA, HMAC, SHA hashing, and post-quantum cryptography (PQC) via OpenSSL
 - **Type-Safe Execution**: Memory-safe command execution with comprehensive validation
 - **Timeout Enforcement**: Per-operation timeout controls to prevent resource exhaustion
 - **Input Sanitization**: Multi-layer validation (length, charset, algorithm allowlists)
 
-### 🎯 **Choice Maker (NLP Engine)**
+###  **Choice Maker (NLP Engine)**
 - **Intent Classification**: Fine-tuned SecureBERT for understanding user cryptographic queries
 - **Entity Recognition**: Named entity recognition for extracting numbers, algorithms, and parameters
 - **Dynamic Routing**: Intelligently dispatches requests to appropriate specialist agents
 
-### 🎛️ **Unified Orchestrator**
+###  **Unified Orchestrator**
 - **Service Mesh**: Go-based orchestration layer managing all agent lifecycles
 - **Health Monitoring**: Real-time health checks with automatic failover
 - **Request Multiplexing**: Parallel execution of independent operations with response aggregation
@@ -67,14 +67,14 @@
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 <div align="center" style="width: 700px; max-width: 100%; margin: 0 auto;">
 <img src="logo/architecture.png"/>
 </div>
 
 ---
 
-## 📸 Interface Preview
+##  Interface Preview
 
 
 <div align="center" style="width: 700px; max-width: 100%; margin: 0 auto;">
@@ -92,7 +92,7 @@
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Docker 24+ & Docker Compose 2.20+
@@ -136,7 +136,7 @@ curl http://localhost:5000/health  # Prime Checker
 
 ---
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 ### Password Intelligence
 ```bash
@@ -212,7 +212,7 @@ curl -X POST http://localhost:8085/execute \
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
@@ -228,7 +228,7 @@ curl -X POST http://localhost:8085/execute \
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 vitruvian-cipher/
@@ -253,7 +253,7 @@ vitruvian-cipher/
 
 ---
 
-## 🔐 Security Features
+##  Security Features
 
 - ✅ **Type-Safe Operations**: Rust memory safety for cryptographic primitives
 - ✅ **Input Validation**: Multi-layer validation (length, charset, algorithm allowlists)
@@ -264,7 +264,7 @@ vitruvian-cipher/
 
 ---
 
-## 🚧 Roadmap
+##  Roadmap
 
 - [ ] **Hash Breaking Agent** (Celery + Hashcat + PassGAN integration)
 - [ ] **Cryptosystem Detection** (CyberChef + dcode.fr heuristic engine)
@@ -275,7 +275,7 @@ vitruvian-cipher/
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **YAFU** - Yet Another Factorization Utility
 - **FactorDB** - Distributed factorization database
