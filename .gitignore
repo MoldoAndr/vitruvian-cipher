@@ -1,6 +1,7 @@
 
 # OS/editor noise
-code/agents/ctf_maliketh/RL/Random-Crypto/challenges/*
+code/agents/ctf_maliketh/ReinforcementLearning/HackSynth-GRPO/random_crypto/
+code/agents/ctf_maliketh/ReinforcementLearning/Random-Crypto/training_challenges/*
 doc/SRS/diagrame/
 code/agents/theory_specialist/documents/
 .DS_Store
@@ -14,6 +15,7 @@ Thumbs.db
 # IDE/project settings
 .idea/
 .vscode/
+.claude/
 *.iml
 
 # Python
