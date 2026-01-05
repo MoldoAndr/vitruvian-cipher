@@ -170,6 +170,8 @@
 			\hline
 			mTLS & Mutual TLS \\
 			\hline
+			RL & Reinforcement Learning \\
+			\hline
 			LLM & Large Language Model \\
 			\hline
 			ML & Machine Learning \\
@@ -262,26 +264,6 @@
 		\end{tabular}
 	\end{table}
 
-	\subsection{Audiență Intenționată}
-
-	Acest document este destinat următoarelor persoane:
-
-	\begin{table}[H]
-		\centering
-		\begin{tabular}{|p{4cm}|p{10cm}|}
-			\hline
-			\rowcolor{tableheader}
-			\textbf{Persoană} & \textbf{Rol} \\
-			\hline
-			Academia Tehnică Militară & Conducerea instituției care va evalua proiectul \\
-			\hline
-			Profesor Coordonator & Evaluare și îndrumare tehnică \\
-			\hline
-			Comisia de Licență & Evaluarea finală a proiectului \\
-			\hline
-		\end{tabular}
-	\end{table}
-
 	\subsection{Cadrul Proiectului}
 
 	\subsubsection{În Cadrul Proiectului}
@@ -314,7 +296,7 @@
 
 	\subsection{Descrierea produsului}
 
-	Platforma este o soluție integrată de unelte AI aplicate în criptografie, complet funcțională, care unifică agenți specializați pentru criptanaliză, audit de parole și suport educațional. Sistemul include un orchestrator central pentru rutare, scheduling și execuție asincronă a job-urilor; un agent de decizie pentru extragerea intenției și a entităților; un detector de criptosisteme cu scor de încredere; un modul Hash Breaker cu integrare HashCat/John și generare controlată de parole; un agregator de scoruri de robustețe (ML, zxcvbn, verificări de tip breach); un serviciu de primalitate/factorizare (YAFU + FactorDB); un modul RAG local pentru asistență teoretică; și un CTF Tool dedicat scenariilor educaționale și testare reproductibilă. Arhitectura este bazată pe microservicii containerizate, orchestrate în Kubernetes, expune API/CLI/Web, include autentificare și autorizare RBAC, audit și monitorizare continuă, iar pipeline-ul CI/CD și publicarea open-source pe GitHub susțin livrarea production-ready atât local, cât și în cloud.
+	Platforma este o soluție integrată de unelte AI aplicate în criptografie, complet funcțională, care unifică agenți specializați pentru criptanaliză, audit de parole și suport educațional. Sistemul include un orchestrator central pentru rutare, scheduling și execuție asincronă a job-urilor; un agent de decizie pentru extragerea intenției și a entităților; un detector de criptosisteme care are la baza RL cu scor de încredere; un modul Hash Breaker cu integrare HashCat/John și generare controlată de parole; un agregator de scoruri de robustețe (ML, zxcvbn, verificări de tip breach); un serviciu de primalitate/factorizare (YAFU + FactorDB); un modul RAG local pentru asistență teoretică; și un CTF Tool dedicat scenariilor educaționale și testare reproductibilă. Arhitectura este bazată pe microservicii containerizate, orchestrate în Kubernetes, expune API/CLI/Web, include autentificare și autorizare RBAC, audit și monitorizare continuă, iar pipeline-ul CI/CD și publicarea open-source pe GitHub susțin livrarea production-ready atât local, cât și în cloud.
 
 	\subsection{Perspectiva Produsului}
 
@@ -923,9 +905,9 @@ Această secțiune detaliază cerințele funcționale ale platformei software de
 		\hline
 		NFR-PRF-006 & Generarea RAG \reqshall să returneze răspuns în p95 < 10s (dependent de LLM). \\
 		\hline
-		NFR-PRF-007 & Sistemul \reqshall să suporte minim 100 de cereri concurente. \\
+		NFR-PRF-007 & Sistemul \reqshall să suporte minim 5 de cereri concurente. \\
 		\hline
-		NFR-PRF-008 & Sistemul \reqshould să suporte minim 500 de utilizatori concurenți activi. \\
+		NFR-PRF-008 & Sistemul \reqshould să suporte minim 5 utilizatori concurenți activi. \\
 		\hline
 		NFR-PRF-009 & Cache-ul \reqshall să reducă latența pentru cereri repetitive cu minim 80\%. \\
 		\hline
@@ -1739,40 +1721,22 @@ Această secțiune detaliază cerințele funcționale ale platformei software de
 		\hline
 	\end{longtable}
 
-	\subsection{Licensing și Open Source}
-
-	\subsubsection{Complianță Licențe}
-
-	\begin{longtable}{|p{2cm}|p{12cm}|}
-		\hline
-		\rowcolor{tableheader}
-		\textbf{ID} & \textbf{Cerință} \\
-		\hline
-		\endfirsthead
-		\hline
-		\rowcolor{tableheader}
-		\textbf{ID} & \textbf{Cerință} \\
-		\hline
-		\endhead
-		\hline
-		\endfoot
-
-		CMP-LIC-001 & Proiectul \reqshall să fie licențiat sub MIT License. \\
-		\hline
-		CMP-LIC-002 & Sistemul \reqshall să documenteze toate dependențele și licențele lor. \\
-		\hline
-		CMP-LIC-003 & Sistemul NU \reqshall să includă dependențe cu licențe incompatibile. \\
-		\hline
-	\end{longtable}
-
 	% ========== ANEXE ==========
 	\newpage
 	\section{Anexă}
-Această anexă conține diagramele UML care ilustrează arhitectura și funcționalitățile platformei software de unelte AI în criptografie.
 
 	\subsection{Diagrame UML}
 
 	\subsubsection{Arhitectură generală}
+	Arhitectura platformei software de unelte AI în criptografie este organizată pe niveluri:
+
+	\begin{enumerate}
+		\item \textbf{Nivel Frontend} - React Web, CLI Client, API Consumers
+		\item \textbf{Nivel API Gateway} - Go Backend (Auth, Rate Limiting, Routing)
+		\item \textbf{Nivel Orchestrare} - Orchestrator (Intent Routing, LLM)
+		\item \textbf{Nivel Agenți} - agenți specializați
+		\item \textbf{Nivel Date} - PostgreSQL, Redis, ChromaDB, BoltDB
+	\end{enumerate}
 	\begin{figure}[H]
 		\centering
 		\includesvg[width=\textwidth]{diagrama_arhitectura}
@@ -1782,28 +1746,28 @@ Această anexă conține diagramele UML care ilustrează arhitectura și funcți
 	\subsubsection{Cazuri de utilizare - Anonymous}
 	\begin{figure}[H]
 		\centering
-		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_anonymous}
+		\includesvg[width=0.9\textwidth,height=0.40\textheight,keepaspectratio]{diagrama_use_case_anonymous}
 		\caption{Cazuri de utilizare pentru Anonymous}
 	\end{figure}
 
 	\subsubsection{Cazuri de utilizare - User}
 	\begin{figure}[H]
 		\centering
-		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_user}
+		\includesvg[width=0.9\textwidth,height=0.40\textheight,keepaspectratio]{diagrama_use_case_user}
 		\caption{Cazuri de utilizare pentru User}
 	\end{figure}
 
 	\subsubsection{Cazuri de utilizare - Admin}
 	\begin{figure}[H]
 		\centering
-		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_admin}
+		\includesvg[width=0.9\textwidth,height=0.40\textheight,keepaspectratio]{diagrama_use_case_admin}
 		\caption{Cazuri de utilizare pentru Admin}
 	\end{figure}
 
 	\subsubsection{Cazuri de utilizare - Sistem extern}
 	\begin{figure}[H]
 		\centering
-		\includesvg[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{diagrama_use_case_external_system}
+		\includesvg[width=0.9\textwidth,height=0.40\textheight,keepaspectratio]{diagrama_use_case_external_system}
 		\caption{Cazuri de utilizare pentru Sistem Extern (API Client)}
 	\end{figure}
 
@@ -1877,16 +1841,5 @@ Această anexă conține diagramele UML care ilustrează arhitectura și funcți
 		\caption{Diagramă componentă pentru Cryptosystem Detection}
 	\end{figure}
 
-	\subsection{Arhitectura pe Niveluri}
-
-Arhitectura platformei software de unelte AI în criptografie este organizată pe 5 niveluri verticale:
-
-	\begin{enumerate}
-		\item \textbf{Nivel Frontend} - React Web, CLI Client, API Consumers
-		\item \textbf{Nivel API Gateway} - Go Backend (Auth, Rate Limiting, Routing)
-		\item \textbf{Nivel Orchestrare} - Orchestrator (Intent Routing, LLM)
-		\item \textbf{Nivel Agenți} - 6 agenți specializați (Password, Prime, Theory, Command, Choice, Cryptosystem)
-		\item \textbf{Nivel Date} - PostgreSQL, Redis, ChromaDB, BoltDB
-	\end{enumerate}
 	% ========== SFÂRȘIT DOCUMENT ==========
 \end{document}
