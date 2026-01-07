@@ -65,7 +65,8 @@
 
 \hypersetup{hidelinks}
 \graphicspath{{images/}}
-\svgpath{{images/}}
+\svgpath{{images/diagrame/SVGs/}}
+\setsvg{inkscapelatex=false}
 \addbibresource{bibliography.bib}
 
 % Formatare titluri și liste
@@ -296,14 +297,14 @@ Fiecare dintre agenți la rândul lui poate fi văzut ca un microserviciu contai
 
 \begin{figure}[H]
     \centering
-    \includegraphics[height=0.69\textheight]{diagrama_arhitectura_generala.pdf}
+    \includesvg[width=\textwidth]{diagrama_arhitectura}
     \caption{Arhitectura generală a solutiei propuse.}
     \label{fig:arch-general}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{diagrama_agenti.pdf}
+    \includegraphics[width=\textwidth]{diagrame/PDFs/diagrama_agenti.pdf}
     \caption{Pool-ul de agenți AI specializați.}
     \label{fig:ai-agents}
 \end{figure}
@@ -434,51 +435,91 @@ După terminarea implementării funcționalităților componentelor, voi \textbf
 \subsection{Sistem RAG pentru asistență teoretică}
 Această componentă oferă suport teoretic în criptografie printr-un sistem RAG. Utilizează o bază de date vectorială (ChromaDB) pentru stocarea embeddings-urilor documentelor relevante, generate cu un model Transformer. La primirea unei întrebări, sistemul recuperează fragmente relevante, le rerankează și le integrează într-un răspuns generat de un model LLM, asigurând astfel acuratețea și relevanța informațiilor furnizate.
 Permite functionalități de ingestie a documentelor noi, actualizarea bazei de cunoștințe și optimizarea continuă a procesului de recuperare și generare a răspunsurilor.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1.00\textwidth]{images/diagarama_theory_specialist.pdf}
-    \caption{Diagrama arhitectură Sistem RAG pentru asistență teoretică}
-\end{figure}
-\newpage
 \subsection{Modul verificare parole}
 Această componentă evaluează puterea parolelor folosind un model de rețea neuronală antrenat pe un set divers de parole, combinat cu algoritmul zxcvbn și verificarea în baza de date HaveIBeenPwned. Această abordare hibridă oferă o evaluare precisă a securității parolelor, identificând atât complexitatea lor, cât și dacă au fost compromise în breșe cunoscute.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.95\textwidth]{images/diagarama_password_checker.pdf}
-    \caption{Diagrama arhitectură modul verificare parole}
-\end{figure}
 O implementare viitoare va include un sistem de feedback care să permită utilizatorilor să înțeleagă mai bine riscurile asociate parolelor slabe și să primească recomandări personalizate pentru îmbunătățirea securității acestora.
-\newpage
 \subsection{Modul detectare intenție și entități}
 Acest modul utilizează un model NLP bazat pe arhitectura Transformer pentru a extrage intenția și entitățile relevante din cererile utilizatorilor. Acesta ajută la direcționarea corectă a cererilor către agenții specializați, asigurând o interpretare precisă a nevoilor utilizatorului.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.6\textwidth]{images/diagarama_choice_maker_make_choice.pdf}
-    \caption{Diagrama componentă make\_choice pentru detectarea intenției și entităților}
-\end{figure}
-
 Pentru a îmbunătăți performanța modelului, am implementat tehnici de data augmentation, generând variații și parafrazări sintetice ale setului de antrenare. Acest lucru ajută la creșterea robustetei modelului în fața diversității limbajului natural.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.38\textwidth]{images/diagarama_choice_maker_generate_questions.pdf}
-    \caption{Diagrama componentă generate\_questions pentru generarea corpusului TOON}
-\end{figure}
 
 \chapter{Implementare}
 \label{ch:implementation}
 
 \section{Mediu de dezvoltare}
+Implementarea a fost realizată într-un workflow \textbf{container-first}, cu rulare locală pe baza Docker Compose și replicare ușoară în medii similare. Stack-ul este \textbf{multi‑lingvistic}, ales în funcție de rolul fiecărei componente: Python 3.11 pentru serviciile FastAPI, Go 1.22 pentru orchestrare și prime checking, respectiv Rust 1.80 pentru execuția de comenzi criptografice. Pentru interfața web se folosește React (Vite), construită în container Node 20 și servită prin Nginx; generarea locală pentru RAG se sprijină pe un serviciu Ollama rulat pe host.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{interface/interface_start.png}
+    \caption{Interfața web -- ecran de start}
+\end{figure}
 
 \section{Framework-uri și biblioteci utilizate}
+Backend-ul este compus din microservicii cu roluri distincte:
+\begin{itemize}
+    \item \textbf{Password Checker} -- FastAPI + Uvicorn pentru expunerea celor trei scoruri (PassGPT, zxcvbn, HIBP) și agregarea acestora.
+    \item \textbf{Theory Specialist} -- FastAPI + ChromaDB + SQLite, embeddings FastEmbed (BAAI/bge-small-en-v1.5) și reranking ONNX, cu orchestrare de ingestie în background.
+    \item \textbf{Choice Maker} -- model NLP pe Transformers + PyTorch CPU, rulat ca serviciu de inferență pentru intent/NER.
+    \item \textbf{Command Executor} -- serviciu Rust (Axum) cu backend OpenSSL 3, suportând atât operații clasice, cât și semnături PQC prin \textit{oqsprovider}.
+    \item \textbf{Prime Checker} -- serviciu Go cu YAFU (GMP/ECM) pentru factorizare și fallback către FactorDB.
+    \item \textbf{Orchestrator} -- serviciu Go care coordonează pipeline-ul și rutează cererile către agenții specializați.
+\end{itemize}
+
+Interfața web (React + Vite) oferă puncte de intrare pentru scenariile principale:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{interface/password_check_interface.png}
+    \caption{Interfața web -- verificare parole}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{interface/theory_question_interface.png}
+    \caption{Interfața web -- întrebări teoretice (RAG)}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{interface/prime_check_interface.png}
+    \caption{Interfața web -- verificare primalitate/factorizare}
+\end{figure}
 
 \section{Containerizare și infrastructură}
+Soluția este orchestratată printr-un \texttt{docker-compose.yml} unificat, care definește rețele separate pentru \textbf{public}, \textbf{application}, \textbf{agents} și \textbf{data}, precum și volume persistente pentru baze de date și modele. Serviciile expun porturi dedicate (de ex. 9000 pentru password-checker, 8100 pentru theory specialist, 8200 pentru orchestrator), iar dependențele sunt legate prin \texttt{depends\_on} și \texttt{healthcheck}. În acest fel, infrastructura pornește determinist, iar serviciile se pot scala independent.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{architecture/docker_ps.png}
+    \caption{Serviciile containerizate active (docker ps)}
+\end{figure}
 
 \section{Măsuri de securitate aplicate}
+Securitatea este abordată pragmatic, la nivel de serviciu și container. Mai multe servicii rulează \textbf{non-root} (orchestrator distroless, command executor, prime checker), iar containerul de execuție criptografică aplică \textbf{cap\_drop ALL}, \texttt{no-new-privileges} și \texttt{tmpfs} pentru directorul de lucru. Password Checker folosește mecanismul \textbf{k-anonimity} din HIBP, astfel încât parolele nu sunt trimise în clar către servicii externe. Command Executor validează strict inputul și nu execută shell-uri arbitrare, expunând doar operații predefinite (inclusiv AES-CBC + HMAC și RSA-OAEP). Pentru integrarea serviciilor externe (HIBP/FactorDB/LLM) sunt folosite timeouts și retry-uri configurabile.
 
 \section{Automatizare}
+Automatizarea este realizată printr-un \texttt{Makefile} central care acoperă build/start/stop/health/logs și un script \texttt{run\_all.sh} care verifică prerechizitele, inițializează \texttt{.env} și pornește infrastructura în ordine. Există și un script dedicat de \texttt{health-check} care validează endpoint-urile \texttt{/health} pentru fiecare serviciu.
+
+Pentru testare rapidă și scenarii de demo este disponibilă și o interfață CLI, utilă în validarea fluxurilor fără browser:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cli/cli1.png}
+    \caption{CLI -- ecran de pornire}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cli/choice_cli.png}
+    \caption{CLI -- extragere intenție și entități}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{cli/request_direct_Theory_Specailist.png}
+    \caption{CLI -- interogare directă către Theory Specialist}
+\end{figure}
 
 \chapter{Testare și Evaluare}
 \label{ch:testing}
@@ -519,14 +560,5 @@ Pentru a îmbunătăți performanța modelului, am implementat tehnici de data a
 \addcontentsline{toc}{chapter}{Bibliografie}
 
 \printbibliography[heading=none]
-
-\chapter{Anexe}
-\label{ch:annexes}
-
-\section{Listă de diagrame suplimentare}
-
-\section{Configurații tehnice}
-
-\section{Scripturi și manual de utilizare}
 
 \end{document}
